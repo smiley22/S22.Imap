@@ -1,0 +1,219 @@
+<S22>
+	<Imap>
+		<ImapClient name="ctor-1">
+			<example>
+				This example shows how to establish a connection with an IMAP server
+				and print out the IMAP options, which the server supports.
+				<code>
+					/* Connect to Gmail's IMAP server on port 993 using SSL */
+					ImapClient Client = new ImapClient("imap.gmail.com", 993, true);
+
+					/* Print out the server's capabilities */
+					foreach(string s in Client.Capabilities())
+						Console.WriteLine(s);
+
+					Client.Dispose();
+				</code>
+			</example>
+		</ImapClient>
+
+		<ImapClient name="ctor-2">
+			<example>
+				This example demonstrates how to connect and login to an IMAP server.
+				<code>
+					/* Connect to Gmail's IMAP server on port 993 using SSL */
+					try {
+						ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_Username",
+							"My_Password", true, AuthMethod.Login);
+
+						/* Check if the server supports IMAP IDLE */
+						if(Client.Supports("IDLE"))
+							Console.WriteLine("This server supports the IMAP4 IDLE specification");
+						else
+							Console.WriteLine("This server does not support IMAP IDLE");
+
+						/* release resources */
+						Client.Dispose();
+					}
+					catch(InvalidCredentialsException) {
+						Console.WriteLine("The server rejected the supplied credentials");
+					}
+				</code>
+			</example>
+		</ImapClient>
+
+		<ImapClient name="Login">
+			<example>
+				This example demonstrates how to authenticate with an IMAP server once a connection
+				has been established. Notice that you can also connect and login in one step
+				using one of the overloaded constructors. 
+				<code>
+					/* Connect to Gmail's IMAP server on port 993 using SSL */
+					ImapClient Client = new ImapClient("imap.gmail.com", 993, true);
+
+					try {
+						Client.Login("My_Username", "My_Password", AuthMethod.Login);
+					}
+					catch(InvalidCredentialsException) {
+						Console.WriteLine("The server rejected the supplied credentials");
+					}
+					
+					Client.Dispose();
+				</code>
+			</example>
+		</ImapClient>
+
+		<ImapClient name="Search">
+			<example>
+				This example demonstrates how to use the search method to get a list of all
+				unread messages in the mailbox.
+				<code>
+					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_Username",
+						"My_Password", true, AuthMethod.Login);
+
+					/* get a list of unique identifiers (UIDs) of all unread messages in the mailbox */
+					uint[] uids = Client.Search( SearchCondition.Unseen() );
+					
+					/* fetch the messages and print out their subject lines */
+					foreach(uint uid in uids) {
+						MailMessage message = Client.GetMessage(uid);
+						
+						Console.WriteLine(message.Subject);
+					}
+					
+					/* free up any resources associated with this instance */
+					Client.Dispose();
+				</code>
+			</example>
+			<example>
+				This example demonstrates how to perform a search using multiple search criteria
+				<code>
+					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_Username",
+						"My_Password", true, AuthMethod.Login);
+
+					/* get a list of unique identifiers (UIDs) of all messages sent before the 01.04.2012
+							and that are larger than 1 Kilobyte */
+					uint[] uids = Client.Search( SearchCondition.SentBefore(new DateTime(2012, 4, 1))
+						.And( SearchCondition.Larger(1024) ));
+
+					Console.WriteLine("Found " + uids.Length + " messages");
+					
+					/* free up any resources associated with this instance */
+					Client.Dispose();
+				</code>
+			</example>
+		</ImapClient>
+		<ImapClient name="GetMessage">
+			<example>
+				<code>
+					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
+						"My_Password", true, AuthMethod.Login);
+					
+					/* find all messages in the mailbox that were sent from "John.Doe@gmail.com" */
+					uint uids = Client.Search( SearchCondition.From("John.Doe@gmail.com") );
+					
+					/* fetch the first message and print it's subject and body */
+					if(uids.Length > 0) {
+						MailMessage msg = Client.GetMessage(uids[0]);
+						
+						Console.WriteLine("Subject: " + msg.Subject);
+						Console.WriteLine("Body: " + msg.Body);
+					}
+					
+					Client.Dispose();
+				</code>
+			</example>
+		</ImapClient>
+
+		<ImapClient name="GetMessages">
+			<example>
+				<code>
+					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
+						"My_Password", true, AuthMethod.Login);
+
+					/* find all messages that have been sent since June the 1st */
+					uint uids = Client.Search( SearchCondition.SentSince( new DateTime(2012, 6, 1) ) );
+
+					/* fetch the messages and print out their subject lines */
+					MailMessage[] messages = Client.GetMessages( uids );
+
+					foreach(MailMessage m in messages)
+						Console.WriteLine("Subject: " + m.Subject);
+
+					Client.Dispose();
+				</code>
+			</example>
+		</ImapClient>
+
+		<ImapClient name="GetStatus">
+			<example>
+				<code>
+					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
+						"My_Password", true, AuthMethod.Login);
+
+					MailboxStatus status = Client.GetStatus();
+
+					Console.WriteLine("Number of messages in the mailbox: " + status.Messages);
+					Console.WriteLine("Number of unread messages in the mailbox: " + status.Unread);
+
+					Client.Dispose();
+				</code>
+			</example>
+		</ImapClient>
+
+		<ImapClient name="NewMessage">
+			<example>
+				This example demonstrates how to receive IMAP IDLE notifications.
+				<code>
+					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
+						"My_Password", true, AuthMethod.Login);
+
+					/* make sure our server actually supports IMAP IDLE */
+					if(!Client.Supports("IDLE"))
+						throw new Exception("This server does not support IMAP IDLE");
+
+					/* Our event handler will be called whenever a new message is received
+					by the server. */
+					Client.NewMessage += new EventHandler&lt;IdleMessageEventArgs&gt;(OnNewMessage);
+					
+					Client.Dispose();
+					
+					/* ........ */
+					
+					void OnNewMessage(object sender, IdleMessageEventArgs e) {
+						Console.WriteLine("Received a new message!");
+						Console.WriteLine("Total number of messages in the mailbox: " +
+							e.MessageCount);
+					}
+				</code>
+			</example>
+		</ImapClient>
+
+		<ImapClient name="MessageDeleted">
+			<example>
+				This example demonstrates how to receive IMAP IDLE notifications.
+				<code>
+					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
+						"My_Password", true, AuthMethod.Login);
+
+					/* make sure our server actually supports IMAP IDLE */
+					if(!Client.Supports("IDLE"))
+						throw new Exception("This server does not support IMAP IDLE");
+
+					/* Our event handler will be called whenever a message is deleted on the server. */
+					Client.MessageDeleted += new EventHandler&lt;IdleMessageEventArgs&gt;(OnMessageDeleted);
+
+					Client.Dispose();
+
+					/* ........ */
+
+					void OnMessageDeleted(object sender, IdleMessageEventArgs e) {
+						Console.WriteLine("A mail message was deleted on the server!");
+						Console.WriteLine("Total number of mail messages in the mailbox: " +
+							e.MessageCount);
+					}
+				</code>
+			</example>
+		</ImapClient>
+	</Imap>
+</S22>

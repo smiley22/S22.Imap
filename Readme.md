@@ -38,7 +38,7 @@ Parts of this library are heavily based on the AE.Net.Mail project (copyright ©
 
 ### License
 
-This library is released under the [MIT license](https://github.com/smiley22/smiley22.github.com/blob/master/License.md).
+This library is released under the [MIT license](https://github.com/smiley22/S22.Imap/blob/master/License.md).
 
 
 ### Bug reports

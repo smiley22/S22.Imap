@@ -46,6 +46,7 @@
     <Compile Include="ImapClient.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="MailboxStatus.cs" />
+    <Compile Include="MessageFlags.cs" />
     <Compile Include="MessageReader.cs" />
     <Compile Include="MIMEPart.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

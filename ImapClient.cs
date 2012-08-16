@@ -480,16 +480,22 @@ namespace S22.Imap {
 				// Fixme: evaluate data
 				response = GetResponse();
 			}
+			ResumeIdling();
 			if (!IsResponseOK(response, tag))
 				throw new BadServerResponseException(response);
 			selectedMailbox = mailbox;
-			ResumeIdling();
 		}
 
 		/// <summary>
 		/// Retrieves a list of all available and selectable mailboxes on the server.
 		/// </summary>
 		/// <returns>A list of all available and selectable mailboxes</returns>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if a list of mailboxes
+		/// could not be retrieved. The message property of the exception contains the
+		/// error message returned by the server.</exception>
 		/// <remarks>The mailbox INBOX is a special name reserved to mean "the
 		/// primary mailbox for this user on this server"</remarks>
 		public string[] ListMailboxes() {
@@ -514,6 +520,8 @@ namespace S22.Imap {
 				response = GetResponse();
 			}
 			ResumeIdling();
+			if (!IsResponseOK(response, tag))
+				throw new BadServerResponseException(response);
 			return mailboxes.ToArray();
 		}
 
@@ -708,6 +716,61 @@ namespace S22.Imap {
 				throw new BadServerResponseException(response);
 			return messages.ToArray();
 		}
+
+		/// <summary>
+		/// Retrieves the IMAP message flag attributes for a mail message.
+		/// </summary>
+		/// <param name="uid">The UID of the mail message to retrieve the flag
+		/// attributes for.</param>
+		/// <param name="mailbox">The mailbox the message will be retrieved from. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail message flags
+		/// could not be retrieved. The message property of the exception contains the error
+		/// message returned by the server.</exception>
+		/// <returns>A list of IMAP flags set for the message with the matching UID.</returns>
+		public MessageFlag[] GetMessageFlags(uint uid, string mailbox = null) {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			PauseIdling();
+			SelectMailbox(mailbox);
+			string tag = GetTag();
+			string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
+				" (FLAGS)");
+			List<MessageFlag> flags = new List<MessageFlag>();
+			while (response.StartsWith("*")) {
+				Match m = Regex.Match(response, @"FLAGS \(([\w\s\\]*)\)");
+				if (!m.Success)
+					continue;
+				string[] setFlags = m.Groups[1].Value.Split(new char[] { ' ' });
+				foreach (string flag in setFlags) {
+					if (messageFlagsMapping.ContainsKey(flag))
+						flags.Add(messageFlagsMapping[flag]);
+				}
+				response = GetResponse();
+			}
+			ResumeIdling();
+			if (!IsResponseOK(response, tag))
+				throw new BadServerResponseException(response);
+			return flags.ToArray();
+		}
+
+		/// <summary>
+		/// A mapping to map IMAP message flag attribute values to their 
+		/// corresponding MessageFlag enum counterparts.
+		/// </summary>
+		static private Dictionary<string, MessageFlag> messageFlagsMapping =
+			new Dictionary<string, MessageFlag>(StringComparer.OrdinalIgnoreCase) {
+				{ @"\Seen", MessageFlag.Seen },
+				{ @"\Answered", MessageFlag.Answered },
+				{ @"\Flagged", MessageFlag.Flagged },
+				{ @"\Deleted", MessageFlag.Deleted },
+				{ @"\Draft", MessageFlag.Draft },
+				{ @"\Recent",	MessageFlag.Recent }
+			};
 
 		/// <summary>
 		/// Starts receiving of IMAP IDLE notifications from the IMAP server.

@@ -511,12 +511,14 @@ namespace S22.Imap {
 				if (!m.Success)
 					continue;
 				string[] attr = m.Groups[1].Value.Split(new char[] { ' ' });
+				bool add = true;
 				foreach (string a in attr) {
 					/* Only list selectable mailboxes */
 					if (a.ToLower() == @"\noselect")
-						continue;
+						add = false;
 				}
-				mailboxes.Add(m.Groups[3].Value);
+				if(add)
+					mailboxes.Add(m.Groups[3].Value);
 				response = GetResponse();
 			}
 			ResumeIdling();
@@ -614,8 +616,8 @@ namespace S22.Imap {
 		/// can be used with the GetMessage family of methods to download mail
 		/// messages.</returns>
 		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each
-		/// message which uniquely identifies the message. No two messages share the
-		/// the same UID.</remarks>
+		/// message which uniquely identifies the message within a mailbox. No two
+		/// messages in a mailbox share the the same UID.</remarks>
 		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="Search"]/*'/>
 		public uint[] Search(SearchCondition criteria, string mailbox = null) {
 			if (!Authed)
@@ -659,8 +661,8 @@ namespace S22.Imap {
 		/// <returns>An initialized instance of the MailMessage class representing the
 		/// fetched mail message</returns>
 		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each
-		/// message which uniquely identifies the message. No two messages share the
-		/// the same UID.</remarks>
+		/// message which uniquely identifies the message within a mailbox. No two
+		/// messages in a mailbox share the the same UID.</remarks>
 		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMessage"]/*'/>
 		public MailMessage GetMessage(uint uid, bool seen = true, string mailbox = null) {
 			MailMessage[] M = GetMessages(new uint[] { uid }, seen, mailbox);
@@ -687,8 +689,8 @@ namespace S22.Imap {
 		/// <returns>An array of initialized instances of the MailMessage class representing
 		/// the fetched mail messages</returns>
 		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each
-		/// message which uniquely identifies the message. No two messages share the
-		/// the same UID.</remarks>
+		/// message which uniquely identifies the message within a mailbox. No two
+		/// messages in a mailbox share the the same UID.</remarks>
 		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMessages"]/*'/>
 		public MailMessage[] GetMessages(uint[] uids, bool seen = true, string mailbox = null) {
 			if (!Authed)
@@ -835,6 +837,131 @@ namespace S22.Imap {
 			if (!IsResponseOK(response, tag))
 				throw new BadServerResponseException(response);
 			return flags.ToArray();
+		}
+
+		/// <summary>
+		/// Sets the IMAP message flag attributes for a mail message.
+		/// </summary>
+		/// <param name="uid">The UID of the mail message to set the flag
+		/// attributes for.</param>
+		/// <param name="mailbox">The mailbox that contains the mail message. If this
+		/// parameter is null, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <param name="flags">One or multiple message flags from the MessageFlag 
+		/// enumeration.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail message flags
+		/// could not be set. The message property of the exception contains the error
+		/// message returned by the server.</exception>
+		/// <remarks>This method replaces the current flag attributes of the message
+		/// with the specified new flags. If you wish to retain the old attributes, use
+		/// the <see cref="AddMessageFlags"/> method instead.</remarks>
+		/// <seealso cref="GetMessageFlags"/>
+		/// <seealso cref="AddMessageFlags"/>
+		/// <seealso cref="RemoveMessageFlags"/>
+		public void SetMessageFlags(uint uid, string mailbox, params MessageFlag[] flags) {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			PauseIdling();
+			SelectMailbox(mailbox);
+			string flagsString = "";
+			foreach (MessageFlag f in flags)
+				flagsString = flagsString + @"\" + f + " ";
+			string tag = GetTag();
+			string response = SendCommandGetResponse(tag + "UID STORE " + uid +
+				@" FLAGS.SILENT (" + flagsString.Trim() + ")");
+			while (response.StartsWith("*")) {
+				response = GetResponse();
+			}
+			ResumeIdling();
+			if (!IsResponseOK(response, tag))
+				throw new BadServerResponseException(response);
+		}
+
+		/// <summary>
+		/// Adds the specified set of IMAP message flags to the existing flag attributes
+		/// of a mail message.
+		/// </summary>
+		/// <param name="uid">The UID of the mail message to add the flag
+		/// attributes to.</param>
+		/// <param name="mailbox">The mailbox that contains the mail message. If this
+		/// parameter is null, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <param name="flags">One or multiple message flags from the MessageFlag 
+		/// enumeration.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail message flags
+		/// could not be added. The message property of the exception contains the error
+		/// message returned by the server.</exception>
+		/// <remarks>This method adds the specified set of flags to the existing set of
+		/// flag attributes of the message. If you wish to replace the old attributes, use
+		/// the <see cref="SetMessageFlags"/> method instead.</remarks>
+		/// <seealso cref="GetMessageFlags"/>
+		/// <seealso cref="SetMessageFlags"/>
+		/// <seealso cref="RemoveMessageFlags"/>
+		public void AddMessageFlags(uint uid, string mailbox, params MessageFlag[] flags) {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			PauseIdling();
+			SelectMailbox(mailbox);
+			string flagsString = "";
+			foreach (MessageFlag f in flags)
+				flagsString = flagsString + @"\" + f + " ";
+			string tag = GetTag();
+			string response = SendCommandGetResponse(tag + "UID STORE " + uid +
+				@" +FLAGS.SILENT (" + flagsString.Trim() + ")");
+			while (response.StartsWith("*")) {
+				response = GetResponse();
+			}
+			ResumeIdling();
+			if (!IsResponseOK(response, tag))
+				throw new BadServerResponseException(response);
+		}
+
+		/// <summary>
+		/// Removes the specified set of IMAP message flags from the existing flag
+		/// attributes of a mail message.
+		/// </summary>
+		/// <param name="uid">The UID of the mail message to remove the flag
+		/// attributes to.</param>
+		/// <param name="mailbox">The mailbox that contains the mail message. If this
+		/// parameter is null, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <param name="flags">One or multiple message flags from the MessageFlag 
+		/// enumeration.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail message flags
+		/// could not be removed. The message property of the exception contains the error
+		/// message returned by the server.</exception>
+		/// <remarks>This method removes the specified set of flags from the existing set of
+		/// flag attributes of the message. If you wish to replace the old attributes, use
+		/// the <see cref="SetMessageFlags"/> method instead.</remarks>
+		/// <seealso cref="GetMessageFlags"/>
+		/// <seealso cref="SetMessageFlags"/>
+		/// <seealso cref="AddMessageFlags"/>
+		public void RemoveMessageFlags(uint uid, string mailbox, params MessageFlag[] flags) {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			PauseIdling();
+			SelectMailbox(mailbox);
+			string flagsString = "";
+			foreach (MessageFlag f in flags)
+				flagsString = flagsString + @"\" + f + " ";
+			string tag = GetTag();
+			string response = SendCommandGetResponse(tag + "UID STORE " + uid +
+				@" -FLAGS.SILENT (" + flagsString.Trim() + ")");
+			while (response.StartsWith("*")) {
+				response = GetResponse();
+			}
+			ResumeIdling();
+			if (!IsResponseOK(response, tag))
+				throw new BadServerResponseException(response);
 		}
 
 		/// <summary>

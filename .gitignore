@@ -1,3 +1,6 @@
+# Ignore Sandcastle documentation directory
+Documentation/
+
 #################
 ## Eclipse
 #################

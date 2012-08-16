@@ -718,6 +718,85 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
+		/// Copies a mail message with the specified UID to the specified destination
+		/// mailbox.
+		/// </summary>
+		/// <param name="uid">The UID of the mail message that is to be copied.</param>
+		/// <param name="destination">The name of the mailbox to copy the message
+		/// into.</param>
+		/// <param name="mailbox">The mailbox the message will be copied from. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail message could
+		/// not be copied to the specified destination. The message property of the
+		/// exception contains the error message returned by the server.</exception>
+		public void CopyMessage(uint uid, string destination, string mailbox = null) {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			PauseIdling();
+			SelectMailbox(mailbox);
+			string tag = GetTag();
+			string response = SendCommandGetResponse(tag + "COPY " + uid + " "
+				+ destination.QuoteString());
+			ResumeIdling();
+			if (!IsResponseOK(response, tag))
+				throw new BadServerResponseException(response);
+		}
+
+		/// <summary>
+		/// Moves a mail message with the specified UID to the specified destination
+		/// mailbox.
+		/// </summary>
+		/// <param name="uid">The UID of the mail message that is to be moved.</param>
+		/// <param name="destination">The name of the mailbox to move the message
+		/// into.</param>
+		/// <param name="mailbox">The mailbox the message will be moved from. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail message could
+		/// not be moved into the specified destination. The message property of the
+		/// exception contains the error message returned by the server.</exception>
+		public void MoveMessage(uint uid, string destination, string mailbox = null) {
+			CopyMessage(uid, destination, mailbox);
+			DeleteMessage(uid, mailbox);
+		}
+
+		/// <summary>
+		/// Deletes the mail message with the specified UID.
+		/// </summary>
+		/// <param name="uid">The UID of the mail message that is to be deleted.</param>
+		/// <param name="mailbox">The mailbox the message will be deleted from. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail message could
+		/// not be deleted. The message property of the exception contains the error
+		/// message returned by the server.</exception>
+		public void DeleteMessage(uint uid, string mailbox = null) {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			PauseIdling();
+			SelectMailbox(mailbox);
+			string tag = GetTag();
+			string response = SendCommandGetResponse(tag + "UID STORE " + uid +
+				@" +FLAGS.SILENT (\Deleted \Seen)");
+			while (response.StartsWith("*")) {
+				response = GetResponse();
+			}
+			ResumeIdling();
+			if (!IsResponseOK(response, tag))
+				throw new BadServerResponseException(response);
+		}
+
+		/// <summary>
 		/// Retrieves the IMAP message flag attributes for a mail message.
 		/// </summary>
 		/// <param name="uid">The UID of the mail message to retrieve the flag

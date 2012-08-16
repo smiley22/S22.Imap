@@ -487,6 +487,37 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
+		/// Retrieves a list of all available and selectable mailboxes on the server.
+		/// </summary>
+		/// <returns>A list of all available and selectable mailboxes</returns>
+		/// <remarks>The mailbox INBOX is a special name reserved to mean "the
+		/// primary mailbox for this user on this server"</remarks>
+		public string[] ListMailboxes() {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			PauseIdling();
+			List<string> mailboxes = new List<string>();
+			string tag = GetTag();
+			string response = SendCommandGetResponse(tag + "LIST \"\" \"*\"");
+			while (response.StartsWith("*")) {
+				Match m = Regex.Match(response,
+					"\\* LIST \\((.*)\\)\\s+\"(.+)\"\\s+\"(.+)\"");
+				if (!m.Success)
+					continue;
+				string[] attr = m.Groups[1].Value.Split(new char[] { ' ' });
+				foreach (string a in attr) {
+					/* Only list selectable mailboxes */
+					if (a.ToLower() == @"\noselect")
+						continue;
+				}
+				mailboxes.Add(m.Groups[3].Value);
+				response = GetResponse();
+			}
+			ResumeIdling();
+			return mailboxes.ToArray();
+		}
+
+		/// <summary>
 		/// Permanently removes all messages that have the \Deleted flag set from the
 		/// specified mailbox.
 		/// </summary>

@@ -252,7 +252,8 @@ namespace S22.Imap {
 			}
 			/* Server may include a CAPABILITY response */
 			if (response.StartsWith("* CAPABILITY")) {
-				capabilities = response.Substring(13).Trim().Split(' ');
+				capabilities = response.Substring(13).Trim().Split(' ')
+					.Select(s => s.ToUpperInvariant()).ToArray();
 				response = GetResponse();
 			}
 
@@ -352,6 +353,8 @@ namespace S22.Imap {
 		/// from the server during the request. The message property of the exception contains the
 		/// error message returned by the server.</exception>
 		/// <returns>A listing of supported capabilities as an array of strings</returns>
+		/// <remarks>This is one of the few methods which can be called in a non-authenticated
+		/// </remarks>
 		public string[] Capabilities() {
 			if (capabilities != null)
 				return capabilities;
@@ -362,7 +365,8 @@ namespace S22.Imap {
 			/* Server is required to issue untagged capability response */
 			if (response.StartsWith("* CAPABILITY "))
 				response = response.Substring(13);
-			capabilities = response.Trim().Split(' ');
+			capabilities = response.Trim().Split(' ')
+				.Select(s => s.ToUpperInvariant()).ToArray();
 			/* should return OK */
 			response = GetResponse();
 			ResumeIdling();
@@ -540,6 +544,7 @@ namespace S22.Imap {
 		/// <exception cref="BadServerResponseException">Thrown if the expunge operation could
 		/// not be completed. The message property of the exception contains the error message
 		/// returned by the server.</exception>
+		/// <seealso cref="DeleteMessage"/>
 		public void Expunge(string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
@@ -558,7 +563,7 @@ namespace S22.Imap {
 
 		/// <summary>
 		/// Retrieves status information (total number of messages, number of unread
-		/// messages, etc.) for the specified mailbox. </summary>
+		/// messages, etc.) for the specified mailbox.</summary>
 		/// <param name="mailbox">The mailbox to retrieve status information for. If this
 		/// parameter is omitted, the value of the DefaultMailbox property is used to
 		/// determine the mailbox to operate on.</param>
@@ -570,6 +575,9 @@ namespace S22.Imap {
 		/// <exception cref="BadServerResponseException">Thrown if the operation could
 		/// not be completed. The message property of the exception contains the error message
 		/// returned by the server.</exception>
+		/// <remarks>Not all IMAP servers support the retrieval of quota information. If
+		/// it is not possible to retrieve this information, the UsedStorage and FreeStorage
+		/// properties of the returned MailboxStatus instance are set to 0.</remarks>
 		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetStatus"]/*'/>
 		public MailboxStatus GetStatus(string mailbox = null) {
 			if (!Authed)
@@ -593,7 +601,21 @@ namespace S22.Imap {
 			ResumeIdling();
 			if (!IsResponseOK(response, tag))
 				throw new BadServerResponseException(response);
-			return new MailboxStatus(messages, unread);
+
+			/* Collect quota information if server supports it */
+			UInt64 usedStorage = 0, freeStorage = 0;
+
+			if (Supports("QUOTA")) {
+				MailboxQuota[] Quotas = GetQuota(mailbox);
+				foreach (MailboxQuota Q in Quotas) {
+					if (Q.ResourceName == "STORAGE") {
+						usedStorage = Q.Usage;
+						freeStorage = Q.Limit - Q.Usage;
+					}
+				}
+			}
+
+			return new MailboxStatus(messages, unread, usedStorage, freeStorage);
 		}
 
 		/// <summary>
@@ -735,6 +757,7 @@ namespace S22.Imap {
 		/// <exception cref="BadServerResponseException">Thrown if the mail message could
 		/// not be copied to the specified destination. The message property of the
 		/// exception contains the error message returned by the server.</exception>
+		/// <seealso cref="MoveMessage"/>
 		public void CopyMessage(uint uid, string destination, string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
@@ -764,6 +787,8 @@ namespace S22.Imap {
 		/// <exception cref="BadServerResponseException">Thrown if the mail message could
 		/// not be moved into the specified destination. The message property of the
 		/// exception contains the error message returned by the server.</exception>
+		/// <seealso cref="CopyMessage"/>
+		/// <seealso cref="DeleteMessage"/>
 		public void MoveMessage(uint uid, string destination, string mailbox = null) {
 			CopyMessage(uid, destination, mailbox);
 			DeleteMessage(uid, mailbox);
@@ -782,6 +807,7 @@ namespace S22.Imap {
 		/// <exception cref="BadServerResponseException">Thrown if the mail message could
 		/// not be deleted. The message property of the exception contains the error
 		/// message returned by the server.</exception>
+		/// <seealso cref="MoveMessage"/>
 		public void DeleteMessage(uint uid, string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
@@ -813,6 +839,9 @@ namespace S22.Imap {
 		/// could not be retrieved. The message property of the exception contains the error
 		/// message returned by the server.</exception>
 		/// <returns>A list of IMAP flags set for the message with the matching UID.</returns>
+		/// <seealso cref="SetMessageFlags"/>
+		/// <seealso cref="AddMessageFlags"/>
+		/// <seealso cref="RemoveMessageFlags"/>
 		public MessageFlag[] GetMessageFlags(uint uid, string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
@@ -1180,6 +1209,56 @@ namespace S22.Imap {
 			string response = SendCommandGetResponse(tag + "NOOP");
 			while (!response.StartsWith(tag))
 				response = GetResponse();
+		}
+
+		/// <summary>
+		/// Retrieves IMAP QUOTA information for a mailbox.
+		/// </summary>
+		/// <param name="mailbox">The mailbox to retrieve QUOTA information for.
+		/// If this parameter is null, the value of the DefaultMailbox property is
+		/// used to determine the mailbox to operate on.</param>
+		/// <returns>A list of MailboxQuota objects describing usage and limits
+		/// of the quota roots for the mailbox.</returns>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="InvalidOperationException">Thrown if the IMAP4 QUOTA
+		/// extension is not supported by the server.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the quota operation
+		/// could not be completed. The message property of the exception contains the error
+		/// message returned by the server.</exception>
+		private MailboxQuota[] GetQuota(string mailbox = null) {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			if (!Supports("QUOTA"))
+				throw new InvalidOperationException(
+					"This server does not support the IMAP4 QUOTA extension");
+			PauseIdling();
+			if (mailbox == null)
+				mailbox = DefaultMailbox;
+			List<MailboxQuota> Quotas = new List<MailboxQuota>();
+			string tag = GetTag();
+			string response = SendCommandGetResponse(tag + "GETQUOTAROOT " +
+				mailbox.QuoteString());
+			while (response.StartsWith("*")) {
+				Match m = Regex.Match(response,
+					"\\* QUOTA \"(\\w*)\" \\((\\w+)\\s+(\\d+)\\s+(\\d+)\\)");
+				if (m.Success) {
+					try {
+						MailboxQuota Quota = new MailboxQuota(m.Groups[2].Value,
+							UInt32.Parse(m.Groups[3].Value),
+							UInt32.Parse(m.Groups[4].Value));
+						Quotas.Add(Quota);
+					} catch {
+						throw new BadServerResponseException(response);
+					}
+				}
+				response = GetResponse();
+			}
+			ResumeIdling();
+			if (!IsResponseOK(response, tag))
+				throw new BadServerResponseException(response);
+			return Quotas.ToArray();
 		}
 
 		/// <summary>

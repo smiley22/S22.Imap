@@ -148,6 +148,10 @@ namespace S22.Imap {
 		/// </summary>
 		/// <param name="boundary">The boundary string which separates
 		/// the different parts which make up the multipart-message</param>
+		/// <returns>A list of the MIME parts composing the multipart
+		/// message</returns>
+		/// <remarks>Each MIME part consists of its own set of header
+		/// fields and a body.</remarks>
 		private MIMEPart[] ReadMultipartBody(string boundary) {
 			List<MIMEPart> parts = new List<MIMEPart>();
 			string s_boundary = "--" + boundary,

@@ -171,12 +171,15 @@ namespace S22.Imap {
 				/* add MIME part to the list */
 				parts.Add(part);
 				/* if the boundary is actually the end boundary, we're done */
-				if (response == e_boundary)
+				if (response.StartsWith(e_boundary))
 					break;
 			}
-			/* next read should return closing bracket from FETCH command */
-			if ((response = GetResponse()) != ")")
-				throw new BadServerResponseException(response);
+			/* FETCH closing bracket may be last character of response */
+			if (!response.EndsWith(")")) {
+				/* next read should return closing bracket from FETCH command then */
+				if ((response = GetResponse()) != ")")
+					throw new BadServerResponseException(response);
+			}
 			return parts.ToArray();
 		}
 

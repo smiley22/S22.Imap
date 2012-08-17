@@ -354,7 +354,7 @@ namespace S22.Imap {
 		/// error message returned by the server.</exception>
 		/// <returns>A listing of supported capabilities as an array of strings</returns>
 		/// <remarks>This is one of the few methods which can be called in a non-authenticated
-		/// </remarks>
+		/// state.</remarks>
 		public string[] Capabilities() {
 			if (capabilities != null)
 				return capabilities;
@@ -739,6 +739,42 @@ namespace S22.Imap {
 			if (!IsResponseOK(response, tag))
 				throw new BadServerResponseException(response);
 			return messages.ToArray();
+		}
+
+		/// <summary>
+		/// Retrieves the highest UID in the mailbox.
+		/// </summary>
+		/// <param name="mailbox">The mailbox to find the highest UID for. If
+		/// this parameter is null, the value of the DefaultMailbox property is
+		/// used to determine the mailbox to operate on.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the UID could
+		/// not be determined. The message property of the exception contains the error
+		/// message returned by the server.</exception>
+		/// <returns>The highest unique identifier value (UID) in the mailbox</returns>
+		/// <remarks>The highest UID usually corresponds to the newest message in a
+		/// mailbox.</remarks>
+		public uint GetHighestUID(string mailbox = null) {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			PauseIdling();
+			SelectMailbox(mailbox);
+			string tag = GetTag();
+			string response = SendCommandGetResponse(tag + "STATUS " +
+				selectedMailbox.QuoteString() + " (UIDNEXT)");
+			uint nextUID = 0;
+			while (response.StartsWith("*")) {
+				Match m = Regex.Match(response, @"\* STATUS.*UIDNEXT (\d+)");
+				if (m.Success)
+					nextUID = Convert.ToUInt32(m.Groups[1].Value);
+				response = GetResponse();
+			}
+			ResumeIdling();
+			if (!IsResponseOK(response, tag))
+				throw new BadServerResponseException(response);
+			return (nextUID - 1);
 		}
 
 		/// <summary>
@@ -1141,7 +1177,7 @@ namespace S22.Imap {
 					continue;
 				/* Examine the notification */
 				uint numberOfMessages = Convert.ToUInt32(m.Groups[1].Value);
-				uint highestUID = 0;
+				uint highestUID = GetHighestUID();
 
 				switch (m.Groups[2].Value.ToUpper()) {
 					case "EXISTS":

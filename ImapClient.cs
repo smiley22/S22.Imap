@@ -1063,6 +1063,8 @@ namespace S22.Imap {
 		private void StartIdling() {
 			if (idling)
 				return;
+			/* Make sure a mailbox is selected */
+			SelectMailbox(null);
 			idling = true;
 			ResumeIdling();
 		}

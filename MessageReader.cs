@@ -200,7 +200,15 @@ namespace S22.Imap {
 			MailMessage m = new MailMessage();
 			NameValueCollection contentType = ParseMIMEField(
 				header["Content-Type"]);
-			m.Headers.Add(header);
+			/* NameValueCollection throws an exception if adding an empty string as
+			 * value which can happen, if reading a mail message with an empty subject
+			 * for instance
+			 */
+			foreach (string key in header) {
+				string value = header.GetValues(key)[0];
+				if (value != String.Empty)
+					m.Headers.Add(key, value);
+			}
 			if (parts != null) {
 				/* This takes care of setting the Body, BodyEncoding and IsBodyHtml fields also */
 				AddMIMEPartsToMessage(m, parts);

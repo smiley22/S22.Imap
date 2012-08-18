@@ -256,7 +256,6 @@ namespace S22.Imap {
 					.Select(s => s.ToUpperInvariant()).ToArray();
 				response = GetResponse();
 			}
-
 			if (!IsResponseOK(response, tag))
 				throw new InvalidCredentialsException(response);
 			Authed = true;
@@ -756,7 +755,7 @@ namespace S22.Imap {
 		/// <returns>The highest unique identifier value (UID) in the mailbox</returns>
 		/// <remarks>The highest UID usually corresponds to the newest message in a
 		/// mailbox.</remarks>
-		public uint GetHighestUID(string mailbox = null) {
+		private uint GetHighestUID(string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
 			PauseIdling();

@@ -9,6 +9,13 @@ namespace S22.Imap {
 	/// </summary>
 	public class SearchCondition {
 		/// <summary>
+		/// Finds all messages in the mailbox.
+		/// </summary>
+		/// <returns>A SearchCondition object representing the "all" search criterion</returns>
+		public static SearchCondition All() {
+			return new SearchCondition { Field = Fields.All };
+		}
+		/// <summary>
 		/// Finds messages that contain the specified string in the header or body of the
 		/// message.
 		/// </summary>

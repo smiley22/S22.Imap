@@ -1178,18 +1178,17 @@ namespace S22.Imap {
 					continue;
 				/* Examine the notification */
 				uint numberOfMessages = Convert.ToUInt32(m.Groups[1].Value);
-				uint highestUID = GetHighestUID();
 
 				switch (m.Groups[2].Value.ToUpper()) {
 					case "EXISTS":
 						ThreadPool.QueueUserWorkItem(callback => {
 							newMessageEvent.Raise(this,
-								new IdleMessageEventArgs(numberOfMessages, highestUID, this));
+								new IdleMessageEventArgs(numberOfMessages, GetHighestUID(), this));
 						});
 						break;
 					case "EXPUNGE":
 						ThreadPool.QueueUserWorkItem(callback => messageDeleteEvent.Raise(
-							this, new IdleMessageEventArgs(numberOfMessages, highestUID, this)));
+							this, new IdleMessageEventArgs(numberOfMessages, GetHighestUID(), this)));
 						break;
 				}
 			}

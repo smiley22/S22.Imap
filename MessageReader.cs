@@ -152,7 +152,7 @@ namespace S22.Imap {
 		/// message</returns>
 		/// <remarks>Each MIME part consists of its own set of header
 		/// fields and a body.</remarks>
-		private MIMEPart[] ReadMultipartBody(string boundary) {
+		private MIMEPart[] ReadMultipartBody(string boundary, bool nested = false) {
 			List<MIMEPart> parts = new List<MIMEPart>();
 			string s_boundary = "--" + boundary,
 				e_boundary = "--" + boundary + "--";
@@ -165,20 +165,29 @@ namespace S22.Imap {
 				MIMEPart part = new MIMEPart();
 				/* read content-header of part */
 				part.header = ReadMailHeader();
+				/* account for nested multipart content */
+				NameValueCollection contentType = ParseMIMEField(
+					part.header["Content-Type"]);
+				if (contentType["Boundary"] != null)
+					parts.AddRange(ReadMultipartBody(contentType["boundary"], true));
 				/* read content-body of part */
 				while (!(response = GetResponse()).StartsWith(s_boundary))
 					part.body = part.body + response + "\r\n";
-				/* add MIME part to the list */
-				parts.Add(part);
+				/* add MIME part to the list unless body is null which means the body was
+						nested multipart content */
+				if(part.body != null)
+					parts.Add(part);
 				/* if the boundary is actually the end boundary, we're done */
 				if (response.StartsWith(e_boundary))
 					break;
 			}
-			/* FETCH closing bracket may be last character of response */
-			if (!response.EndsWith(")")) {
-				/* next read should return closing bracket from FETCH command then */
-				if ((response = GetResponse()) != ")")
-					throw new BadServerResponseException(response);
+			if (nested == false) {
+				/* FETCH closing bracket may be last character of response */
+				if (!response.EndsWith(")")) {
+					/* next read should return closing bracket from FETCH command then */
+					if ((response = GetResponse()) != ")")
+						throw new BadServerResponseException(response);
+				}
 			}
 			return parts.ToArray();
 		}

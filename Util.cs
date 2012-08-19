@@ -87,7 +87,7 @@ namespace S22.Imap {
 				case "Q":
 					return Util.QDecode(text, encoding);
 				case "B":
-					return Util.Base64Decode(text, encoding);
+					return encoding.GetString(Util.Base64Decode(text));
 				default:
 					throw new FormatException("Encoding not recognized " +
 						"in encoded word: " + word);
@@ -138,16 +138,13 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Takes a Base64-encoded string and decodes it using the specified
-		/// encoding.
+		/// Takes a Base64-encoded string and decodes it.
 		/// </summary>
 		/// <param name="value">The Base64-encoded string to decode</param>
-		/// <param name="encoding">The encoding to use for encoding the returned
-		/// string</param>
-		/// <returns>A Base64-decoded string</returns>
-		internal static string Base64Decode(string value, Encoding encoding) {
-			byte[] bytes = Convert.FromBase64String(value);
-			return encoding.GetString(bytes);
+		/// <returns>A byte array containing the Base64-decoded bytes
+		/// of the input string.</returns>
+		internal static byte[] Base64Decode(string value) {
+			return Convert.FromBase64String(value);
 		}
 	}
 }

@@ -90,7 +90,7 @@ namespace S22.Imap {
 		/// of Content-Type, this would be "text/html").</remarks>
 		private NameValueCollection ParseMIMEField(string field) {
 			NameValueCollection coll = new NameValueCollection();
-			MatchCollection matches = Regex.Matches(field, @"([\w\-]+)=([\w\-\/]+)");
+			MatchCollection matches = Regex.Matches(field, @"([\w\-]+)=\W*([\w\-\/\.]+)");
 			foreach (Match m in matches)
 				coll.Add(m.Groups[1].Value, m.Groups[2].Value);
 			Match mvalue = Regex.Match(field, @"^\s*([\w\/]+)");
@@ -148,6 +148,7 @@ namespace S22.Imap {
 		/// </summary>
 		/// <param name="boundary">The boundary string which separates
 		/// the different parts which make up the multipart-message</param>
+		/// <param name="nested">True if recursive call</param>
 		/// <returns>A list of the MIME parts composing the multipart
 		/// message</returns>
 		/// <remarks>Each MIME part consists of its own set of header
@@ -310,20 +311,20 @@ namespace S22.Imap {
 					"none";
 				Encoding encoding = Encoding.GetEncoding(
 					contentType["Charset"] ?? "us-ascii");
-				string body = p.body;
+				byte[] bytes = encoding.GetBytes(p.body);
 				/* decode content if it was encoded */
 				switch (transferEnc.ToLower()) {
 					case "quoted-printable":
-						body = Util.QPDecode(p.body, encoding);
+						bytes = encoding.GetBytes(Util.QPDecode(p.body, encoding));
 						break;
 					case "base64":
-						body = Util.Base64Decode(p.body, encoding);
+						bytes = Util.Base64Decode(p.body);
 						break;
 				}
 				/* Put the first MIME part into the Body fields of the MailMessage
 				 * instance */
 				if (i == 0) {
-					m.Body = body;
+					m.Body = encoding.GetString(bytes);
 					m.BodyEncoding = encoding;
 					m.IsBodyHtml = contentType["value"].ToLower()
 						.Contains("text/html");
@@ -335,7 +336,7 @@ namespace S22.Imap {
 				} catch {
 					contentId = "";
 				}
-				MemoryStream stream = new MemoryStream(encoding.GetBytes(body));
+				MemoryStream stream = new MemoryStream(bytes); 
 				NameValueCollection disposition = ParseMIMEField(
 					p.header["Content-Disposition"] ?? "");
 				if (disposition["value"].ToLower() == "attachment") {

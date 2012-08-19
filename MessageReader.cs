@@ -303,6 +303,7 @@ namespace S22.Imap {
 		/// <param name="m">The MailMessage instance to operate on</param>
 		/// <param name="parts">An array of MIME parts</param>
 		private void AddMIMEPartsToMessage(MailMessage m, MIMEPart[] parts) {
+			bool setBodyFields = false;
 			for (int i = 0; i < parts.Length; i++) {
 				MIMEPart p = parts[i];
 				NameValueCollection contentType = ParseMIMEField(
@@ -321,41 +322,65 @@ namespace S22.Imap {
 						bytes = Util.Base64Decode(p.body);
 						break;
 				}
-				/* Put the first MIME part into the Body fields of the MailMessage
-				 * instance */
-				if (i == 0) {
-					m.Body = encoding.GetString(bytes);
-					m.BodyEncoding = encoding;
-					m.IsBodyHtml = contentType["value"].ToLower()
-						.Contains("text/html");
-					continue;
+				/* Put the first MIME part that contains text into the Body fields of the
+				 * MailMessage instance */
+				if (setBodyFields == false && contentType["value"].ToLower().Contains("text")) {
+						m.Body = encoding.GetString(bytes);
+						m.BodyEncoding = encoding;
+						m.IsBodyHtml = contentType["value"].ToLower()
+							.Contains("text/html");
+						setBodyFields = true;
+						continue;
 				}
-				string contentId;
-				try {
-					contentId = ParseMessageId(p.header["Content-Id"]);
-				} catch {
-					contentId = "";
-				}
-				MemoryStream stream = new MemoryStream(bytes); 
 				NameValueCollection disposition = ParseMIMEField(
 					p.header["Content-Disposition"] ?? "");
 				if (disposition["value"].ToLower() == "attachment") {
-					/* attachments should have the Content-Disposition header set to
-					 * "attachment" and possibly contain a name attribute */
-					string filename = disposition["filename"] ?? ("attachment" +
-						i.ToString());
-					Attachment attachment = new Attachment(stream, filename);
-					attachment.ContentId = contentId;
-					attachment.ContentType = new ContentType(p.header["Content-Type"]);
-					m.Attachments.Add(attachment);
+					m.Attachments.Add(CreateAttachment(p.header, bytes,
+						disposition["filename"] ?? ("attachment" + i.ToString())));
 				} else {
-					AlternateView view = new AlternateView(stream,
-						new ContentType(p.header["Content-Type"]));
-					view.ContentId = contentId;
-					view.ContentType = new ContentType(p.header["Content-Type"]);
-					m.AlternateViews.Add(view);
+					m.AlternateViews.Add(CreateAlternateView(p.header, bytes));
 				}
 			}
+		}
+
+		/// <summary>
+		/// Creates an instance of the Attachment class used by the MailMessage class
+		/// to store mail message attachments.
+		/// </summary>
+		/// <param name="header">The MIME part header</param>
+		/// <param name="bytes">An array of bytes composing the content of the
+		/// attachment</param>
+		/// <param name="name">The designated name of the attachment file</param>
+		/// <returns>An initialized instance of the Attachment class</returns>
+		private Attachment CreateAttachment(NameValueCollection header, byte[] bytes, string name) {
+			MemoryStream stream = new MemoryStream(bytes);
+			Attachment attachment = new Attachment(stream, name);
+			try {
+				attachment.ContentId = ParseMessageId(header["Content-Id"]);
+			} catch {
+			}
+			attachment.ContentType = new ContentType(header["Content-Type"]);
+			return attachment;
+		}
+
+		/// <summary>
+		/// Creates an instance of the AlternateView class used by the MailMessage class
+		/// to store alternate views of the mail message's content.
+		/// </summary>
+		/// <param name="header">The MIME part header</param>
+		/// <param name="bytes">An array of bytes composing the content of the
+		/// alternate view</param>
+		/// <returns>An initialized instance of the AlternateView class</returns>
+		private AlternateView CreateAlternateView(NameValueCollection header, byte[] bytes) {
+			MemoryStream stream = new MemoryStream(bytes);
+			AlternateView view = new AlternateView(stream,
+				new ContentType(header["Content-Type"]));
+			try {
+				view.ContentId = ParseMessageId(header["Content-Id"]);
+			} catch {
+			}
+			view.ContentType = new ContentType(header["Content-Type"]);
+			return view;
 		}
 	}
 }

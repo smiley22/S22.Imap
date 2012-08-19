@@ -799,7 +799,7 @@ namespace S22.Imap {
 			PauseIdling();
 			SelectMailbox(mailbox);
 			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "COPY " + uid + " "
+			string response = SendCommandGetResponse(tag + "UID COPY " + uid + " "
 				+ destination.QuoteString());
 			ResumeIdling();
 			if (!IsResponseOK(response, tag))
@@ -1243,8 +1243,10 @@ namespace S22.Imap {
 		private void IssueNoop() {
 			string tag = GetTag();
 			string response = SendCommandGetResponse(tag + "NOOP");
-			while (!response.StartsWith(tag))
+			while (response.StartsWith("*"))
 				response = GetResponse();
+			if (!IsResponseOK(response, tag))
+				throw new BadServerResponseException(response);
 		}
 
 		/// <summary>

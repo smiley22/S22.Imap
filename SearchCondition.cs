@@ -169,14 +169,14 @@ namespace S22.Imap {
 		}
 		/// <summary>
 		/// Finds messages with unique identifiers corresponding to the specified
-		/// unique identifier set. Sequence set ranges are permitted.
+		/// unique identifier set.
 		/// </summary>
-		/// <param name="ids">String of whitespace-separated list of unique
-		/// identifiers to search for</param>
+		/// <param name="uids">An array of unique identifiers</param>
 		/// <returns>A SearchCondition object representing the "UID" search
 		/// criterion</returns>
-		public static SearchCondition UID(string ids) {
-			return new SearchCondition { Field = Fields.UID, Value = ids };
+		public static SearchCondition UID(uint[] uids) {
+			return new SearchCondition { Field = Fields.UID,
+				Value = string.Join<uint>(",", uids) };
 		}
 		/// <summary>
 		/// Finds messages that do not have the specified keyword flag set.

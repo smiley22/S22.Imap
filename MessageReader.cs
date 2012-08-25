@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net.Mail;
-using System.Net.Mime;
 using System.Text;
 using System.Text.RegularExpressions;
 
 namespace S22.Imap {
 	internal delegate string GetResponseDelegate();
-
+	
 	/// <summary>
 	/// A helper class for reading a mail message and building a MailMessage
 	/// instance out of it.
 	/// </summary>
+	/// <remarks>The MessageReader class has been deprecated as of version 2.0
+	/// in favor of partial fetching of mail messages.</remarks>
+	[Obsolete("Deprecated as of version 2.0 in favor of partial fetching")]
 	internal class MessageReader {
 		private GetResponseDelegate GetResponse;
 
@@ -359,7 +361,7 @@ namespace S22.Imap {
 				attachment.ContentId = ParseMessageId(header["Content-Id"]);
 			} catch {
 			}
-			attachment.ContentType = new ContentType(header["Content-Type"]);
+			attachment.ContentType = new System.Net.Mime.ContentType(header["Content-Type"]);
 			return attachment;
 		}
 
@@ -374,12 +376,12 @@ namespace S22.Imap {
 		private AlternateView CreateAlternateView(NameValueCollection header, byte[] bytes) {
 			MemoryStream stream = new MemoryStream(bytes);
 			AlternateView view = new AlternateView(stream,
-				new ContentType(header["Content-Type"]));
+				new System.Net.Mime.ContentType(header["Content-Type"]));
 			try {
 				view.ContentId = ParseMessageId(header["Content-Id"]);
 			} catch {
 			}
-			view.ContentType = new ContentType(header["Content-Type"]);
+			view.ContentType = new System.Net.Mime.ContentType(header["Content-Type"]);
 			return view;
 		}
 	}

@@ -25,15 +25,24 @@ IMAP server:
 		}
 	}
 
-Please see the [documentation](http://smiley22.github.com/S22.Imap/Documentation/) for further details on using
-the classes and methods exposed by the S22.Imap namespace. Plenty of example codes are provided.
+[Here](https://github.com/smiley22/S22.Imap/blob/master/Examples.md) are a couple of examples of how to use
+the library. Please also see the [documentation](http://smiley22.github.com/S22.Imap/Documentation/) for
+further details on using the classes and methods exposed by the S22.Imap namespace.
 
+### Features
+
++ Supports IMAP IDLE notifications
++ Supports IMAP over SSL
++ API designed to be very easy to use
++ Allows selectively fetching parts of mail messages
++ Well documented with lots of example code
++ Free to use in commercial and personal projects ([MIT license](https://github.com/smiley22/S22.Imap/blob/master/License.md))
 
 ### Credits
 
 This library is copyright © 2012 Torben Könke.
 
-Parts of this library are heavily based on the AE.Net.Mail project (copyright © 2012 Andy Edinborough).
+Parts of this library are based on the AE.Net.Mail project (copyright © 2012 Andy Edinborough).
 
 
 ### License

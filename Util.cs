@@ -117,7 +117,7 @@ namespace S22.Imap {
 
 		/// <summary>
 		/// Takes a quoted-printable-encoded string and decodes it using
-		/// the specifiednencoding.
+		/// the specified encoding.
 		/// </summary>
 		/// <param name="value">The quoted-printable-encoded string to
 		/// decode</param>

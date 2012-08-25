@@ -684,11 +684,113 @@ namespace S22.Imap {
 		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each
 		/// message which uniquely identifies the message within a mailbox. No two
 		/// messages in a mailbox share the the same UID.</remarks>
-		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMessage"]/*'/>
+		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMessage-1"]/*'/>
 		public MailMessage GetMessage(uint uid, bool seen = true, string mailbox = null) {
-			MailMessage[] M = GetMessages(new uint[] { uid }, seen, mailbox);
+			return GetMessage(uid, FetchOptions.Normal, seen, mailbox);
+		}
+	
+		/// <summary>
+		/// Retrieves a mail message by its unique identifier message attribute with the
+		/// specified fetch option.
+		/// </summary>
+		/// <param name="uid">The unique identifier of the mail message to retrieve</param>
+		/// <param name="options">A value from the FetchOptions enumeration which allows
+		/// for fetching selective parts of a mail message.</param>
+		/// <param name="seen">Set this to true to set the \Seen flag for this message
+		/// on the server.</param>
+		/// <param name="mailbox">The mailbox the message will be retrieved from. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail message could
+		/// not be fetched. The message property of the exception contains the error message
+		/// returned by the server.</exception>
+		/// <returns>An initialized instance of the MailMessage class representing the
+		/// fetched mail message</returns>
+		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each
+		/// message which uniquely identifies the message within a mailbox. No two
+		/// messages in a mailbox share the the same UID.
+		/// <para>If you need more fine-grained control over which parts of a mail
+		/// message to fetch, consider using one of the overloaded GetMessage methods.
+		/// </para>
+		/// </remarks>
+		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMessage-2"]/*'/>
+		public MailMessage GetMessage(uint uid, FetchOptions options,
+			bool seen = true, string mailbox = null) {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			PauseIdling();
+			SelectMailbox(mailbox);
+			string header = GetMailHeader(uid, seen, mailbox);
+			MailMessage message = MessageBuilder.FromHeader(header);
+			if (options == FetchOptions.HeadersOnly) {
+				ResumeIdling();
+				return message;
+			}
+			/* Retrieve and parse the body structure of the mail message */
+			Bodypart[] parts = Bodystructure.Parse(
+				GetBodystructure(uid, mailbox));
+			foreach (Bodypart part in parts) {
+				if (options != FetchOptions.Normal &&
+					part.Disposition.Type == ContentDispositionType.Attachment)
+					continue;
+				if (options == FetchOptions.TextOnly && part.Type != ContentType.Text)
+					continue;
+				/* fetch the content */
+				string content = GetBodypart(uid, part.PartNumber, seen, mailbox);
+				
+				message.AddBodypart(part, content);
+			}
+			ResumeIdling();
+			return message;
+		}
 
-			return M[0];
+		/// <summary>
+		/// Retrieves a mail message by its unique identifier message attribute providing
+		/// fine-grained control over which message parts to retrieve.
+		/// </summary>
+		/// <param name="uid">The unique identifier of the mail message to retrieve</param>
+		/// <param name="callback">A delegate which will be invoked for every MIME body
+		/// part of the mail message to determine whether it should be fetched from the
+		/// server or skipped.</param>
+		/// <param name="seen">Set this to true to set the \Seen flag for this message
+		/// on the server.</param>
+		/// <param name="mailbox">The mailbox the message will be retrieved from. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail message could
+		/// not be fetched. The message property of the exception contains the error message
+		/// returned by the server.</exception>
+		/// <returns>An initialized instance of the MailMessage class representing the
+		/// fetched mail message</returns>
+		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each
+		/// message which uniquely identifies the message within a mailbox. No two
+		/// messages in a mailbox share the the same UID.</remarks>
+		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMessage-3"]/*'/>
+		public MailMessage GetMessage(uint uid, ExaminePartDelegate callback,
+			bool seen = true, string mailbox = null) {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			PauseIdling();
+			SelectMailbox(mailbox);
+			string header = GetMailHeader(uid, seen, mailbox);
+			MailMessage message = MessageBuilder.FromHeader(header);
+			Bodypart[] parts = Bodystructure.Parse(
+				GetBodystructure(uid, mailbox));
+			foreach (Bodypart part in parts) {
+				/* Let delegate decide if part should be fetched or not */
+				if (callback(part) == true) {
+					string content = GetBodypart(uid, part.PartNumber, seen, mailbox);
+					message.AddBodypart(part, content);
+				}
+			}
+			ResumeIdling();
+			return message;
 		}
 
 		/// <summary>
@@ -712,32 +814,210 @@ namespace S22.Imap {
 		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each
 		/// message which uniquely identifies the message within a mailbox. No two
 		/// messages in a mailbox share the the same UID.</remarks>
-		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMessages"]/*'/>
+		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMessages-1"]/*'/>
 		public MailMessage[] GetMessages(uint[] uids, bool seen = true, string mailbox = null) {
+			return GetMessages(uids, FetchOptions.Normal, seen, mailbox);
+		}
+
+		/// <summary>
+		/// Retrieves a set of mail messages by their unique identifier message attributes
+		/// with the specified fetch option.
+		/// </summary>
+		/// <param name="uids">An array of unique identifiers of the mail messages to
+		/// retrieve</param>
+		/// <param name="options">A value from the FetchOptions enumeration which allows
+		/// for fetching selective parts of a mail message.</param>
+		/// <param name="seen">Set this to true to set the \Seen flag for the fetched
+		/// messages on the server.</param>
+		/// <param name="mailbox">The mailbox the messages will be retrieved from. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail messages could
+		/// not be fetched. The message property of the exception contains the error message
+		/// returned by the server.</exception>
+		/// <returns>An array of initialized instances of the MailMessage class representing
+		/// the fetched mail messages</returns>
+		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each
+		/// message which uniquely identifies the message within a mailbox. No two
+		/// messages in a mailbox share the the same UID.</remarks>
+		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMessages-2"]/*'/>
+		public MailMessage[] GetMessages(uint[] uids, FetchOptions options,
+			bool seen = true, string mailbox = null) {
+				List<MailMessage> list = new List<MailMessage>();
+				foreach (uint uid in uids)
+					list.Add(GetMessage(uid, options, seen, mailbox));
+				return list.ToArray();
+		}
+
+		/// <summary>
+		/// Retrieves a set of mail messages by their unique identifier message attributes
+		/// providing fine-grained control over which message parts to retrieve of each
+		/// respective message.
+		/// </summary>
+		/// <param name="uids">An array of unique identifiers of the mail messages to
+		/// retrieve</param>
+		/// <param name="callback">A delegate which will be invoked for every MIME body
+		/// part of a mail message to determine whether it should be fetched from the
+		/// server or skipped.</param>
+		/// <param name="seen">Set this to true to set the \Seen flag for the fetched
+		/// messages on the server.</param>
+		/// <param name="mailbox">The mailbox the messages will be retrieved from. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail messages could
+		/// not be fetched. The message property of the exception contains the error message
+		/// returned by the server.</exception>
+		/// <returns>An array of initialized instances of the MailMessage class representing
+		/// the fetched mail messages</returns>
+		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each
+		/// message which uniquely identifies the message within a mailbox. No two
+		/// messages in a mailbox share the the same UID.</remarks>
+		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMessages-3"]/*'/>
+		public MailMessage[] GetMessages(uint[] uids, ExaminePartDelegate callback,
+			bool seen = true, string mailbox = null) {
+				List<MailMessage> list = new List<MailMessage>();
+				foreach (uint uid in uids)
+					list.Add(GetMessage(uid, callback, seen, mailbox));
+				return list.ToArray();
+		}
+
+		/// <summary>
+		/// Retrieves the mail header for a mail message and returns it as a string.
+		/// </summary>
+		/// <param name="uid">The UID of the mail message to retrieve the mail
+		/// headers for.</param>
+		/// <param name="seen">Set this to true to set the \Seen flag for the fetched
+		/// messages on the server.</param>
+		/// <param name="mailbox">The mailbox the messages will be retrieved from. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail header could
+		/// not be fetched. The message property of the exception contains the error message
+		/// returned by the server.</exception>
+		/// <returns>A string containing the raw mail header of the mail message with the
+		/// specified UID.</returns>
+		private string GetMailHeader(uint uid, bool seen = true, string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
 			PauseIdling();
 			SelectMailbox(mailbox);
-			List<MailMessage> messages = new List<MailMessage>();
+			StringBuilder builder = new StringBuilder();
 			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "UID FETCH " +
-				string.Join<uint>(",", uids) + " (BODY" + (seen ? null : ".PEEK") + "[])");
-
-			/* ready any untagged responses */
+			string response = SendCommandGetResponse(tag + "UID FETCH " + uid + " (BODY" +
+				(seen ? null : ".PEEK") + "[HEADER])");
 			while (response.StartsWith("*")) {
 				Match m = Regex.Match(response, @"\* (\d+) FETCH");
 				if (!m.Success)
 					throw new BadServerResponseException(response);
-				uint uid = Convert.ToUInt32(m.Groups[1].Value);
-				/* fetch the actual message header and data */
-				messages.Add(new MessageReader(GetResponse).
-					ReadMailMessage(uid));
+				while ((response = GetResponse()) != String.Empty)
+					builder.AppendLine(response);
+				if ((response = GetResponse()) != ")")
+					throw new BadServerResponseException(response);
+			}
+			ResumeIdling();
+			if (!IsResponseOK(GetResponse(), tag))
+				throw new BadServerResponseException(response);
+			return builder.ToString();
+		}
+
+		/// <summary>
+		/// Retrieves the body structure for a mail message and returns it as a string.
+		/// </summary>
+		/// <param name="uid">The UID of the mail message to retrieve the body structure
+		/// for.</param>
+		/// <param name="mailbox">The mailbox the messages will be retrieved from. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the body structure could
+		/// not be fetched. The message property of the exception contains the error message
+		/// returned by the server.</exception>
+		/// <returns>A string containing the raw body structure of the mail message with the
+		/// specified UID.</returns>
+		/// <remarks>A body structure is a textual description of the layout of a mail message.
+		/// It is described in some detail in RFC 3501 under 7.4.2 FETCH response.</remarks>
+		private string GetBodystructure(uint uid, string mailbox = null) {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			PauseIdling();
+			SelectMailbox(mailbox);
+			string tag = GetTag();
+			string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
+				" (BODYSTRUCTURE)");
+			string structure = String.Empty;
+			while (response.StartsWith("*")) {
+				Match m = Regex.Match(response,
+					@"BODYSTRUCTURE \((.*)\)\)", RegexOptions.IgnoreCase);
+				if (!m.Success)
+					throw new BadServerResponseException(response);
+				structure = m.Groups[1].Value;
 				response = GetResponse();
 			}
 			ResumeIdling();
 			if (!IsResponseOK(response, tag))
 				throw new BadServerResponseException(response);
-			return messages.ToArray();
+			return structure;
+		}
+
+		/// <summary>
+		/// Retrieves the MIME body part of a multipart message with the specified
+		/// part number.
+		/// </summary>
+		/// <param name="uid">The UID of the mail message to retrieve a MIME body part
+		/// from.</param>
+		/// <param name="partNumber">The part number of the body part to fetch as
+		/// is expected by the IMAP server.</param>
+		/// <param name="seen">Set this to true to set the \Seen flag for the fetched
+		/// messages on the server.</param>
+		/// <param name="mailbox">The mailbox the messages will be retrieved from. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the body part could
+		/// not be fetched. The message property of the exception contains the error message
+		/// returned by the server.</exception>
+		/// <returns>A string containing the downloaded body part of the mail message
+		/// with the specified UID.</returns>
+		private string GetBodypart(uint uid, string partNumber, bool seen = true,
+			string mailbox = null) {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			PauseIdling();
+			SelectMailbox(mailbox);
+			StringBuilder builder = new StringBuilder();
+			string tag = GetTag();
+			string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
+				" (BODY" + (seen ? null : ".PEEK") + "[" + partNumber + "])");
+			while (response.StartsWith("*")) {
+				Match m = Regex.Match(response, @"\* (\d+) FETCH");
+				if (!m.Success)
+					throw new BadServerResponseException(response);
+				while ((response = GetResponse()) != ")") {
+					/* FETCH closing bracket may be last character of response */
+					if (response.EndsWith(")")) {
+						builder.AppendLine(response.TrimEnd(')'));
+						break;
+					}
+					builder.AppendLine(response);
+				}
+			}
+			ResumeIdling();
+			if (!IsResponseOK(GetResponse(), tag))
+				throw new BadServerResponseException(response);
+			return builder.ToString();
 		}
 
 		/// <summary>
@@ -1314,4 +1594,16 @@ namespace S22.Imap {
 			}
 		}
 	}
+
+	/// <summary>
+	/// A delegate which is invoked during a call to GetMessage or GetMessages for every
+	/// MIME part in a multipart mail message. The delegate can examine the MIME body
+	/// part and decide to either include it in the returned mail message or dismiss
+	/// it.
+	/// </summary>
+	/// <param name="part">A MIME body part of a mail message which consists of multiple
+	/// parts.</param>
+	/// <returns>Return true to include the body part in the returned MailMessage object,
+	/// or false to skip it.</returns>
+	public delegate bool ExaminePartDelegate(Bodypart part);
 }

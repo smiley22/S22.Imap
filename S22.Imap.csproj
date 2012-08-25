@@ -42,11 +42,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AuthMethod.cs" />
+    <Compile Include="Bodystructure\Bodypart.cs" />
+    <Compile Include="Bodystructure\Bodystructure.cs" />
+    <Compile Include="Bodystructure\ContentDisposition.cs" />
+    <Compile Include="Bodystructure\ContentTransferEncoding.cs" />
+    <Compile Include="Bodystructure\ContentType.cs" />
+    <Compile Include="Bodystructure\Reader.cs" />
+    <Compile Include="FetchOptions.cs" />
     <Compile Include="IdleEvents.cs" />
     <Compile Include="ImapClient.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="MailboxQuota.cs" />
     <Compile Include="MailboxStatus.cs" />
+    <Compile Include="MessageBuilder.cs" />
     <Compile Include="MessageFlags.cs" />
     <Compile Include="MessageReader.cs" />
     <Compile Include="MIMEPart.cs" />

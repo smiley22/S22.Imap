@@ -233,18 +233,18 @@ namespace S22.Imap {
 						password.QuoteString());
 					break;
 				case AuthMethod.CRAMMD5:
-          response = SendCommandGetResponse(tag + "AUTHENTICATE CRAM-MD5");
-          /* retrieve server key */
-          string key = Encoding.Default.GetString(
+					response = SendCommandGetResponse(tag + "AUTHENTICATE CRAM-MD5");
+					/* retrieve server key */
+					string key = Encoding.Default.GetString(
 						Convert.FromBase64String(response.Replace("+ ", "")));
 					/* compute the hash */
-          using (var kMd5 = new HMACMD5(Encoding.ASCII.GetBytes(password))) {
-            byte[] hash1 = kMd5.ComputeHash(Encoding.ASCII.GetBytes(key));
-            key = BitConverter.ToString(hash1).ToLower().Replace("-", "");
-            string command = Convert.ToBase64String(
+					using (var kMd5 = new HMACMD5(Encoding.ASCII.GetBytes(password))) {
+						byte[] hash1 = kMd5.ComputeHash(Encoding.ASCII.GetBytes(key));
+						key = BitConverter.ToString(hash1).ToLower().Replace("-", "");
+						string command = Convert.ToBase64String(
 							Encoding.ASCII.GetBytes(username + " " + key));
-            response = SendCommandGetResponse(command);
-          }
+						response = SendCommandGetResponse(command);
+					}
 					break;
 				case AuthMethod.SaslOAuth:
 					response = SendCommandGetResponse(tag + "AUTHENTICATE XOAUTH " + password);
@@ -1343,6 +1343,9 @@ namespace S22.Imap {
 		private void StartIdling() {
 			if (idling)
 				return;
+			if (!Supports("IDLE"))
+				throw new InvalidOperationException("The server does not support the " +
+					"IMAP4 IDLE command");
 			/* Make sure a mailbox is selected */
 			SelectMailbox(null);
 			idling = true;
@@ -1390,9 +1393,6 @@ namespace S22.Imap {
 				throw new NotAuthenticatedException();
 			if (!idling)
 				return;
-			if (!Supports("IDLE"))
-				throw new InvalidOperationException("The server does not support the " +
-					"IMAP4 IDLE command");
 			/* Send server "DONE" continuation-command to indicate we no longer wish
 			 * to receive idle notifications. The server response is consumed by
 			 * the idle thread and signals it to shut down.
@@ -1425,9 +1425,6 @@ namespace S22.Imap {
 				throw new NotAuthenticatedException();
 			if (!idling)
 				return;
-			if (!Supports("IDLE"))
-				throw new InvalidOperationException("The server does not support the " +
-					"IMAP4 IDLE command");
 			/* Make sure a mailbox is selected */
 			SelectMailbox(null);
 			string tag = GetTag();

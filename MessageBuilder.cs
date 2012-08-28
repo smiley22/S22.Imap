@@ -31,7 +31,7 @@ namespace S22.Imap {
 				if (value != String.Empty)
 					m.Headers.Add(key, value);
 			}
-			Match ma = Regex.Match(header["Subject"], @"=\?([A-Za-z0-9\-]+)");
+			Match ma = Regex.Match(header["Subject"] ?? "", @"=\?([A-Za-z0-9\-]+)");
 			if (ma.Success) {
 				/* encoded-word subject */
 				m.SubjectEncoding = Encoding.GetEncoding(ma.Groups[1].Value);

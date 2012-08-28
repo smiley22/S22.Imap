@@ -33,6 +33,7 @@ namespace S22.Imap {
 		}
 		private bool idling;
 		private Thread idleThread;
+		private int pauseRefCount = 0;
 
 		/// <summary>
 		/// The default mailbox to operate on, when no specific mailbox name was indicated
@@ -1348,8 +1349,17 @@ namespace S22.Imap {
 					"IMAP4 IDLE command");
 			/* Make sure a mailbox is selected */
 			SelectMailbox(null);
+			string tag = GetTag();
+			string response = SendCommandGetResponse(tag + "IDLE");
+			/* Server must respond with a '+' continuation response */
+			if (!response.StartsWith("+"))
+				throw new BadServerResponseException(response);
+			/* setup and start the idle thread */
+			if (idleThread != null)
+				throw new ApplicationException("idleThread is not null");
 			idling = true;
-			ResumeIdling();
+			idleThread = new Thread(IdleLoop);
+			idleThread.Start();
 		}
 
 		/// <summary>
@@ -1368,7 +1378,14 @@ namespace S22.Imap {
 		/// <seealso cref="StartIdling"/>
 		/// <seealso cref="PauseIdling"/>
 		private void StopIdling() {
-			PauseIdling();
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			if (!idling)
+				return;
+			SendCommand("DONE");
+			/* Wait until idle thread has shutdown */
+			idleThread.Join();
+			idleThread = null;
 			idling = false;
 		}
 
@@ -1392,6 +1409,10 @@ namespace S22.Imap {
 			if (!Authed)
 				throw new NotAuthenticatedException();
 			if (!idling)
+				return;
+			Console.WriteLine("Pause Reference Count: " + pauseRefCount);
+			pauseRefCount = pauseRefCount + 1;
+			if (pauseRefCount != 1)
 				return;
 			/* Send server "DONE" continuation-command to indicate we no longer wish
 			 * to receive idle notifications. The server response is consumed by
@@ -1424,6 +1445,10 @@ namespace S22.Imap {
 			if (!Authed)
 				throw new NotAuthenticatedException();
 			if (!idling)
+				return;
+			Console.WriteLine("Resume Reference Count:" + pauseRefCount);
+			pauseRefCount = pauseRefCount - 1;
+			if (pauseRefCount != 0)
 				return;
 			/* Make sure a mailbox is selected */
 			SelectMailbox(null);

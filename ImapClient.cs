@@ -1410,7 +1410,6 @@ namespace S22.Imap {
 				throw new NotAuthenticatedException();
 			if (!idling)
 				return;
-			Console.WriteLine("Pause Reference Count: " + pauseRefCount);
 			pauseRefCount = pauseRefCount + 1;
 			if (pauseRefCount != 1)
 				return;
@@ -1446,7 +1445,6 @@ namespace S22.Imap {
 				throw new NotAuthenticatedException();
 			if (!idling)
 				return;
-			Console.WriteLine("Resume Reference Count:" + pauseRefCount);
 			pauseRefCount = pauseRefCount - 1;
 			if (pauseRefCount != 0)
 				return;
@@ -1478,21 +1476,31 @@ namespace S22.Imap {
 				Match m = Regex.Match(response, @"\*\s+(\d+)\s+(\w+)");
 				if (!m.Success)
 					continue;
-				/* Examine the notification */
 				uint numberOfMessages = Convert.ToUInt32(m.Groups[1].Value);
 
+				/* Pause IDLE mode temporarily without shutting the thread down */
+				response = SendCommandGetResponse("DONE");
+				if (!response.Contains("OK IDLE"))
+					throw new BadServerResponseException(response);
+				idling = false;
+
+				/* Use the IdleLoop thread to fire the event */
 				switch (m.Groups[2].Value.ToUpper()) {
 					case "EXISTS":
-						ThreadPool.QueueUserWorkItem(callback => {
 							newMessageEvent.Raise(this,
 								new IdleMessageEventArgs(numberOfMessages, GetHighestUID(), this));
-						});
 						break;
 					case "EXPUNGE":
-						ThreadPool.QueueUserWorkItem(callback => messageDeleteEvent.Raise(
-							this, new IdleMessageEventArgs(numberOfMessages, GetHighestUID(), this)));
+						messageDeleteEvent.Raise(
+							this, new IdleMessageEventArgs(numberOfMessages, GetHighestUID(), this));
 						break;
 				}
+
+				/* Continue IDLE mode */
+				response = SendCommandGetResponse(GetTag() + "IDLE");
+				if (!response.StartsWith("+"))
+					throw new BadServerResponseException(response);
+				idling = true;
 			}
 		}
 

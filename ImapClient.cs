@@ -32,8 +32,9 @@ namespace S22.Imap {
 			}
 		}
 		private bool idling;
-		private Thread idleThread;
+		private Thread idleThread, idleDispatch;
 		private int pauseRefCount = 0;
+		private SafeQueue<string> idleEvents = new SafeQueue<string>();
 
 		/// <summary>
 		/// The default mailbox to operate on, when no specific mailbox name was indicated
@@ -195,7 +196,7 @@ namespace S22.Imap {
 				stream = sslStream;
 			}
 			/* Server issues untagged OK greeting upon connect */
-			string greeting = GetResponse();			
+			string greeting = GetResponse();
 			if (!IsResponseOK(greeting))
 				throw new BadServerResponseException(greeting);
 		}
@@ -1468,39 +1469,43 @@ namespace S22.Imap {
 		/// notifications are to be received.
 		/// </summary>
 		private void IdleLoop() {
+			if (idleDispatch == null) {
+				idleDispatch = new Thread(EventDispatcher);
+				idleDispatch.Start();
+			}
+
 			while (true) {
 				string response = WaitForResponse();
 				/* A request was made to stop idling so quit the thread */
 				if (response.Contains("OK IDLE"))
-					return;
+					return; 
+				/* Let the dispatcher thread take care of the IDLE notification so we
+				 * can go back to receiving responses */
+				idleEvents.Enqueue(response);
+			}
+		}
+
+		/// <summary>
+		/// Blocks on a queue and wakes up whenever a new notification is put into the
+		/// queue. The notification is then examined and dispatches as an event.
+		/// </summary>
+		private void EventDispatcher() {
+			while (true) {
+				string response = idleEvents.Dequeue();
 				Match m = Regex.Match(response, @"\*\s+(\d+)\s+(\w+)");
 				if (!m.Success)
 					continue;
 				uint numberOfMessages = Convert.ToUInt32(m.Groups[1].Value);
-
-				/* Pause IDLE mode temporarily without shutting the thread down */
-				response = SendCommandGetResponse("DONE");
-				if (!response.Contains("OK IDLE"))
-					throw new BadServerResponseException(response);
-				idling = false;
-
-				/* Use the IdleLoop thread to fire the event */
 				switch (m.Groups[2].Value.ToUpper()) {
 					case "EXISTS":
-							newMessageEvent.Raise(this,
-								new IdleMessageEventArgs(numberOfMessages, GetHighestUID(), this));
+								newMessageEvent.Raise(this,
+									new IdleMessageEventArgs(numberOfMessages, GetHighestUID(), this));
 						break;
 					case "EXPUNGE":
-						messageDeleteEvent.Raise(
-							this, new IdleMessageEventArgs(numberOfMessages, GetHighestUID(), this));
+							messageDeleteEvent.Raise(
+								this, new IdleMessageEventArgs(numberOfMessages, GetHighestUID(), this));
 						break;
 				}
-
-				/* Continue IDLE mode */
-				response = SendCommandGetResponse(GetTag() + "IDLE");
-				if (!response.StartsWith("+"))
-					throw new BadServerResponseException(response);
-				idling = true;
 			}
 		}
 

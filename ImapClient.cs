@@ -1590,7 +1590,6 @@ namespace S22.Imap {
 				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
 			}
-			Console.WriteLine("Issued a NOOP");
 		}
 
 		/// <summary>

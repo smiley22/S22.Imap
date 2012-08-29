@@ -1411,7 +1411,7 @@ namespace S22.Imap {
 			idleThread = new Thread(IdleLoop);
 			idleThread.Start();
 			/* setup a timer to issue NOOPs every once in a while */
-			noopTimer.Interval = 1000 * 4;
+			noopTimer.Interval = 1000 * 60 * 10;
 			noopTimer.Elapsed += IssueNoop;
 			noopTimer.Start();
 		}

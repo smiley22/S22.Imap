@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Timers;
 
 namespace S22.Imap {
 	/// <summary>
@@ -20,6 +21,7 @@ namespace S22.Imap {
 		private TcpClient client;
 		private readonly object readLock = new object();
 		private readonly object writeLock = new object();
+		private readonly object sequenceLock = new object();
 		private string[] capabilities;
 		private int tag = 0;
 		private string selectedMailbox;
@@ -35,6 +37,7 @@ namespace S22.Imap {
 		private Thread idleThread, idleDispatch;
 		private int pauseRefCount = 0;
 		private SafeQueue<string> idleEvents = new SafeQueue<string>();
+		private System.Timers.Timer noopTimer = new System.Timers.Timer();
 
 		/// <summary>
 		/// The default mailbox to operate on, when no specific mailbox name was indicated
@@ -273,15 +276,17 @@ namespace S22.Imap {
 		public void Logout() {
 			if (!Authed)
 				return;
-			StopIdling();
-			string tag = GetTag();
-			string bye = SendCommandGetResponse(tag + "LOGOUT");
-			if (!bye.StartsWith("* BYE"))
-				throw new BadServerResponseException(bye);
-			string response = GetResponse();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
-			Authed = false;
+			lock (sequenceLock) {
+				StopIdling();
+				string tag = GetTag();
+				string bye = SendCommandGetResponse(tag + "LOGOUT");
+				if (!bye.StartsWith("* BYE"))
+					throw new BadServerResponseException(bye);
+				string response = GetResponse();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+				Authed = false;
+			}
 		}
 
 		/// <summary>
@@ -359,21 +364,23 @@ namespace S22.Imap {
 		public string[] Capabilities() {
 			if (capabilities != null)
 				return capabilities;
-			PauseIdling();
-			string tag = GetTag();
-			string command = tag + "CAPABILITY";
-			string response = SendCommandGetResponse(command);
-			/* Server is required to issue untagged capability response */
-			if (response.StartsWith("* CAPABILITY "))
-				response = response.Substring(13);
-			capabilities = response.Trim().Split(' ')
-				.Select(s => s.ToUpperInvariant()).ToArray();
-			/* should return OK */
-			response = GetResponse();
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
-			return capabilities;
+			lock (sequenceLock) {
+				PauseIdling();
+				string tag = GetTag();
+				string command = tag + "CAPABILITY";
+				string response = SendCommandGetResponse(command);
+				/* Server is required to issue untagged capability response */
+				if (response.StartsWith("* CAPABILITY "))
+					response = response.Substring(13);
+				capabilities = response.Trim().Split(' ')
+					.Select(s => s.ToUpperInvariant()).ToArray();
+				/* should return OK */
+				response = GetResponse();
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+				return capabilities;
+			}
 		}
 
 		/// <summary>
@@ -404,13 +411,15 @@ namespace S22.Imap {
 		public void RenameMailbox(string mailbox, string newName) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "RENAME " +
-				mailbox.QuoteString() + " " + newName.QuoteString());
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
+			lock (sequenceLock) {
+				PauseIdling();
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "RENAME " +
+					mailbox.QuoteString() + " " + newName.QuoteString());
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+			}
 		}
 
 		/// <summary>
@@ -426,13 +435,15 @@ namespace S22.Imap {
 		public void DeleteMailbox(string mailbox) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "DELETE " +
-				mailbox.QuoteString());
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
+			lock (sequenceLock) {
+				PauseIdling();
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "DELETE " +
+					mailbox.QuoteString());
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+			}
 		}
 
 		/// <summary>
@@ -448,13 +459,15 @@ namespace S22.Imap {
 		public void CreateMailbox(string mailbox) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "CREATE " +
-				mailbox.QuoteString());
-			ResumeIdling();
-			if(!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
+			lock (sequenceLock) {
+				PauseIdling();
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "CREATE " +
+					mailbox.QuoteString());
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+			}
 		}
 
 		/// <summary>
@@ -476,19 +489,21 @@ namespace S22.Imap {
 			/* requested mailbox is already selected */
 			if (selectedMailbox == mailbox)
 				return;
-			PauseIdling();
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "SELECT " +
-				mailbox.QuoteString());
-			/* evaluate untagged data */
-			while (response.StartsWith("*")) {
-				// Fixme: evaluate data
-				response = GetResponse();
+			lock (sequenceLock) {
+				PauseIdling();
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "SELECT " +
+					mailbox.QuoteString());
+				/* evaluate untagged data */
+				while (response.StartsWith("*")) {
+					// Fixme: evaluate data
+					response = GetResponse();
+				}
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+				selectedMailbox = mailbox;
 			}
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
-			selectedMailbox = mailbox;
 		}
 
 		/// <summary>
@@ -506,30 +521,32 @@ namespace S22.Imap {
 		public string[] ListMailboxes() {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			List<string> mailboxes = new List<string>();
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "LIST \"\" \"*\"");
-			while (response.StartsWith("*")) {
-				Match m = Regex.Match(response,
-					"\\* LIST \\((.*)\\)\\s+\"(.+)\"\\s+\"(.+)\"");
-				if (!m.Success)
-					continue;
-				string[] attr = m.Groups[1].Value.Split(new char[] { ' ' });
-				bool add = true;
-				foreach (string a in attr) {
-					/* Only list selectable mailboxes */
-					if (a.ToLower() == @"\noselect")
-						add = false;
+			lock (sequenceLock) {
+				PauseIdling();
+				List<string> mailboxes = new List<string>();
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "LIST \"\" \"*\"");
+				while (response.StartsWith("*")) {
+					Match m = Regex.Match(response,
+						"\\* LIST \\((.*)\\)\\s+\"(.+)\"\\s+\"(.+)\"");
+					if (!m.Success)
+						continue;
+					string[] attr = m.Groups[1].Value.Split(new char[] { ' ' });
+					bool add = true;
+					foreach (string a in attr) {
+						/* Only list selectable mailboxes */
+						if (a.ToLower() == @"\noselect")
+							add = false;
+					}
+					if (add)
+						mailboxes.Add(m.Groups[3].Value);
+					response = GetResponse();
 				}
-				if(add)
-					mailboxes.Add(m.Groups[3].Value);
-				response = GetResponse();
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+				return mailboxes.ToArray();
 			}
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
-			return mailboxes.ToArray();
 		}
 
 		/// <summary>
@@ -549,17 +566,19 @@ namespace S22.Imap {
 		public void Expunge(string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			SelectMailbox(mailbox);
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "EXPUNGE");
-			/* Server is required to send an untagged response for each message that is
-			 * deleted before sending OK */
-			while (response.StartsWith("*"))
-				response = GetResponse();
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
+			lock (sequenceLock) {
+				PauseIdling();
+				SelectMailbox(mailbox);
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "EXPUNGE");
+				/* Server is required to send an untagged response for each message that is
+				 * deleted before sending OK */
+				while (response.StartsWith("*"))
+					response = GetResponse();
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+			}
 		}
 
 		/// <summary>
@@ -583,25 +602,27 @@ namespace S22.Imap {
 		public MailboxStatus GetStatus(string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			if (mailbox == null)
-				mailbox = defaultMailbox;
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "STATUS " +
-				mailbox.QuoteString() + " (MESSAGES UNSEEN)");
 			int messages = 0, unread = 0;
-			while (response.StartsWith("*")) {
-				Match m = Regex.Match(response, @"\* STATUS.*MESSAGES (\d+)");
-				if (m.Success)
-					messages = Convert.ToInt32(m.Groups[1].Value);
-				m = Regex.Match(response, @"\* STATUS.*UNSEEN (\d+)");
-				if (m.Success)
-					unread = Convert.ToInt32(m.Groups[1].Value);
-				response = GetResponse();
+			lock (sequenceLock) {
+				PauseIdling();
+				if (mailbox == null)
+					mailbox = defaultMailbox;
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "STATUS " +
+					mailbox.QuoteString() + " (MESSAGES UNSEEN)");
+				while (response.StartsWith("*")) {
+					Match m = Regex.Match(response, @"\* STATUS.*MESSAGES (\d+)");
+					if (m.Success)
+						messages = Convert.ToInt32(m.Groups[1].Value);
+					m = Regex.Match(response, @"\* STATUS.*UNSEEN (\d+)");
+					if (m.Success)
+						unread = Convert.ToInt32(m.Groups[1].Value);
+					response = GetResponse();
+				}
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
 			}
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
 
 			/* Collect quota information if server supports it */
 			UInt64 usedStorage = 0, freeStorage = 0;
@@ -645,25 +666,27 @@ namespace S22.Imap {
 		public uint[] Search(SearchCondition criteria, string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			SelectMailbox(mailbox);
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "UID SEARCH " +
-				criteria.ToString());
-			List<uint> result = new List<uint>();
-			while (response.StartsWith("*")) {
-				Match m = Regex.Match(response, @"^\* SEARCH (.*)");
-				if (m.Success) {
-					string[] v = m.Groups[1].Value.Trim().Split(' ');
-					foreach (string s in v)
-						result.Add(Convert.ToUInt32(s));
+			lock (sequenceLock) {
+				PauseIdling();
+				SelectMailbox(mailbox);
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "UID SEARCH " +
+					criteria.ToString());
+				List<uint> result = new List<uint>();
+				while (response.StartsWith("*")) {
+					Match m = Regex.Match(response, @"^\* SEARCH (.*)");
+					if (m.Success) {
+						string[] v = m.Groups[1].Value.Trim().Split(' ');
+						foreach (string s in v)
+							result.Add(Convert.ToUInt32(s));
+					}
+					response = GetResponse();
 				}
-				response = GetResponse();
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+				return result.ToArray();
 			}
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
-			return result.ToArray();
 		}
 
 		/// <summary>
@@ -723,30 +746,32 @@ namespace S22.Imap {
 			bool seen = true, string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			SelectMailbox(mailbox);
-			string header = GetMailHeader(uid, seen, mailbox);
-			MailMessage message = MessageBuilder.FromHeader(header);
-			if (options == FetchOptions.HeadersOnly) {
+			lock (sequenceLock) {
+				PauseIdling();
+				SelectMailbox(mailbox);
+				string header = GetMailHeader(uid, seen, mailbox);
+				MailMessage message = MessageBuilder.FromHeader(header);
+				if (options == FetchOptions.HeadersOnly) {
+					ResumeIdling();
+					return message;
+				}
+				/* Retrieve and parse the body structure of the mail message */
+				Bodypart[] parts = Bodystructure.Parse(
+					GetBodystructure(uid, mailbox));
+				foreach (Bodypart part in parts) {
+					if (options != FetchOptions.Normal &&
+						part.Disposition.Type == ContentDispositionType.Attachment)
+						continue;
+					if (options == FetchOptions.TextOnly && part.Type != ContentType.Text)
+						continue;
+					/* fetch the content */
+					string content = GetBodypart(uid, part.PartNumber, seen, mailbox);
+
+					message.AddBodypart(part, content);
+				}
 				ResumeIdling();
 				return message;
 			}
-			/* Retrieve and parse the body structure of the mail message */
-			Bodypart[] parts = Bodystructure.Parse(
-				GetBodystructure(uid, mailbox));
-			foreach (Bodypart part in parts) {
-				if (options != FetchOptions.Normal &&
-					part.Disposition.Type == ContentDispositionType.Attachment)
-					continue;
-				if (options == FetchOptions.TextOnly && part.Type != ContentType.Text)
-					continue;
-				/* fetch the content */
-				string content = GetBodypart(uid, part.PartNumber, seen, mailbox);
-				
-				message.AddBodypart(part, content);
-			}
-			ResumeIdling();
-			return message;
 		}
 
 		/// <summary>
@@ -778,21 +803,23 @@ namespace S22.Imap {
 			bool seen = true, string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			SelectMailbox(mailbox);
-			string header = GetMailHeader(uid, seen, mailbox);
-			MailMessage message = MessageBuilder.FromHeader(header);
-			Bodypart[] parts = Bodystructure.Parse(
-				GetBodystructure(uid, mailbox));
-			foreach (Bodypart part in parts) {
-				/* Let delegate decide if part should be fetched or not */
-				if (callback(part) == true) {
-					string content = GetBodypart(uid, part.PartNumber, seen, mailbox);
-					message.AddBodypart(part, content);
+			lock (sequenceLock) {
+				PauseIdling();
+				SelectMailbox(mailbox);
+				string header = GetMailHeader(uid, seen, mailbox);
+				MailMessage message = MessageBuilder.FromHeader(header);
+				Bodypart[] parts = Bodystructure.Parse(
+					GetBodystructure(uid, mailbox));
+				foreach (Bodypart part in parts) {
+					/* Let delegate decide if part should be fetched or not */
+					if (callback(part) == true) {
+						string content = GetBodypart(uid, part.PartNumber, seen, mailbox);
+						message.AddBodypart(part, content);
+					}
 				}
+				ResumeIdling();
+				return message;
 			}
-			ResumeIdling();
-			return message;
 		}
 
 		/// <summary>
@@ -910,25 +937,27 @@ namespace S22.Imap {
 		private string GetMailHeader(uint uid, bool seen = true, string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			SelectMailbox(mailbox);
-			StringBuilder builder = new StringBuilder();
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "UID FETCH " + uid + " (BODY" +
-				(seen ? null : ".PEEK") + "[HEADER])");
-			while (response.StartsWith("*")) {
-				Match m = Regex.Match(response, @"\* (\d+) FETCH");
-				if (!m.Success)
+			lock (sequenceLock) {
+				PauseIdling();
+				SelectMailbox(mailbox);
+				StringBuilder builder = new StringBuilder();
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "UID FETCH " + uid + " (BODY" +
+					(seen ? null : ".PEEK") + "[HEADER])");
+				while (response.StartsWith("*")) {
+					Match m = Regex.Match(response, @"\* (\d+) FETCH");
+					if (!m.Success)
+						throw new BadServerResponseException(response);
+					while ((response = GetResponse()) != String.Empty)
+						builder.AppendLine(response);
+					if ((response = GetResponse()) != ")")
+						throw new BadServerResponseException(response);
+				}
+				ResumeIdling();
+				if (!IsResponseOK(GetResponse(), tag))
 					throw new BadServerResponseException(response);
-				while ((response = GetResponse()) != String.Empty)
-					builder.AppendLine(response);
-				if ((response = GetResponse()) != ")")
-					throw new BadServerResponseException(response);
+				return builder.ToString();
 			}
-			ResumeIdling();
-			if (!IsResponseOK(GetResponse(), tag))
-				throw new BadServerResponseException(response);
-			return builder.ToString();
 		}
 
 		/// <summary>
@@ -952,24 +981,26 @@ namespace S22.Imap {
 		private string GetBodystructure(uint uid, string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			SelectMailbox(mailbox);
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
-				" (BODYSTRUCTURE)");
-			string structure = String.Empty;
-			while (response.StartsWith("*")) {
-				Match m = Regex.Match(response,
-					@"BODYSTRUCTURE \((.*)\)\)", RegexOptions.IgnoreCase);
-				if (!m.Success)
+			lock (sequenceLock) {
+				PauseIdling();
+				SelectMailbox(mailbox);
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
+					" (BODYSTRUCTURE)");
+				string structure = String.Empty;
+				while (response.StartsWith("*")) {
+					Match m = Regex.Match(response,
+						@"BODYSTRUCTURE \((.*)\)\)", RegexOptions.IgnoreCase);
+					if (!m.Success)
+						throw new BadServerResponseException(response);
+					structure = m.Groups[1].Value;
+					response = GetResponse();
+				}
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
-				structure = m.Groups[1].Value;
-				response = GetResponse();
+				return structure;
 			}
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
-			return structure;
 		}
 
 		/// <summary>
@@ -997,29 +1028,31 @@ namespace S22.Imap {
 			string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			SelectMailbox(mailbox);
-			StringBuilder builder = new StringBuilder();
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
-				" (BODY" + (seen ? null : ".PEEK") + "[" + partNumber + "])");
-			while (response.StartsWith("*")) {
-				Match m = Regex.Match(response, @"\* (\d+) FETCH");
-				if (!m.Success)
-					throw new BadServerResponseException(response);
-				while ((response = GetResponse()) != ")") {
-					/* FETCH closing bracket may be last character of response */
-					if (response.EndsWith(")")) {
-						builder.AppendLine(response.TrimEnd(')'));
-						break;
+			lock (sequenceLock) {
+				PauseIdling();
+				SelectMailbox(mailbox);
+				StringBuilder builder = new StringBuilder();
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
+					" (BODY" + (seen ? null : ".PEEK") + "[" + partNumber + "])");
+				while (response.StartsWith("*")) {
+					Match m = Regex.Match(response, @"\* (\d+) FETCH");
+					if (!m.Success)
+						throw new BadServerResponseException(response);
+					while ((response = GetResponse()) != ")") {
+						/* FETCH closing bracket may be last character of response */
+						if (response.EndsWith(")")) {
+							builder.AppendLine(response.TrimEnd(')'));
+							break;
+						}
+						builder.AppendLine(response);
 					}
-					builder.AppendLine(response);
 				}
+				ResumeIdling();
+				if (!IsResponseOK(GetResponse(), tag))
+					throw new BadServerResponseException(response);
+				return builder.ToString();
 			}
-			ResumeIdling();
-			if (!IsResponseOK(GetResponse(), tag))
-				throw new BadServerResponseException(response);
-			return builder.ToString();
 		}
 
 		/// <summary>
@@ -1040,22 +1073,24 @@ namespace S22.Imap {
 		private uint GetHighestUID(string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			SelectMailbox(mailbox);
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "STATUS " +
-				selectedMailbox.QuoteString() + " (UIDNEXT)");
-			uint nextUID = 0;
-			while (response.StartsWith("*")) {
-				Match m = Regex.Match(response, @"\* STATUS.*UIDNEXT (\d+)");
-				if (m.Success)
-					nextUID = Convert.ToUInt32(m.Groups[1].Value);
-				response = GetResponse();
+			lock (sequenceLock) {
+				PauseIdling();
+				SelectMailbox(mailbox);
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "STATUS " +
+					selectedMailbox.QuoteString() + " (UIDNEXT)");
+				uint nextUID = 0;
+				while (response.StartsWith("*")) {
+					Match m = Regex.Match(response, @"\* STATUS.*UIDNEXT (\d+)");
+					if (m.Success)
+						nextUID = Convert.ToUInt32(m.Groups[1].Value);
+					response = GetResponse();
+				}
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+				return (nextUID - 1);
 			}
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
-			return (nextUID - 1);
 		}
 
 		/// <summary>
@@ -1078,14 +1113,16 @@ namespace S22.Imap {
 		public void CopyMessage(uint uid, string destination, string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			SelectMailbox(mailbox);
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "UID COPY " + uid + " "
-				+ destination.QuoteString());
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
+			lock (sequenceLock) {
+				PauseIdling();
+				SelectMailbox(mailbox);
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "UID COPY " + uid + " "
+					+ destination.QuoteString());
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+			}
 		}
 
 		/// <summary>
@@ -1128,17 +1165,19 @@ namespace S22.Imap {
 		public void DeleteMessage(uint uid, string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			SelectMailbox(mailbox);
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "UID STORE " + uid +
-				@" +FLAGS.SILENT (\Deleted \Seen)");
-			while (response.StartsWith("*")) {
-				response = GetResponse();
+			lock (sequenceLock) {
+				PauseIdling();
+				SelectMailbox(mailbox);
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "UID STORE " + uid +
+					@" +FLAGS.SILENT (\Deleted \Seen)");
+				while (response.StartsWith("*")) {
+					response = GetResponse();
+				}
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
 			}
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
 		}
 
 		/// <summary>
@@ -1162,27 +1201,29 @@ namespace S22.Imap {
 		public MessageFlag[] GetMessageFlags(uint uid, string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			SelectMailbox(mailbox);
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
-				" (FLAGS)");
-			List<MessageFlag> flags = new List<MessageFlag>();
-			while (response.StartsWith("*")) {
-				Match m = Regex.Match(response, @"FLAGS \(([\w\s\\]*)\)");
-				if (!m.Success)
-					continue;
-				string[] setFlags = m.Groups[1].Value.Split(new char[] { ' ' });
-				foreach (string flag in setFlags) {
-					if (messageFlagsMapping.ContainsKey(flag))
-						flags.Add(messageFlagsMapping[flag]);
+			lock (sequenceLock) {
+				PauseIdling();
+				SelectMailbox(mailbox);
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
+					" (FLAGS)");
+				List<MessageFlag> flags = new List<MessageFlag>();
+				while (response.StartsWith("*")) {
+					Match m = Regex.Match(response, @"FLAGS \(([\w\s\\]*)\)");
+					if (!m.Success)
+						continue;
+					string[] setFlags = m.Groups[1].Value.Split(new char[] { ' ' });
+					foreach (string flag in setFlags) {
+						if (messageFlagsMapping.ContainsKey(flag))
+							flags.Add(messageFlagsMapping[flag]);
+					}
+					response = GetResponse();
 				}
-				response = GetResponse();
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+				return flags.ToArray();
 			}
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
-			return flags.ToArray();
 		}
 
 		/// <summary>
@@ -1210,20 +1251,22 @@ namespace S22.Imap {
 		public void SetMessageFlags(uint uid, string mailbox, params MessageFlag[] flags) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			SelectMailbox(mailbox);
-			string flagsString = "";
-			foreach (MessageFlag f in flags)
-				flagsString = flagsString + @"\" + f + " ";
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "UID STORE " + uid +
-				@" FLAGS.SILENT (" + flagsString.Trim() + ")");
-			while (response.StartsWith("*")) {
-				response = GetResponse();
+			lock (sequenceLock) {
+				PauseIdling();
+				SelectMailbox(mailbox);
+				string flagsString = "";
+				foreach (MessageFlag f in flags)
+					flagsString = flagsString + @"\" + f + " ";
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "UID STORE " + uid +
+					@" FLAGS.SILENT (" + flagsString.Trim() + ")");
+				while (response.StartsWith("*")) {
+					response = GetResponse();
+				}
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
 			}
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
 		}
 
 		/// <summary>
@@ -1252,20 +1295,22 @@ namespace S22.Imap {
 		public void AddMessageFlags(uint uid, string mailbox, params MessageFlag[] flags) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			SelectMailbox(mailbox);
-			string flagsString = "";
-			foreach (MessageFlag f in flags)
-				flagsString = flagsString + @"\" + f + " ";
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "UID STORE " + uid +
-				@" +FLAGS.SILENT (" + flagsString.Trim() + ")");
-			while (response.StartsWith("*")) {
-				response = GetResponse();
+			lock (sequenceLock) {
+				PauseIdling();
+				SelectMailbox(mailbox);
+				string flagsString = "";
+				foreach (MessageFlag f in flags)
+					flagsString = flagsString + @"\" + f + " ";
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "UID STORE " + uid +
+					@" +FLAGS.SILENT (" + flagsString.Trim() + ")");
+				while (response.StartsWith("*")) {
+					response = GetResponse();
+				}
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
 			}
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
 		}
 
 		/// <summary>
@@ -1294,20 +1339,22 @@ namespace S22.Imap {
 		public void RemoveMessageFlags(uint uid, string mailbox, params MessageFlag[] flags) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			PauseIdling();
-			SelectMailbox(mailbox);
-			string flagsString = "";
-			foreach (MessageFlag f in flags)
-				flagsString = flagsString + @"\" + f + " ";
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "UID STORE " + uid +
-				@" -FLAGS.SILENT (" + flagsString.Trim() + ")");
-			while (response.StartsWith("*")) {
-				response = GetResponse();
+			lock (sequenceLock) {
+				PauseIdling();
+				SelectMailbox(mailbox);
+				string flagsString = "";
+				foreach (MessageFlag f in flags)
+					flagsString = flagsString + @"\" + f + " ";
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "UID STORE " + uid +
+					@" -FLAGS.SILENT (" + flagsString.Trim() + ")");
+				while (response.StartsWith("*")) {
+					response = GetResponse();
+				}
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
 			}
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
 		}
 
 		/// <summary>
@@ -1348,19 +1395,25 @@ namespace S22.Imap {
 			if (!Supports("IDLE"))
 				throw new InvalidOperationException("The server does not support the " +
 					"IMAP4 IDLE command");
-			/* Make sure a mailbox is selected */
-			SelectMailbox(null);
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "IDLE");
-			/* Server must respond with a '+' continuation response */
-			if (!response.StartsWith("+"))
-				throw new BadServerResponseException(response);
+			lock (sequenceLock) {
+				/* Make sure a mailbox is selected */
+				SelectMailbox(null);
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "IDLE");
+				/* Server must respond with a '+' continuation response */
+				if (!response.StartsWith("+"))
+					throw new BadServerResponseException(response);
+			}
 			/* setup and start the idle thread */
 			if (idleThread != null)
 				throw new ApplicationException("idleThread is not null");
 			idling = true;
 			idleThread = new Thread(IdleLoop);
 			idleThread.Start();
+			/* setup a timer to issue NOOPs every once in a while */
+			noopTimer.Interval = 1000 * 4;
+			noopTimer.Elapsed += IssueNoop;
+			noopTimer.Start();
 		}
 
 		/// <summary>
@@ -1388,6 +1441,7 @@ namespace S22.Imap {
 			idleThread.Join();
 			idleThread = null;
 			idling = false;
+			noopTimer.Stop();
 		}
 
 		/// <summary>
@@ -1450,12 +1504,14 @@ namespace S22.Imap {
 			if (pauseRefCount != 0)
 				return;
 			/* Make sure a mailbox is selected */
-			SelectMailbox(null);
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "IDLE");
-			/* Server must respond with a '+' continuation response */
-			if (!response.StartsWith("+"))
-				throw new BadServerResponseException(response);
+			lock (sequenceLock) {
+				SelectMailbox(null);
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "IDLE");
+				/* Server must respond with a '+' continuation response */
+				if (!response.StartsWith("+"))
+					throw new BadServerResponseException(response);
+			}
 			/* setup and start the idle thread */
 			if (idleThread != null)
 				throw new ApplicationException("idleThread is not null");
@@ -1475,19 +1531,26 @@ namespace S22.Imap {
 			}
 
 			while (true) {
-				string response = WaitForResponse();
-				/* A request was made to stop idling so quit the thread */
-				if (response.Contains("OK IDLE"))
-					return; 
-				/* Let the dispatcher thread take care of the IDLE notification so we
-				 * can go back to receiving responses */
-				idleEvents.Enqueue(response);
+				try {
+					string response = GetResponse();
+					/* A request was made to stop idling so quit the thread */
+					if (response.Contains("OK IDLE"))
+						return;
+					/* Let the dispatcher thread take care of the IDLE notification so we
+					 * can go back to receiving responses */
+					idleEvents.Enqueue(response);
+				} catch (IOException) {
+					/* Closing _Stream or the underlying _Connection instance will
+					 * cause a WSACancelBlockingCall exception on a blocking socket.
+					 * This is not an error so just let it pass.
+					 */
+				}
 			}
 		}
 
 		/// <summary>
 		/// Blocks on a queue and wakes up whenever a new notification is put into the
-		/// queue. The notification is then examined and dispatches as an event.
+		/// queue. The notification is then examined and dispatched as an event.
 		/// </summary>
 		private void EventDispatcher() {
 			while (true) {
@@ -1498,70 +1561,36 @@ namespace S22.Imap {
 				uint numberOfMessages = Convert.ToUInt32(m.Groups[1].Value);
 				switch (m.Groups[2].Value.ToUpper()) {
 					case "EXISTS":
-								newMessageEvent.Raise(this,
-									new IdleMessageEventArgs(numberOfMessages, GetHighestUID(), this));
+						newMessageEvent.Raise(this,
+							new IdleMessageEventArgs(numberOfMessages, GetHighestUID(), this));
 						break;
 					case "EXPUNGE":
-							messageDeleteEvent.Raise(
-								this, new IdleMessageEventArgs(numberOfMessages, GetHighestUID(), this));
+						messageDeleteEvent.Raise(
+							this, new IdleMessageEventArgs(numberOfMessages, GetHighestUID(), this));
 						break;
 				}
 			}
 		}
 
 		/// <summary>
-		/// Blocks until an IMAP notification has been received while taking
-		/// care of issuing NOOP's to the IMAP server at regular intervals
-		/// </summary>
-		/// <returns>The IMAP command received from the server</returns>
-		private string WaitForResponse() {
-			string response = null;
-			int noopInterval = (int)TimeSpan.FromMinutes(10).TotalMilliseconds;
-			AutoResetEvent ev = new AutoResetEvent(false);
-
-			ThreadPool.QueueUserWorkItem(_ => {
-				try {
-					response = GetResponse();
-					ev.Set();
-				} catch (IOException) {
-					/* Closing _Stream or the underlying _Connection instance will
-					 * cause a WSACancelBlockingCall exception on a blocking socket.
-					 * This is not an error so just let it pass.
-					 */
-				}
-			});
-			if (ev.WaitOne(noopInterval))
-				return response;
-			/* Still here means the NOOP timeout was hit. WorkItem thread is still
-			 * in a blocking read which _must_ be consumed.
-			 */
-			SendCommand("DONE");
-			ev.WaitOne();
-			if (response.Contains("OK IDLE") == false) {
-				/* Shouldn't happen really */
-			}
-			/* Perform actual NOOP command and resume idling afterwards */
-			IssueNoop();
-			response = SendCommandGetResponse(GetTag() + "IDLE");
-			if (!response.StartsWith("+"))
-				throw new BadServerResponseException(response);
-			/* Go back to receiving IDLE notifications */
-			return WaitForResponse();
-		}
-
-		/// <summary>
-		/// Issues a NOOP command to the IMAP server.
+		/// Issues a NOOP command to the IMAP server. Called in the context of a
+		/// System.Timer event when IDLE notifications are being received.
 		/// </summary>
 		/// <remarks>This is needed by the IMAP IDLE mechanism to give the server
-		/// an indication the connection is still active from time to time.
+		/// an indication the connection is still active.
 		/// </remarks>
-		private void IssueNoop() {
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "NOOP");
-			while (response.StartsWith("*"))
-				response = GetResponse();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
+		private void IssueNoop(object sender, ElapsedEventArgs e) {
+			lock (sequenceLock) {
+				PauseIdling();
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "NOOP");
+				while (response.StartsWith("*"))
+					response = GetResponse();
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+			}
+			Console.WriteLine("Issued a NOOP");
 		}
 
 		/// <summary>
@@ -1586,32 +1615,34 @@ namespace S22.Imap {
 			if (!Supports("QUOTA"))
 				throw new InvalidOperationException(
 					"This server does not support the IMAP4 QUOTA extension");
-			PauseIdling();
-			if (mailbox == null)
-				mailbox = DefaultMailbox;
-			List<MailboxQuota> Quotas = new List<MailboxQuota>();
-			string tag = GetTag();
-			string response = SendCommandGetResponse(tag + "GETQUOTAROOT " +
-				mailbox.QuoteString());
-			while (response.StartsWith("*")) {
-				Match m = Regex.Match(response,
-					"\\* QUOTA \"(\\w*)\" \\((\\w+)\\s+(\\d+)\\s+(\\d+)\\)");
-				if (m.Success) {
-					try {
-						MailboxQuota Quota = new MailboxQuota(m.Groups[2].Value,
-							UInt32.Parse(m.Groups[3].Value),
-							UInt32.Parse(m.Groups[4].Value));
-						Quotas.Add(Quota);
-					} catch {
-						throw new BadServerResponseException(response);
+			lock (sequenceLock) {
+				PauseIdling();
+				if (mailbox == null)
+					mailbox = DefaultMailbox;
+				List<MailboxQuota> Quotas = new List<MailboxQuota>();
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "GETQUOTAROOT " +
+					mailbox.QuoteString());
+				while (response.StartsWith("*")) {
+					Match m = Regex.Match(response,
+						"\\* QUOTA \"(\\w*)\" \\((\\w+)\\s+(\\d+)\\s+(\\d+)\\)");
+					if (m.Success) {
+						try {
+							MailboxQuota Quota = new MailboxQuota(m.Groups[2].Value,
+								UInt32.Parse(m.Groups[3].Value),
+								UInt32.Parse(m.Groups[4].Value));
+							Quotas.Add(Quota);
+						} catch {
+							throw new BadServerResponseException(response);
+						}
 					}
+					response = GetResponse();
 				}
-				response = GetResponse();
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+				return Quotas.ToArray();
 			}
-			ResumeIdling();
-			if (!IsResponseOK(response, tag))
-				throw new BadServerResponseException(response);
-			return Quotas.ToArray();
 		}
 
 		/// <summary>

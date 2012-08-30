@@ -1409,6 +1409,7 @@ namespace S22.Imap {
 				throw new ApplicationException("idleThread is not null");
 			idling = true;
 			idleThread = new Thread(IdleLoop);
+			idleThread.IsBackground = true;
 			idleThread.Start();
 			/* setup a timer to issue NOOPs every once in a while */
 			noopTimer.Interval = 1000 * 60 * 10;
@@ -1516,6 +1517,7 @@ namespace S22.Imap {
 			if (idleThread != null)
 				throw new ApplicationException("idleThread is not null");
 			idleThread = new Thread(IdleLoop);
+			idleThread.IsBackground = true;
 			idleThread.Start();
 		}
 
@@ -1527,6 +1529,7 @@ namespace S22.Imap {
 		private void IdleLoop() {
 			if (idleDispatch == null) {
 				idleDispatch = new Thread(EventDispatcher);
+				idleDispatch.IsBackground = true;
 				idleDispatch.Start();
 			}
 

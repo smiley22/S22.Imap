@@ -1651,15 +1651,18 @@ namespace S22.Imap {
 		/// Releases all resources used by this ImapClient object.
 		/// </summary>
 		public void Dispose() {
-			stream.Close();
-			client.Close();
-			stream = null;
-			client = null;
-
 			if (idleThread != null) {
 				idleThread.Abort();
 				idleThread = null;
 			}
+			if (idleDispatch != null) {
+				idleDispatch.Abort();
+				idleDispatch = null;
+			}
+			stream.Close();
+			client.Close();
+			stream = null;
+			client = null;
 		}
 	}
 

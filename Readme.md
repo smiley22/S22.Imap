@@ -35,6 +35,7 @@ further details on using the classes and methods exposed by the S22.Imap namespa
 + Supports IMAP over SSL
 + API designed to be very easy to use
 + Allows selectively fetching parts of mail messages
++ Inherently thread-safe
 + Well documented with lots of example code
 + Free to use in commercial and personal projects ([MIT license](https://github.com/smiley22/S22.Imap/blob/master/License.md))
 

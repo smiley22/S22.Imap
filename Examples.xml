@@ -287,5 +287,47 @@
 				</code>
 			</example>
 		</ImapClient>
+
+		<ImapClient name="StoreMessage">
+			<example>
+				This example demonstrates how to store a mail message on an
+				IMAP server.
+				<code>
+					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
+					"My_Password", true, AuthMethod.Login);
+					
+					MailMessage message = CreateSimpleMailMessage();
+					uint uid = Client.StoreMessage(message);
+					
+					Console.WriteLine("The UID of the stored mail message is " + uid);
+					
+					Client.Dispose();
+
+					/* ........... */
+
+					/* This creates a simple mail message with a text/plain body and a PNG image
+					 * as a file attachment.
+					 * Consult the MSDN website for details on the System.Net.Mail.Mailmessage class
+					 */
+					static MailMessage CreateSimpleMailMessage() {
+						MailMessage message = new MailMessage();
+
+						message.From = new MailAddress("someone@someplace.com");
+						message.To.Add("john.doe@someplace.com");
+
+						message.Subject = "This is just a test!";
+						message.Body = "This is the text/plain body. An additional HTML body " +
+							"can optionally be attached as an alternate view";
+
+						// Add the attachment
+						Attachment attachment = new Attachment("some_image.png", "image/png");
+						attachment.Name = "my_attached_image.png";
+						message.Attachments.Add(attachment);
+
+						return message;
+					}
+				</code>
+			</example>
+		</ImapClient>
 	</Imap>
 </S22>

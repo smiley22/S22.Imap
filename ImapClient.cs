@@ -882,6 +882,80 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
+		/// Stores the specified mail message on the IMAP server.
+		/// </summary>
+		/// <param name="message">The mail message to store on the server.</param>
+		/// <param name="seen">Set this to true to set the \Seen flag for the message
+		/// on the server.</param>
+		/// <param name="mailbox">The mailbox the message will be stored in. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to store the message in.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail message could
+		/// not be stored. The message property of the exception contains the error message
+		/// returned by the server.</exception>
+		/// <returns>The unique identifier (UID) of the stored message.</returns>
+		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each
+		/// message which uniquely identifies the message within a mailbox. No two
+		/// messages in a mailbox share the the same UID.</remarks>
+		/// <seealso cref="StoreMessages"/>
+		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="StoreMessage"]/*'/>
+		public uint StoreMessage(MailMessage message, bool seen = false, string mailbox = null) {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			string mime822 = message.ToMIME822();
+			lock (sequenceLock) {
+				PauseIdling();
+				if (mailbox == null)
+					mailbox = defaultMailbox;
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "APPEND " +
+					mailbox.QuoteString() + (seen ? @" (\Seen)" : "") +
+					" {" + mime822.Length + "}");
+				/* Server is required to send a continuation response to signal
+				 * we can go ahead with the actual message data */
+				if (!response.StartsWith("+"))
+					throw new BadServerResponseException(response);
+				response = SendCommandGetResponse(mime822);
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+				return GetHighestUID(mailbox);
+			}
+		}
+
+		/// <summary>
+		/// Stores the specified mail messages on the IMAP server.
+		/// </summary>
+		/// <param name="messages">An array of mail messages to store on the server.</param>
+		/// <param name="seen">Set this to true to set the \Seen flag for each message
+		/// on the server.</param>
+		/// <param name="mailbox">The mailbox the messages will be stored in. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to store the messages in.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail messages could
+		/// not be stored. The message property of the exception contains the error message
+		/// returned by the server.</exception>
+		/// <returns>An array containing the unique identifiers (UID) of the stored
+		/// messages.</returns>
+		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each
+		/// message which uniquely identifies the message within a mailbox. No two
+		/// messages in a mailbox share the the same UID.</remarks>
+		/// <seealso cref="StoreMessage"/>
+		public uint[] StoreMessages(MailMessage[] messages, bool seen = false,
+			string mailbox = null) {
+			List<uint> list = new List<uint>();
+			foreach (MailMessage m in messages)
+				list.Add(StoreMessage(m, seen, mailbox));
+			return list.ToArray();
+		}
+
+		/// <summary>
 		/// Retrieves a set of mail messages by their unique identifier message attributes
 		/// providing fine-grained control over which message parts to retrieve of each
 		/// respective message.

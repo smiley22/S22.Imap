@@ -8,6 +8,7 @@
 * [Download mail headers only instead of the entire mail message](#6)
 * [Download attachments only if they are smaller than 2 Megabytes](#7)
 * [Download attachments only if they are zip archives, otherwise skip them](#8)
+* [Store mail message on an IMAP server](#9)
 	
 <a name="1"></a>**Connecting to an IMAP server using SSL**
 
@@ -239,6 +240,49 @@
 						}
 					);
 				}
+			}
+		}
+	}
+
+<a name="9"></a>**Store mail message on an IMAP server**
+
+	using System;
+	using System.Net.Mail;
+	using S22.Imap;
+
+	namespace Test {
+		class Program {
+			static void Main(string[] args)
+			{
+				using (ImapClient Client = new ImapClient("imap.gmail.com", 993,
+				 "username", "password", Authmethod.Login, true))
+				{
+					MailMessage m = CreateSimpleMailMessage();
+
+					uint uid = Client.StoreMessage(m);
+					Console.WriteLine("The UID of the stored mail message is " + uid);
+				}
+			}
+
+			// This creates a simple mail message with a text/plain body and a PNG image
+			// as a file attachment.
+			// Consult the MSDN website for details on the System.Net.Mail.Mailmessage class
+			static MailMessage CreateSimpleMailMessage() {
+				MailMessage message = new MailMessage();
+
+				message.From = new MailAddress("someone@someplace.com");
+				message.To.Add("john.doe@someplace.com");
+
+				message.Subject = "This is just a test!";
+				message.Body = "This is the text/plain body. An additional HTML body " +
+						"can optionally be attached as an alternate view";
+
+				// Add the attachment
+				Attachment attachment = new Attachment("some_image.png", "image/png");
+				attachment.Name = "my_attached_image.png";
+				message.Attachments.Add(attachment);
+
+				return message;
 			}
 		}
 	}

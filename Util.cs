@@ -6,8 +6,9 @@ using System.Text.RegularExpressions;
 
 namespace S22.Imap {
 	/// <summary>
-	/// A static utility class mainly containing methods for decoding encoded
-	/// non-ASCII data as is often used in mail messages.
+	/// A static utility class containing methods for decoding encoded
+	/// non-ASCII data as is often used in mail messages as well as
+	/// extension methods for some existing classes.
 	/// </summary>
 	internal static class Util {
 		/// <summary>
@@ -24,6 +25,36 @@ namespace S22.Imap {
 				.Replace("\r", "\\r")
 				.Replace("\n", "\\n")
 				.Replace("\"", "\\\"") + "\"";
+		}
+
+		/// <summary>
+		/// Returns true if the string contains only ASCII characters.
+		/// </summary>
+		/// <param name="s">Extension method for the String class.</param>
+		/// <returns>Returns true if the string contains only ASCII characters,
+		/// otherwise false is returned.</returns>
+		internal static bool IsASCII(this String s) {
+			return s.ToCharArray().All(c => c < 127);
+		}
+
+		/// <summary>
+		/// Splits a string into chunks of the specified number of
+		/// characters.
+		/// </summary>
+		/// <param name="str">Extension method for the String class.</param>
+		/// <param name="characters">The length of a chunk, measured in
+		/// characters.</param>
+		/// <returns>An array of string chunks</returns>
+		internal static string[] ToChunks(this string str, int characters) {
+			List<string> list = new List<string>();
+			while (str.Length > 0) {
+				int length = str.Length > characters ? characters :
+					str.Length;
+				string t = str.Substring(0, length);
+				str = str.Remove(0, length);
+				list.Add(t);
+			}
+			return list.ToArray();
 		}
 
 		/// <summary>

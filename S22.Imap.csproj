@@ -54,6 +54,7 @@
     <Compile Include="Exceptions.cs" />
     <Compile Include="MailboxQuota.cs" />
     <Compile Include="MailboxStatus.cs" />
+    <Compile Include="MailMessage.cs" />
     <Compile Include="MessageBuilder.cs" />
     <Compile Include="MessageFlags.cs" />
     <Compile Include="MessageReader.cs" />

@@ -4,6 +4,7 @@ namespace S22.Imap {
 	/// <summary>
 	/// Contains status information for a mailbox.
 	/// </summary>
+	[Serializable]
 	public class MailboxStatus {
 		/// <summary>
 		/// Initializes a new MailboxStatus instance with the specified number

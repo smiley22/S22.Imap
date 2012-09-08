@@ -33,7 +33,7 @@ namespace S22.Imap {
 		/// <param name="s">Extension method for the String class.</param>
 		/// <returns>Returns true if the string contains only ASCII characters,
 		/// otherwise false is returned.</returns>
-		internal static bool IsASCII(this String s) {
+		internal static bool IsASCII(this string s) {
 			return s.ToCharArray().All(c => c < 127);
 		}
 

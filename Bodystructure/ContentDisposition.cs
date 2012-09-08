@@ -6,6 +6,7 @@ namespace S22.Imap {
 	/// Represents the content disposition as is presented in the BODYSTRUCTURE
 	/// response by the IMAP server.
 	/// </summary>
+	[Serializable]
 	public class ContentDisposition {
 		/// <summary>
 		/// Initializes a new instance of the ContentDisposition class with

@@ -850,6 +850,41 @@ namespace S22.Imap {
 
 		/// <summary>
 		/// Retrieves a set of mail messages by their unique identifier message attributes
+		/// providing fine-grained control over which message parts to retrieve of each
+		/// respective message.
+		/// </summary>
+		/// <param name="uids">An array of unique identifiers of the mail messages to
+		/// retrieve</param>
+		/// <param name="callback">A delegate which will be invoked for every MIME body
+		/// part of a mail message to determine whether it should be fetched from the
+		/// server or skipped.</param>
+		/// <param name="seen">Set this to true to set the \Seen flag for the fetched
+		/// messages on the server.</param>
+		/// <param name="mailbox">The mailbox the messages will be retrieved from. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail messages could
+		/// not be fetched. The message property of the exception contains the error message
+		/// returned by the server.</exception>
+		/// <returns>An array of initialized instances of the MailMessage class representing
+		/// the fetched mail messages</returns>
+		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each
+		/// message which uniquely identifies the message within a mailbox. No two
+		/// messages in a mailbox share the the same UID.</remarks>
+		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMessages-3"]/*'/>
+		public MailMessage[] GetMessages(uint[] uids, ExaminePartDelegate callback,
+			bool seen = true, string mailbox = null) {
+			List<MailMessage> list = new List<MailMessage>();
+			foreach (uint uid in uids)
+				list.Add(GetMessage(uid, callback, seen, mailbox));
+			return list.ToArray();
+		}
+
+		/// <summary>
+		/// Retrieves a set of mail messages by their unique identifier message attributes
 		/// with the specified fetch option.
 		/// </summary>
 		/// <param name="uids">An array of unique identifiers of the mail messages to
@@ -953,41 +988,6 @@ namespace S22.Imap {
 			foreach (MailMessage m in messages)
 				list.Add(StoreMessage(m, seen, mailbox));
 			return list.ToArray();
-		}
-
-		/// <summary>
-		/// Retrieves a set of mail messages by their unique identifier message attributes
-		/// providing fine-grained control over which message parts to retrieve of each
-		/// respective message.
-		/// </summary>
-		/// <param name="uids">An array of unique identifiers of the mail messages to
-		/// retrieve</param>
-		/// <param name="callback">A delegate which will be invoked for every MIME body
-		/// part of a mail message to determine whether it should be fetched from the
-		/// server or skipped.</param>
-		/// <param name="seen">Set this to true to set the \Seen flag for the fetched
-		/// messages on the server.</param>
-		/// <param name="mailbox">The mailbox the messages will be retrieved from. If this
-		/// parameter is omitted, the value of the DefaultMailbox property is used to
-		/// determine the mailbox to operate on.</param>
-		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
-		/// in a non-authenticated state, i.e. before logging into the server with
-		/// valid credentials.</exception>
-		/// <exception cref="BadServerResponseException">Thrown if the mail messages could
-		/// not be fetched. The message property of the exception contains the error message
-		/// returned by the server.</exception>
-		/// <returns>An array of initialized instances of the MailMessage class representing
-		/// the fetched mail messages</returns>
-		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each
-		/// message which uniquely identifies the message within a mailbox. No two
-		/// messages in a mailbox share the the same UID.</remarks>
-		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMessages-3"]/*'/>
-		public MailMessage[] GetMessages(uint[] uids, ExaminePartDelegate callback,
-			bool seen = true, string mailbox = null) {
-				List<MailMessage> list = new List<MailMessage>();
-				foreach (uint uid in uids)
-					list.Add(GetMessage(uid, callback, seen, mailbox));
-				return list.ToArray();
 		}
 
 		/// <summary>

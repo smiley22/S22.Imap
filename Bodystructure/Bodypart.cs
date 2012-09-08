@@ -7,6 +7,7 @@ namespace S22.Imap {
 	/// Represents a MIME body part of a mail message that has multiple
 	/// parts.
 	/// </summary>
+	[Serializable]
 	public class Bodypart {
 		/// <summary>
 		/// Initializes a new instance of the Bodypart class with default

@@ -145,9 +145,12 @@ namespace S22.Imap {
 		/// <param name="m">The MailMessage instance to operate on</param>
 		/// <param name="header">A collection of mail and MIME headers</param>
 		private static void SetAddressFields(MailMessage m, NameValueCollection header) {
-			string[] addr = ParseAddressList(header["To"]);
-			foreach (string s in addr)
-				m.To.Add(s);
+			string[] addr;
+			if (header["To"] != null) {
+				addr = ParseAddressList(header["To"]);
+				foreach (string s in addr)
+					m.To.Add(s);
+			}
 			if (header["Cc"] != null) {
 				addr = ParseAddressList(header["Cc"]);
 				foreach (string s in addr)

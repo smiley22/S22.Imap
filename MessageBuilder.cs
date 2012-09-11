@@ -34,7 +34,7 @@ namespace S22.Imap {
 			Match ma = Regex.Match(header["Subject"] ?? "", @"=\?([A-Za-z0-9\-]+)");
 			if (ma.Success) {
 				/* encoded-word subject */
-				m.SubjectEncoding = Encoding.GetEncoding(ma.Groups[1].Value);
+				m.SubjectEncoding = Util.GetEncoding(ma.Groups[1].Value);
 				m.Subject = Util.DecodeWords(header["Subject"]);
 			} else {
 				m.SubjectEncoding = Encoding.ASCII;
@@ -184,7 +184,7 @@ namespace S22.Imap {
 		/// <param name="content">The content of the body part.</param>
 		internal static void AddBodypart(this MailMessage message, Bodypart part, string content) {
 			Encoding encoding = part.Parameters.ContainsKey("Charset") ?
-				Encoding.GetEncoding(part.Parameters["Charset"]) : Encoding.ASCII;
+				Util.GetEncoding(part.Parameters["Charset"]) : Encoding.ASCII;
 			// decode content if it was encoded
 			byte[] bytes;
 			switch (part.Encoding) {

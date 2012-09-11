@@ -226,19 +226,14 @@ namespace S22.Imap {
 				AddMIMEPartsToMessage(m, parts);
 			} else {
 				/* charset attribute should be part of content-type */
-				try {
-					m.BodyEncoding = Encoding.GetEncoding(
-							contentType["charset"]);
-				} catch {
-					m.BodyEncoding = Encoding.ASCII;
-				}
+				m.BodyEncoding = Util.GetEncoding(contentType["charset"]);
 				m.Body = body;
 				m.IsBodyHtml = contentType["value"].Contains("text/html");
 			}
 			Match ma = Regex.Match(header["Subject"], @"=\?([A-Za-z0-9\-]+)");
 			if (ma.Success) {
 				/* encoded-word subject */
-				m.SubjectEncoding = Encoding.GetEncoding(
+				m.SubjectEncoding = Util.GetEncoding(
 					ma.Groups[1].Value);
 				m.Subject = Util.DecodeWords(header["Subject"]);
 			} else {
@@ -312,8 +307,7 @@ namespace S22.Imap {
 					p.header["Content-Type"]);
 				string transferEnc = p.header["Content-Transfer-Encoding"] ??
 					"none";
-				Encoding encoding = Encoding.GetEncoding(
-					contentType["Charset"] ?? "us-ascii");
+				Encoding encoding = Util.GetEncoding(contentType["Charset"]);
 				byte[] bytes = encoding.GetBytes(p.body);
 				/* decode content if it was encoded */
 				switch (transferEnc.ToLower()) {

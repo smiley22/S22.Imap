@@ -105,13 +105,7 @@ namespace S22.Imap {
 					@"=\?([A-Za-z0-9\-]+)\?([BbQq])\?(.+)\?=");
 			if (!m.Success)
 				return word;
-			Encoding encoding = null;
-			try {
-				encoding = Encoding.GetEncoding(
-							m.Groups[1].Value);
-			} catch (ArgumentException) {
-				encoding = Encoding.ASCII;
-			}
+			Encoding encoding = Util.GetEncoding(m.Groups[1].Value);
 			string type = m.Groups[2].Value.ToUpper();
 			string text = m.Groups[3].Value;
 			switch (type) {
@@ -176,6 +170,27 @@ namespace S22.Imap {
 		/// of the input string.</returns>
 		internal static byte[] Base64Decode(string value) {
 			return Convert.FromBase64String(value);
+		}
+
+		/// <summary>
+		/// This just wraps Encoding.GetEncoding in a try-catch block to
+		/// ensure it never fails. If the encoding can not be determined
+		/// ASCII is returned as a default.
+		/// </summary>
+		/// <param name="name">The code page name of the preferred encoding.
+		/// Any value returned by System.Text.Encoding.WebName is a valid
+		/// input.</param>
+		/// <returns>The System.Text.Encoding associated with the specified
+		/// code page or Encoding.ASCII if the specified code page could not
+		/// be resolved.</returns>
+		internal static Encoding GetEncoding(string name) {
+			Encoding encoding;
+			try {
+				encoding = Encoding.GetEncoding(name);
+			} catch {
+				encoding = Encoding.ASCII;
+			}
+			return encoding;
 		}
 	}
 }

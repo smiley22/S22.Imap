@@ -60,12 +60,14 @@ namespace S22.Imap {
 			while ((line = reader.ReadLine()) != null) {
 				/* Values may stretch over several lines */
 				if (line[0] == ' ' || line[0] == '\t') {
-					coll[fieldname] = coll[fieldname] +
-						line.Substring(1).Trim();
+					if(fieldname != null)
+						coll[fieldname] = coll[fieldname] + line.Substring(1).Trim();
 					continue;
 				}
 				/* The mail header consists of field:value pairs */
 				int delimiter = line.IndexOf(':');
+				if (delimiter < 0)
+					continue;
 				fieldname = line.Substring(0, delimiter).Trim();
 				fieldvalue = line.Substring(delimiter + 1).Trim();
 				coll.Add(fieldname, fieldvalue);

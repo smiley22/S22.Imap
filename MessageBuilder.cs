@@ -40,8 +40,7 @@ namespace S22.Imap {
 				m.SubjectEncoding = Encoding.ASCII;
 				m.Subject = header["Subject"];
 			}
-			m.Priority = header["Priority"] != null ?
-				PriorityMapping[header["Priority"]] : MailPriority.Normal;
+			m.Priority = ParsePriority(header["Priority"]);
 			SetAddressFields(m, header);
 			return m;
 		}
@@ -130,15 +129,28 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// A mapping to map MIME priority values to their MailPriority enum
-		/// counterparts.
+		/// Parses the priority of a mail message which can be specified
+		/// as part of the header information.
 		/// </summary>
-		private static Dictionary<string, MailPriority> PriorityMapping =
-			new Dictionary<string, MailPriority>(StringComparer.OrdinalIgnoreCase) {
-				{ "non-urgent", MailPriority.Low },
-				{ "normal",	MailPriority.Normal },
-				{ "urgent",	MailPriority.High }
-			};
+		/// <param name="priority">The mail header priority value. The value
+		/// can be null in which case a "normal priority" is returned.</param>
+		/// <returns>A value from the MailPriority enumeration corresponding to
+		/// the specified mail priority. If the passed priority value is null
+		/// or invalid, a normal priority is assumed and MailPriority.Normal
+		/// is returned.</returns>
+		private static MailPriority ParsePriority(string priority) {
+			Dictionary<string, MailPriority> Map =
+				new Dictionary<string, MailPriority>(StringComparer.OrdinalIgnoreCase) {
+						{ "non-urgent", MailPriority.Low },
+						{ "normal",	MailPriority.Normal },
+						{ "urgent",	MailPriority.High }
+				};
+			try {
+				return Map[priority];
+			} catch {
+				return MailPriority.Normal;
+			}
+		}
 
 		/// <summary>
 		/// Sets the address fields (From, To, CC, etc.) of a MailMessage

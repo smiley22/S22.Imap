@@ -106,7 +106,16 @@ namespace S22.Imap {
 				if ((new string(last)) == "NIL")
 					return "";
 			}
-			return ReadUntil('"');
+			StringBuilder builder = new StringBuilder();
+			last[0] = ' ';
+			while (true) {
+				/* account for backslash-escaped double-quote characters */
+				if ((c = (char)Read()) == '"' && last[0] != '\\')
+					break;
+				builder.Append(c);
+				last[0] = c;
+			}
+			return builder.ToString();
 		}
 
 		/// <summary>
@@ -149,8 +158,20 @@ namespace S22.Imap {
 				if ((new string(last)) == "NIL")
 					return Dict;
 			}
-			string pairs = ReadUntil(')');
-			MatchCollection matches = Regex.Matches(pairs, "\"([^\"]+)\"\\s+\"([^\"]+)\"");
+			StringBuilder pairs = new StringBuilder();
+			last[0] = ' ';
+			/* attribute/value literals my contain parenthesis */
+			bool inQuotes = false;
+			while (Peek() > 0) {
+				c = (char)Read();
+				if (c == '"' && last[0] != '\\')
+					inQuotes = !inQuotes;
+				if (c == ')' && !inQuotes)
+					break;
+				last[0] = c;
+				pairs.Append(c);
+			}
+			MatchCollection matches = Regex.Matches(pairs.ToString(), "\"([^\"]+)\"\\s+\"([^\"]+)\"");
 			foreach (Match m in matches)
 				Dict.Add(m.Groups[1].Value, m.Groups[2].Value);
 			return Dict;

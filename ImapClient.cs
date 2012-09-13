@@ -1065,9 +1065,8 @@ namespace S22.Imap {
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response,
 						@"BODYSTRUCTURE \((.*)\)\)", RegexOptions.IgnoreCase);
-					if (!m.Success)
-						throw new BadServerResponseException(response);
-					structure = m.Groups[1].Value;
+					if (m.Success)
+						structure = m.Groups[1].Value;
 					response = GetResponse();
 				}
 				ResumeIdling();

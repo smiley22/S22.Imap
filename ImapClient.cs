@@ -352,6 +352,29 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
+		/// Reads the specified amount of bytes from the server. This
+		/// method blocks until the specified amount of bytes has been
+		/// read from the network stream.
+		/// </summary>
+		/// <param name="byteCount">The number of bytes to read</param>
+		/// <returns>The read number of bytes as an ASCII-encoded string</returns>
+		private string GetData(int byteCount) {
+			byte[] buffer = new byte[4096];
+			using (var mem = new MemoryStream()) {
+				lock (readLock) {
+					while (byteCount > 0) {
+						int request = byteCount > buffer.Length ?
+							buffer.Length : byteCount;
+						int read = stream.Read(buffer, 0, request);
+						mem.Write(buffer, 0, read);
+						byteCount = byteCount - read;
+					}
+				}
+				return Encoding.ASCII.GetString(mem.ToArray());
+			}
+		}
+
+		/// <summary>
 		/// Returns a listing of capabilities that the IMAP server supports. All strings
 		/// in the returned array are guaranteed to be upper-case.
 		/// </summary>
@@ -756,18 +779,23 @@ namespace S22.Imap {
 					return message;
 				}
 				/* Retrieve and parse the body structure of the mail message */
-				Bodypart[] parts = Bodystructure.Parse(
-					GetBodystructure(uid, mailbox));
-				foreach (Bodypart part in parts) {
-					if (options != FetchOptions.Normal &&
-						part.Disposition.Type == ContentDispositionType.Attachment)
-						continue;
-					if (options == FetchOptions.TextOnly && part.Type != ContentType.Text)
-						continue;
-					/* fetch the content */
-					string content = GetBodypart(uid, part.PartNumber, seen, mailbox);
+				string structure = GetBodystructure(uid, mailbox);
+				try {
+					Bodypart[] parts = Bodystructure.Parse(structure);
+					foreach (Bodypart part in parts) {
+						if (options != FetchOptions.Normal &&
+							part.Disposition.Type == ContentDispositionType.Attachment)
+							continue;
+						if (options == FetchOptions.TextOnly && part.Type != ContentType.Text)
+							continue;
+						/* fetch the content */
+						string content = GetBodypart(uid, part.PartNumber, seen, mailbox);
 
-					message.AddBodypart(part, content);
+						message.AddBodypart(part, content);
+					}
+				} catch (FormatException) {
+					throw new BadServerResponseException("Server returned erroneous " +
+						"body structure:" + structure);
 				}
 				ResumeIdling();
 				return message;
@@ -808,14 +836,19 @@ namespace S22.Imap {
 				SelectMailbox(mailbox);
 				string header = GetMailHeader(uid, seen, mailbox);
 				MailMessage message = MessageBuilder.FromHeader(header);
-				Bodypart[] parts = Bodystructure.Parse(
-					GetBodystructure(uid, mailbox));
-				foreach (Bodypart part in parts) {
-					/* Let delegate decide if part should be fetched or not */
-					if (callback(part) == true) {
-						string content = GetBodypart(uid, part.PartNumber, seen, mailbox);
-						message.AddBodypart(part, content);
+				string structure = GetBodystructure(uid, mailbox);
+				try {
+					Bodypart[] parts = Bodystructure.Parse(structure);
+					foreach (Bodypart part in parts) {
+						/* Let delegate decide if part should be fetched or not */
+						if (callback(part) == true) {
+							string content = GetBodypart(uid, part.PartNumber, seen, mailbox);
+							message.AddBodypart(part, content);
+						}
 					}
+				} catch (FormatException) {
+					throw new BadServerResponseException("Server returned erroneous " +
+						"body structure:" + structure);
 				}
 				ResumeIdling();
 				return message;
@@ -1019,16 +1052,17 @@ namespace S22.Imap {
 				string response = SendCommandGetResponse(tag + "UID FETCH " + uid + " (BODY" +
 					(seen ? null : ".PEEK") + "[HEADER])");
 				while (response.StartsWith("*")) {
-					Match m = Regex.Match(response, @"\* (\d+) FETCH");
-					if (!m.Success)
-						throw new BadServerResponseException(response);
-					while ((response = GetResponse()) != String.Empty)
-						builder.AppendLine(response);
-					if ((response = GetResponse()) != ")")
-						throw new BadServerResponseException(response);
+					Match m = Regex.Match(response, @"\* \d+ FETCH .* {(\d+)}");
+					if (m.Success) {
+						int size = Convert.ToInt32(m.Groups[1].Value);
+						builder.Append(GetData(size));
+						if ((response = GetResponse()) != ")")
+							throw new BadServerResponseException(response);
+					}
+					response = GetResponse();
 				}
 				ResumeIdling();
-				if (!IsResponseOK(GetResponse(), tag))
+				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
 				return builder.ToString();
 			}
@@ -1109,20 +1143,17 @@ namespace S22.Imap {
 				string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
 					" (BODY" + (seen ? null : ".PEEK") + "[" + partNumber + "])");
 				while (response.StartsWith("*")) {
-					Match m = Regex.Match(response, @"\* (\d+) FETCH");
-					if (!m.Success)
-						throw new BadServerResponseException(response);
-					while ((response = GetResponse()) != ")") {
-						/* FETCH closing bracket may be last character of response */
-						if (response.EndsWith(")")) {
-							builder.AppendLine(response.TrimEnd(')'));
-							break;
-						}
-						builder.AppendLine(response);
+					Match m = Regex.Match(response, @"\* \d+ FETCH .* {(\d+)}");
+					if (m.Success) {
+						int size = Convert.ToInt32(m.Groups[1].Value);
+						builder.Append(GetData(size));
+						if ((response = GetResponse()) != ")")
+							throw new BadServerResponseException(response);
 					}
+					response = GetResponse();
 				}
 				ResumeIdling();
-				if (!IsResponseOK(GetResponse(), tag))
+				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
 				return builder.ToString();
 			}

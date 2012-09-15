@@ -57,6 +57,8 @@ namespace S22.Imap {
 			NameValueCollection coll = new NameValueCollection();
 			string line, fieldname = null, fieldvalue = null;
 			while ((line = reader.ReadLine()) != null) {
+				if (line == String.Empty)
+					continue;
 				/* Values may stretch over several lines */
 				if (line[0] == ' ' || line[0] == '\t') {
 					if(fieldname != null)

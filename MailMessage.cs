@@ -245,8 +245,11 @@ namespace S22.Imap {
 				byte[] bytes = m.BodyEncoding.GetBytes(m.Body);
 				body = Convert.ToBase64String(bytes);
 			}
-			foreach (string chunk in body.ToChunks(76))
-				builder.AppendLine(chunk);
+			StringReader reader = new StringReader(body);
+			char[] line = new char[76];
+			int read;
+			while ((read = reader.Read(line, 0, line.Length)) > 0)
+				builder.AppendLine(new string(line, 0, read));
 		}
 
 		/// <summary>
@@ -281,8 +284,11 @@ namespace S22.Imap {
 					memstream.Write(buffer, 0, bytesRead);
 				}
 				string str = Convert.ToBase64String(memstream.ToArray());
-				foreach (string chunk in str.ToChunks(76))
-					builder.AppendLine(chunk);
+				StringReader reader = new StringReader(str);
+				char[] line = new char[76];
+				int read;
+				while ((read = reader.Read(line, 0, line.Length)) > 0)
+					builder.AppendLine(new string(line, 0, read));
 			}
 			// Rewind the stream if it supports seeking
 			if (view.ContentStream.CanSeek)

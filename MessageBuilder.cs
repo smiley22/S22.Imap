@@ -62,7 +62,7 @@ namespace S22.Imap {
 				/* Values may stretch over several lines */
 				if (line[0] == ' ' || line[0] == '\t') {
 					if(fieldname != null)
-						coll[fieldname] = coll[fieldname] + line.Substring(1).Trim();
+						coll[fieldname] = coll[fieldname] + line.Substring(1).TrimEnd();
 					continue;
 				}
 				/* The mail header consists of field:value pairs */

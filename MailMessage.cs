@@ -231,17 +231,20 @@ namespace S22.Imap {
 		/// adding the actual body part content.</param>
 		static void AddBody(StringBuilder builder, MailMessage m,
 			NameValueCollection header, bool addHeaders = false) {
+			bool base64 = header["Content-Transfer-Encoding"] == "base64";
 			if (addHeaders) {
 				string contentType = m.IsBodyHtml ? "text/html" : "text/plain";
 				if (m.BodyEncoding != null)
 					contentType = contentType + "; charset=" + m.BodyEncoding.WebName;
 				builder.AppendLine("Content-Type: " + contentType);
-				if (m.Body != null && !m.Body.IsASCII())
+				if (m.Body != null && !m.Body.IsASCII()) {
 					builder.AppendLine("Content-Transfer-Encoding: base64");
+					base64 = true;
+				}
 				builder.AppendLine();
 			}
 			string body = m.Body;
-			if (header["Content-Transfer-Encoding"] == "base64") {
+			if (base64) {
 				byte[] bytes = m.BodyEncoding.GetBytes(m.Body);
 				body = Convert.ToBase64String(bytes);
 			}

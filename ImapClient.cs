@@ -1098,7 +1098,7 @@ namespace S22.Imap {
 				string structure = String.Empty;
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response,
-						@"BODYSTRUCTURE \((.*)\)\)", RegexOptions.IgnoreCase);
+						@"FETCH \(.*BODYSTRUCTURE \((.*)\).*\)", RegexOptions.IgnoreCase);
 					if (m.Success)
 						structure = m.Groups[1].Value;
 					response = GetResponse();

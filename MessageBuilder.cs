@@ -179,11 +179,13 @@ namespace S22.Imap {
 			}
 			if (header["From"] != null) {
 				addr = ParseAddressList(header["From"]);
-				m.From = new MailAddress(addr.Length > 0 ? addr[0] : "");
+				if(addr.Length > 0)
+					m.From = new MailAddress(addr[0]);
 			}
 			if (header["Sender"] != null) {
 				addr = ParseAddressList(header["Sender"]);
-				m.Sender = new MailAddress(addr.Length > 0 ? addr[0] : "");
+				if(addr.Length > 0)
+					m.Sender = new MailAddress(addr[0]);
 			}
 			if (header["Reply-to"] != null) {
 				addr = ParseAddressList(header["Reply-to"]);

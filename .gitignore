@@ -1,5 +1,6 @@
-# Ignore Sandcastle documentation directory
-Documentation/
+# Ignore nuspec files from NuGet
+*.nuspec
+Tools/
 
 #################
 ## Eclipse

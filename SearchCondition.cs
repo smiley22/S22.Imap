@@ -174,9 +174,9 @@ namespace S22.Imap {
 		/// <param name="uids">An array of unique identifiers</param>
 		/// <returns>A SearchCondition object representing the "UID" search
 		/// criterion</returns>
-		public static SearchCondition UID(uint[] uids) {
+		public static SearchCondition UID(params uint[] uids) {
 			return new SearchCondition { Field = Fields.UID,
-				Value = string.Join<uint>(",", uids) };
+				Value = uids };
 		}
 		/// <summary>
 		/// Finds messages that do not have the specified keyword flag set.
@@ -374,6 +374,8 @@ namespace S22.Imap {
 				} else if (Value is DateTime) {
 					Value = ((DateTime)Value).ToString("dd-MMM-yyyy",
 						CultureInfo.InvariantCulture).QuoteString();
+				} else if (Value is uint[]) {
+					Value = string.Join<uint>(",", (uint[])Value);
 				}
 				if (Field != null)
 					builder.Append(" ");

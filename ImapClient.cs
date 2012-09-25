@@ -697,11 +697,14 @@ namespace S22.Imap {
 					criteria.ToString());
 				List<uint> result = new List<uint>();
 				while (response.StartsWith("*")) {
-					Match m = Regex.Match(response, @"^\* SEARCH (.*)");
+					Match m = Regex.Match(response, @"^\* SEARCH (.+)");
 					if (m.Success) {
 						string[] v = m.Groups[1].Value.Trim().Split(' ');
-						foreach (string s in v)
-							result.Add(Convert.ToUInt32(s));
+						foreach (string s in v) {
+							try {
+								result.Add(Convert.ToUInt32(s));
+							} catch(FormatException) { }
+						}
 					}
 					response = GetResponse();
 				}

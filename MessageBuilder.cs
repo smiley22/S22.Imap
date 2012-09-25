@@ -23,13 +23,16 @@ namespace S22.Imap {
 		internal static MailMessage FromHeader(string text) {
 			NameValueCollection header = ParseMailHeader(text);
 			MailMessage m = new MailMessage();
-			// NameValueCollection throws an exception if adding an empty string as
-			// value, which can happen, if reading a mail message with an empty
-			// subject.
 			foreach (string key in header) {
 				string value = header.GetValues(key)[0];
-				if (value != String.Empty)
-					m.Headers.Add(key, value);
+				try {
+						m.Headers.Add(key, value);
+				} catch {
+					// HeaderCollection throws an exception if adding an empty string as
+					// value, which can happen, if reading a mail message with an empty
+					// subject.
+					// Also spammers often forge headers, so just fall through and ignore.
+				}
 			}
 			Match ma = Regex.Match(header["Subject"] ?? "", @"=\?([A-Za-z0-9\-]+)");
 			if (ma.Success) {

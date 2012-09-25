@@ -35,6 +35,11 @@ namespace S22.Imap {
 		/// </summary>
 		Application,
 		/// <summary>
+		/// The "message" content type allows messages to contain other messages
+		/// or pointers to other messages.
+		/// </summary>
+		Message,
+		/// <summary>
 		/// The media type value is unknown or could not be determined.
 		/// </summary>
 		Other
@@ -49,6 +54,7 @@ namespace S22.Imap {
 				{ "Audio",	ContentType.Audio },
 				{ "Video", ContentType.Video },
 				{ "Application", ContentType.Application },
+				{ "Message", ContentType.Message },
 				{ "Other", ContentType.Other }
 			};
 			try {

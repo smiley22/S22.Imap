@@ -72,10 +72,28 @@ namespace S22.Imap {
 			part.Size = reader.ReadInteger();
 			if (part.Type == ContentType.Text)
 				part.Lines = reader.ReadInteger();
+			if (part.Type == ContentType.Message && part.Subtype.ToUpper() == "RFC822")
+				ParseMessage822Fields(part);
 			try {
 				ParseOptionalFields(part, parenthesis);
 			} catch (EndOfStringException) {}
 			return part;
+		}
+
+		/// <summary>
+		/// Parses the mandatory extra fields that are present if the bodypart is
+		/// of type message/rfc822 (see RFC 3501, p. 75).
+		/// </summary>
+		/// <param name="part">The bodypart instance the parsed fields will be
+		/// added to.</param>
+		private void ParseMessage822Fields(Bodypart part) {
+			// We just skip over most of this extra information as it is useless
+			// to us.
+			// Mandatory fields:
+			//	"Envelope" "Bodystructure" "Lines"
+			SkipParenthesizedExpression();
+			SkipParenthesizedExpression();
+			part.Lines = reader.ReadInteger();
 		}
 
 		/// <summary>
@@ -157,6 +175,37 @@ namespace S22.Imap {
 					if (openingBrackets == 0)
 						break;
 					openingBrackets--;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Advances the read pointer to skip over an arbitrary
+		/// expression enclosed in parentheses.
+		/// </summary>
+		private void SkipParenthesizedExpression() {
+			int openingBrackets = 1;
+			bool inQuotes = false;
+			char[] last = new char[3];
+			char c;
+			while ((c = (char)reader.Read()) != '(') {
+				last[0] = last[1];
+				last[1] = last[2];
+				last[2] = c;
+				if ((new string(last)) == "NIL")
+					return;
+			}
+			while (reader.Peek() > 0) {
+				c = (char)reader.Read();
+				if (c == '"' && last[0] != '\\')
+					inQuotes = !inQuotes;
+				last[0] = c;
+				if (c == '(' && !inQuotes)
+					openingBrackets++;
+				if (c == ')' && !inQuotes) {
+					openingBrackets--;
+					if (openingBrackets == 0)
+						break;
 				}
 			}
 		}

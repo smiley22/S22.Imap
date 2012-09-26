@@ -213,7 +213,12 @@ namespace S22.Imap {
 					bytes = encoding.GetBytes(Util.QPDecode(content, encoding));
 					break;
 				case ContentTransferEncoding.Base64:
-					bytes = Util.Base64Decode(content);
+					try {
+						bytes = Util.Base64Decode(content);
+					} catch {
+						// If it's not a valid Base64 string just leave the data as is
+						bytes = Encoding.ASCII.GetBytes(content);
+					}
 					break;
 				default:
 					bytes = Encoding.ASCII.GetBytes(content);

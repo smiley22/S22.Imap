@@ -168,6 +168,13 @@ namespace S22.Imap {
 		/// <param name="value">The Base64-encoded string to decode</param>
 		/// <returns>A byte array containing the Base64-decoded bytes
 		/// of the input string.</returns>
+		/// <exception cref="System.ArgumentNullException">Thrown if the
+		/// input value is null.</exception>
+		/// <exception cref="System.FormatException">The length of value,
+		/// ignoring white-space characters, is not zero or a multiple of 4,
+		/// or the format of value is invalid. value contains a non-base-64
+		/// character, more than two padding characters, or a non-white
+		/// space-character among the padding characters.</exception>
 		internal static byte[] Base64Decode(string value) {
 			return Convert.FromBase64String(value);
 		}

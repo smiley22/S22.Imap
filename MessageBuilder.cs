@@ -104,14 +104,18 @@ namespace S22.Imap {
 		/// can contain multiple email addresses.
 		/// </summary>
 		/// <param name="list">The address-list field to parse</param>
-		/// <returns>An array of strings containing the parsed mail
-		/// addresses.</returns>
-		private static string[] ParseAddressList(string list) {
-			List<string> mails = new List<string>();
-			MatchCollection matches = Regex.Matches(list,
-				@"\b([A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4})\b", RegexOptions.IgnoreCase);
-			foreach (Match m in matches)
-				mails.Add(m.Groups[1].Value);
+		/// <returns>An array of MailAddress objects representing the parsed
+		/// mail addresses.</returns>
+		private static MailAddress[] ParseAddressList(string list) {
+			List<MailAddress> mails = new List<MailAddress>();
+			string[] addr = list.Split(',');
+			foreach (string a in addr) {
+				Match m = Regex.Match(a.Trim(),
+					@"(.*)\s*<?([A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4})>?",
+					RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
+				if (m.Success)
+					mails.Add(new MailAddress(m.Groups[2].Value, m.Groups[1].Value));
+			}
 			return mails.ToArray();
 		}
 
@@ -164,36 +168,36 @@ namespace S22.Imap {
 		/// <param name="m">The MailMessage instance to operate on</param>
 		/// <param name="header">A collection of mail and MIME headers</param>
 		private static void SetAddressFields(MailMessage m, NameValueCollection header) {
-			string[] addr;
+			MailAddress[] addr;
 			if (header["To"] != null) {
 				addr = ParseAddressList(header["To"]);
-				foreach (string s in addr)
-					m.To.Add(s);
+				foreach (MailAddress a in addr)
+					m.To.Add(a);
 			}
 			if (header["Cc"] != null) {
 				addr = ParseAddressList(header["Cc"]);
-				foreach (string s in addr)
-					m.CC.Add(s);
+				foreach (MailAddress a in addr)
+					m.CC.Add(a);
 			}
 			if (header["Bcc"] != null) {
 				addr = ParseAddressList(header["Bcc"]);
-				foreach (string s in addr)
-					m.Bcc.Add(s);
+				foreach (MailAddress a in addr)
+					m.Bcc.Add(a);
 			}
 			if (header["From"] != null) {
 				addr = ParseAddressList(header["From"]);
 				if(addr.Length > 0)
-					m.From = new MailAddress(addr[0]);
+					m.From = addr[0];
 			}
 			if (header["Sender"] != null) {
 				addr = ParseAddressList(header["Sender"]);
 				if(addr.Length > 0)
-					m.Sender = new MailAddress(addr[0]);
+					m.Sender = addr[0];
 			}
 			if (header["Reply-to"] != null) {
 				addr = ParseAddressList(header["Reply-to"]);
-				foreach (string s in addr)
-					m.ReplyToList.Add(s);
+				foreach (MailAddress a in addr)
+					m.ReplyToList.Add(a);
 			}
 		}
 

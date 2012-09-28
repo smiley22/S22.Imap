@@ -552,17 +552,17 @@ namespace S22.Imap {
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response,
 						"\\* LIST \\((.*)\\)\\s+\"(.+)\"\\s+\"(.+)\"");
-					if (!m.Success)
-						continue;
-					string[] attr = m.Groups[1].Value.Split(new char[] { ' ' });
-					bool add = true;
-					foreach (string a in attr) {
-						/* Only list selectable mailboxes */
-						if (a.ToLower() == @"\noselect")
-							add = false;
+					if (m.Success) {
+						string[] attr = m.Groups[1].Value.Split(' ');
+						bool add = true;
+						foreach (string a in attr) {
+							/* Only list selectable mailboxes */
+							if (a.ToLower() == @"\noselect")
+								add = false;
+						}
+						if (add)
+							mailboxes.Add(m.Groups[3].Value);
 					}
-					if (add)
-						mailboxes.Add(m.Groups[3].Value);
 					response = GetResponse();
 				}
 				ResumeIdling();

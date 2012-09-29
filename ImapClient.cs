@@ -770,38 +770,17 @@ namespace S22.Imap {
 		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMessage-2"]/*'/>
 		public MailMessage GetMessage(uint uid, FetchOptions options,
 			bool seen = true, string mailbox = null) {
-			if (!Authed)
-				throw new NotAuthenticatedException();
-			lock (sequenceLock) {
-				PauseIdling();
-				SelectMailbox(mailbox);
-				string header = GetMailHeader(uid, seen, mailbox);
-				MailMessage message = MessageBuilder.FromHeader(header);
-				if (options == FetchOptions.HeadersOnly) {
-					ResumeIdling();
-					return message;
-				}
-				/* Retrieve and parse the body structure of the mail message */
-				string structure = GetBodystructure(uid, mailbox);
-				try {
-					Bodypart[] parts = Bodystructure.Parse(structure);
-					foreach (Bodypart part in parts) {
-						if (options != FetchOptions.Normal &&
-							part.Disposition.Type == ContentDispositionType.Attachment)
-							continue;
-						if (options == FetchOptions.TextOnly && part.Type != ContentType.Text)
-							continue;
-						/* fetch the content */
-						string content = GetBodypart(uid, part.PartNumber, seen, mailbox);
-
-						message.AddBodypart(part, content);
-					}
-				} catch (FormatException) {
-					throw new BadServerResponseException("Server returned erroneous " +
-						"body structure:" + structure);
-				}
-				ResumeIdling();
-				return message;
+			switch (options) {
+				case FetchOptions.HeadersOnly:
+					return MessageBuilder.FromHeader(GetMailHeader(uid, seen, mailbox));
+				case FetchOptions.NoAttachments:
+					return GetMessage(uid, p => { return p.Disposition.Type !=
+						ContentDispositionType.Attachment; }, seen, mailbox);
+				case FetchOptions.TextOnly:
+					return GetMessage(uid, p => { return p.Type == ContentType.Text; },
+						seen, mailbox);
+				default:
+					return MessageBuilder.FromMIME822(GetMessageData(uid, seen, mailbox));
 			}
 		}
 
@@ -1145,6 +1124,52 @@ namespace S22.Imap {
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
 					" (BODY" + (seen ? null : ".PEEK") + "[" + partNumber + "])");
+				while (response.StartsWith("*")) {
+					Match m = Regex.Match(response, @"\* \d+ FETCH .* {(\d+)}");
+					if (m.Success) {
+						int size = Convert.ToInt32(m.Groups[1].Value);
+						builder.Append(GetData(size));
+						if ((response = GetResponse()) != ")")
+							throw new BadServerResponseException(response);
+					}
+					response = GetResponse();
+				}
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+				return builder.ToString();
+			}
+		}
+
+		/// <summary>
+		/// Retrieves the raw MIME/RFC822 mail message data for the mail message with
+		/// the specified UID.
+		/// </summary>
+		/// <param name="uid">The UID of the mail message to retrieve as a MIME/RFC822
+		/// string.</param>
+		/// <param name="seen">Set this to true to set the \Seen flag for the fetched
+		/// messages on the server.</param>
+		/// <param name="mailbox">The mailbox the message will be retrieved from. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the mail message data
+		/// could not be fetched. The message property of the exception contains the error
+		/// message returned by the server.</exception>
+		/// <returns>A string containing the raw MIME/RFC822 data of the mail message
+		/// with the specified UID.</returns>
+		private string GetMessageData(uint uid, bool seen = true, string mailbox = null) {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			lock (sequenceLock) {
+				PauseIdling();
+				SelectMailbox(mailbox);
+				StringBuilder builder = new StringBuilder();
+				string tag = GetTag();
+				string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
+					" (BODY" + (seen ? null : ".PEEK") + "[])");
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response, @"\* \d+ FETCH .* {(\d+)}");
 					if (m.Success) {

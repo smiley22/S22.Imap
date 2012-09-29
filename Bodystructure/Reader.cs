@@ -199,8 +199,7 @@ namespace S22.Imap {
 			}
 
 			string type = ReadWord();
-			Disp.Type = ContentDisposition.Map.ContainsKey(type) ?
-				ContentDisposition.Map[type] : ContentDispositionType.Unknown;
+			Disp.Type = ContentDispositionTypeMap.fromString(type);
 			Disp.Attributes = ReadList();
 			ReadUntil(')');
 

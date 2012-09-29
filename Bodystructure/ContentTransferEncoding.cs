@@ -50,7 +50,7 @@ namespace S22.Imap {
 			};
 			try {
 				return Map[transferEncoding];
-			} catch (KeyNotFoundException) {
+			} catch {
 				return ContentTransferEncoding.Unknown;
 			}
 		}

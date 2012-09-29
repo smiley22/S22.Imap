@@ -68,4 +68,20 @@ namespace S22.Imap {
 		/// </summary>
 		Attachment
 	}
+
+	internal static class ContentDispositionTypeMap {
+		public static ContentDispositionType fromString(string disposition) {
+			Dictionary<string, ContentDispositionType> Map =
+			new Dictionary<string, ContentDispositionType>
+				(StringComparer.OrdinalIgnoreCase) {
+				{ "Inline", ContentDispositionType.Inline },
+				{ "Attachment",	ContentDispositionType.Attachment }
+			};
+			try {
+				return Map[disposition];
+			} catch {
+				return ContentDispositionType.Unknown;
+			}
+		}
+	}
 }

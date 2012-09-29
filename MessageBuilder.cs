@@ -34,17 +34,42 @@ namespace S22.Imap {
 					// Also spammers often forge headers, so just fall through and ignore.
 				}
 			}
-			Match ma = Regex.Match(header["Subject"] ?? "", @"=\?([A-Za-z0-9\-]+)");
+			Match ma = Regex.Match(header["Subject"] ?? "", @"=\?([A-Za-z0-9\-_]+)");
 			if (ma.Success) {
-				/* encoded-word subject */
+				// encoded-word subject. A subject must not contain any encoded newline
+				// characters, so if we find any, we strip them off.
 				m.SubjectEncoding = Util.GetEncoding(ma.Groups[1].Value);
-				m.Subject = Util.DecodeWords(header["Subject"]);
+				m.Subject = Util.DecodeWords(header["Subject"]).
+					Replace(Environment.NewLine, "");
 			} else {
 				m.SubjectEncoding = Encoding.ASCII;
 				m.Subject = header["Subject"];
 			}
 			m.Priority = ParsePriority(header["Priority"]);
 			SetAddressFields(m, header);
+			return m;
+		}
+
+		/// <summary>
+		/// Creates a new instance of the MailMessage class from a string
+		/// containing raw RFC822/MIME mail message data.
+		/// </summary>
+		/// <param name="text">A string containing the mail message data to
+		/// create the MailMessage instance from.</param>
+		/// <returns>An initialized instance of the MailMessage class.</returns>
+		/// <remarks>This is used when fetching entire messages instead
+		/// of the partial-fetch mechanism because it saves redundant
+		/// round-trips to the server.</remarks>
+		internal static MailMessage FromMIME822(string text) {
+			StringReader reader = new StringReader(text);
+			StringBuilder header = new StringBuilder();
+			string line;
+			while(!String.IsNullOrEmpty(line = reader.ReadLine()))
+				header.AppendLine(line);
+			MailMessage m = FromHeader(header.ToString());
+			MIMEPart[] parts = ParseMailBody(reader.ReadToEnd(), m.Headers);
+			foreach (MIMEPart p in parts)
+				m.AddBodypart(BodypartFromMIME(p), p.body);
 			return m;
 		}
 
@@ -91,11 +116,17 @@ namespace S22.Imap {
 		/// of Content-Type, this would be "text/html").</remarks>
 		private static NameValueCollection ParseMIMEField(string field) {
 			NameValueCollection coll = new NameValueCollection();
-			MatchCollection matches = Regex.Matches(field, @"([\w\-]+)=\W*([\w\-\/\.]+)");
-			foreach (Match m in matches)
-				coll.Add(m.Groups[1].Value, m.Groups[2].Value);
-			Match mvalue = Regex.Match(field, @"^\s*([\w\/]+)");
-			coll.Add("value", mvalue.Success ? mvalue.Groups[1].Value : "");
+			try {
+				MatchCollection matches = Regex.Matches(field, "([\\w\\-]+)=\"?([\\w\\-\\/\\.]+)");
+				foreach (Match m in matches)
+					coll.Add(m.Groups[1].Value, m.Groups[2].Value);
+				Match mvalue = Regex.Match(field, @"^\s*([\w\/]+)");
+				coll.Add("value", mvalue.Success ? mvalue.Groups[1].Value : "");
+			} catch {
+				// We don't want this to blow up on the user with weird mails so
+				// just return an empty collection.
+				coll.Add("value", String.Empty);
+			}
 			return coll;
 		}
 
@@ -113,8 +144,15 @@ namespace S22.Imap {
 				Match m = Regex.Match(a.Trim(),
 					@"(.*)\s*<?([A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4})>?",
 					RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
-				if (m.Success)
-					mails.Add(new MailAddress(m.Groups[2].Value, m.Groups[1].Value));
+				if (m.Success) {
+					// The above regex will erroneously match some illegal (very rare)
+					// local-parts. RFC-compliant validation is not worth the effort
+					// at all, so just wrap this in a try/catch block in case
+					// MailAddress' ctor complains.
+					try {
+						mails.Add(new MailAddress(m.Groups[2].Value, m.Groups[1].Value));
+					} catch { }
+				}
 			}
 			return mails.ToArray();
 		}
@@ -228,10 +266,10 @@ namespace S22.Imap {
 					bytes = Encoding.ASCII.GetBytes(content);
 					break;
 			}
-
-			// If the MIME part contains text and the MailMessage's Body fields haven't been
-			// initialized yet, put it there.
-			if (message.Body == string.Empty && part.Type == ContentType.Text) {
+			// If the MailMessage's Body fields haven't been initialized yet, put it there.
+			// Some weird (i.e. spam) mails like to omit content-types so don't check for
+			// that here and just assume it's text.
+			if (message.Body == string.Empty) {
 				message.Body = encoding.GetString(bytes);
 				message.BodyEncoding = encoding;
 				message.IsBodyHtml = part.Subtype.ToLower() == "html";
@@ -259,9 +297,12 @@ namespace S22.Imap {
 			try {
 				attachment.ContentId = ParseMessageId(part.Id);
 			} catch {}
-			string contentType = part.Type.ToString().ToLower() + "/" +
-				part.Subtype.ToLower();
-			attachment.ContentType = new System.Net.Mime.ContentType(contentType);
+			try {
+				attachment.ContentType = new System.Net.Mime.ContentType(
+					part.Type.ToString().ToLower() + "/" + part.Subtype.ToLower());
+			} catch {
+				attachment.ContentType = new System.Net.Mime.ContentType();
+			}
 			return attachment;
 		}
 
@@ -275,14 +316,126 @@ namespace S22.Imap {
 		/// <returns>An initialized instance of the AlternateView class</returns>
 		private static AlternateView CreateAlternateView(Bodypart part, byte[] bytes) {
 			MemoryStream stream = new MemoryStream(bytes);
-			string contentType = part.Type.ToString().ToLower() + "/" +
-				part.Subtype.ToLower();
-			AlternateView view = new AlternateView(stream,
-				new System.Net.Mime.ContentType(contentType));
+			System.Net.Mime.ContentType contentType;
+			try {
+				contentType = new System.Net.Mime.ContentType(
+					part.Type.ToString().ToLower() + "/" + part.Subtype.ToLower());
+			} catch {
+				contentType = new System.Net.Mime.ContentType();
+			}
+			AlternateView view = new AlternateView(stream, contentType);
 			try {
 				view.ContentId = ParseMessageId(part.Id);
 			} catch {}
 			return view;
+		}
+
+		/// <summary>
+		/// Parses the body part of a MIME/RFC822 mail message.
+		/// </summary>
+		/// <param name="body">The body of the mail message.</param>
+		/// <param name="header">The header of the mail message whose body
+		/// will be parsed.</param>
+		/// <returns>An array of initialized MIMEPart instances representing
+		/// the body parts of the mail message.</returns>
+		private static MIMEPart[] ParseMailBody(string body,
+			NameValueCollection header) {
+			NameValueCollection contentType = ParseMIMEField(header["Content-Type"]);
+			if (contentType["Boundary"] != null) {
+				return ParseMIMEParts(new StringReader(body), contentType["Boundary"]);
+			} else {
+				return new MIMEPart[] {
+					new MIMEPart() { body = body,
+						header = new NameValueCollection() {
+							{ "Content-Type", header["Content-Type"] },
+							{ "Content-Id", header["Content-Id"] },
+							{ "Content-Transfer-Encoding", header["Content-Transfer-Encoding"] },
+							{ "Content-Disposition", header["Content-Disposition"] }
+						}
+					}
+				};
+			}
+		}
+
+		/// <summary>
+		/// Parses the body of a multipart MIME mail message.
+		/// </summary>
+		/// <param name="reader">An instance of the StringReader class initialized
+		/// with a string containing the body of the mail message.</param>
+		/// <param name="boundary">The boundary value as is present as part of
+		/// the Content-Type header field in multipart mail messages.</param>
+		/// <returns>An array of initialized MIMEPart instances representing
+		/// the various parts of the MIME mail message.</returns>
+		private static MIMEPart[] ParseMIMEParts(StringReader reader, string boundary) {
+			List<MIMEPart> list = new List<MIMEPart>();
+			string start = "--" + boundary, end = "--" + boundary + "--", line;
+			// Skip everything up to the first boundary
+			while ((line = reader.ReadLine()) != null) {
+				if (line.StartsWith(start))
+					break;
+			}
+			// Read MIME parts delimited by boundary strings
+			while (line != null && line.StartsWith(start)) {
+				MIMEPart p = new MIMEPart();
+				// Read the part header
+				StringBuilder header = new StringBuilder();
+				while (!String.IsNullOrEmpty(line = reader.ReadLine()))
+					header.AppendLine(line);
+				p.header = ParseMailHeader(header.ToString());
+				// Account for nested multipart content
+				NameValueCollection contentType = ParseMIMEField(p.header["Content-Type"]);
+				if (contentType["Boundary"] != null)
+					list.AddRange(ParseMIMEParts(reader, contentType["boundary"]));
+				// Read the part body
+				StringBuilder body = new StringBuilder();
+				while ((line = reader.ReadLine()) != null) {
+					if (line.StartsWith(start))
+						break;
+					body.AppendLine(line);
+				}
+				p.body = body.ToString();
+				// Add the MIME part to the list unless body is null which means the
+				// body contained nested multipart content
+				if (!String.IsNullOrEmpty(p.body))
+					list.Add(p);
+				// If the boundary is actually the end boundary, we're done 
+				if (line == null || line.StartsWith(end))
+					break;
+			}
+			return list.ToArray();
+		}
+
+		/// <summary>
+		/// Glue method to create a bodypart from a MIMEPart instance.
+		/// </summary>
+		/// <param name="mimePart">The MIMEPart instance to create the
+		/// bodypart instance from.</param>
+		/// <returns>An initialized instance of the Bodypart class.</returns>
+		private static Bodypart BodypartFromMIME(MIMEPart mimePart) {
+			NameValueCollection contentType = ParseMIMEField(
+				mimePart.header["Content-Type"]);
+			Bodypart p = new Bodypart(null);
+			Match m = Regex.Match(contentType["value"], "(.+)/(.+)");
+			if (m.Success) {
+				p.Type = ContentTypeMap.fromString(m.Groups[1].Value);
+				p.Subtype = m.Groups[2].Value;
+			}
+			p.Encoding = ContentTransferEncodingMap.fromString(
+				mimePart.header["Content-Transfer-Encoding"]);
+			p.Id = mimePart.header["Content-Id"];
+			foreach (string k in contentType.AllKeys)
+				p.Parameters.Add(k, contentType[k]);
+			p.Size = mimePart.body.Length;
+			if (mimePart.header["Content-Disposition"] != null) {
+				NameValueCollection disposition = ParseMIMEField(
+					mimePart.header["Content-Disposition"]);
+				p.Disposition.Type = ContentDispositionTypeMap.fromString(
+					disposition["value"]);
+				p.Disposition.Filename = disposition["Filename"];
+				foreach (string k in disposition.AllKeys)
+					p.Disposition.Attributes.Add(k, disposition[k]);
+			}
+			return p;
 		}
 	}
 }

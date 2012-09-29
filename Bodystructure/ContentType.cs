@@ -59,7 +59,7 @@ namespace S22.Imap {
 			};
 			try {
 				return Map[contentType];
-			} catch (KeyNotFoundException) {
+			} catch {
 				return ContentType.Other;
 			}
 		}

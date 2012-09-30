@@ -37,6 +37,7 @@ further details on using the classes and methods exposed by the S22.Imap namespa
 + Allows selectively fetching parts of mail messages
 + Inherently thread-safe
 + Well documented with lots of example code
++ Thoroughly tested with 20.000+ mails
 + Free to use in commercial and personal projects ([MIT license](https://github.com/smiley22/S22.Imap/blob/master/License.md))
 
 ### Credits

@@ -1342,12 +1342,12 @@ namespace S22.Imap {
 				List<MessageFlag> flags = new List<MessageFlag>();
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response, @"FLAGS \(([\w\s\\]*)\)");
-					if (!m.Success)
-						continue;
-					string[] setFlags = m.Groups[1].Value.Split(new char[] { ' ' });
-					foreach (string flag in setFlags) {
-						if (messageFlagsMapping.ContainsKey(flag))
-							flags.Add(messageFlagsMapping[flag]);
+					if (m.Success) {
+						string[] setFlags = m.Groups[1].Value.Split(' ');
+						foreach (string flag in setFlags) {
+							if (messageFlagsMapping.ContainsKey(flag))
+								flags.Add(messageFlagsMapping[flag]);
+						}
 					}
 					response = GetResponse();
 				}

@@ -20,7 +20,7 @@ namespace S22.Imap {
 			PartNumber = partNumber;
 			Type = ContentType.Other;
 			Subtype = Id = Description = Md5 = Language = Location = "";
-			Parameters = new Dictionary<string, string>();
+			Parameters = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 			Disposition = new ContentDisposition();
 			Encoding = ContentTransferEncoding.Unknown;
 			Size = Lines = 0;

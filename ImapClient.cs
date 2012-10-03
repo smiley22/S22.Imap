@@ -969,6 +969,8 @@ namespace S22.Imap {
 				if (!response.StartsWith("+"))
 					throw new BadServerResponseException(response);
 				response = SendCommandGetResponse(mime822);
+				while (response.StartsWith("*"))
+					response = GetResponse(); 
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);

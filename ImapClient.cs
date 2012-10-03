@@ -1040,7 +1040,7 @@ namespace S22.Imap {
 					if (m.Success) {
 						int size = Convert.ToInt32(m.Groups[1].Value);
 						builder.Append(GetData(size));
-						if ((response = GetResponse()) != ")")
+						if (!Regex.IsMatch(GetResponse(), @"\)\s*$"))
 							throw new BadServerResponseException(response);
 					}
 					response = GetResponse();
@@ -1131,7 +1131,7 @@ namespace S22.Imap {
 					if (m.Success) {
 						int size = Convert.ToInt32(m.Groups[1].Value);
 						builder.Append(GetData(size));
-						if ((response = GetResponse()) != ")")
+						if (!Regex.IsMatch(GetResponse(), @"\)\s*$"))
 							throw new BadServerResponseException(response);
 					}
 					response = GetResponse();
@@ -1177,7 +1177,7 @@ namespace S22.Imap {
 					if (m.Success) {
 						int size = Convert.ToInt32(m.Groups[1].Value);
 						builder.Append(GetData(size));
-						if ((response = GetResponse()) != ")")
+						if (!Regex.IsMatch(GetResponse(), @"\)\s*$"))
 							throw new BadServerResponseException(response);
 					}
 					response = GetResponse();

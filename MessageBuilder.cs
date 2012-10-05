@@ -39,8 +39,14 @@ namespace S22.Imap {
 				// encoded-word subject. A subject must not contain any encoded newline
 				// characters, so if we find any, we strip them off.
 				m.SubjectEncoding = Util.GetEncoding(ma.Groups[1].Value);
-				m.Subject = Util.DecodeWords(header["Subject"]).
-					Replace(Environment.NewLine, "");
+				try {
+					m.Subject = Util.DecodeWords(header["Subject"]).
+						Replace(Environment.NewLine, "");
+				} catch {
+					// if, for any reason encoding fails, set the subject to the
+					// original, unaltered string.
+					m.Subject = header["Subject"];
+				}
 			} else {
 				m.SubjectEncoding = Encoding.ASCII;
 				m.Subject = header["Subject"];

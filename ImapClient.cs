@@ -551,7 +551,7 @@ namespace S22.Imap {
 				string response = SendCommandGetResponse(tag + "LIST \"\" \"*\"");
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response,
-						"\\* LIST \\((.*)\\)\\s+\"(.+)\"\\s+\"?([^\"]+)");
+						"\\* LIST \\((.*)\\)\\s+\"([^\"]+)\"\\s+(.+)");
 					if (m.Success) {
 						string[] attr = m.Groups[1].Value.Split(' ');
 						bool add = true;
@@ -561,7 +561,7 @@ namespace S22.Imap {
 								add = false;
 						}
 						if (add)
-							mailboxes.Add(m.Groups[3].Value);
+							mailboxes.Add(m.Groups[3].Value.Trim('"'));
 					}
 					response = GetResponse();
 				}

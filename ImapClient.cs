@@ -560,14 +560,13 @@ namespace S22.Imap {
 							if (a.ToLower() == @"\noselect")
 								add = false;
 						}
-						if (add) {
-							string name = m.Groups[3].Value;
-							// MS Exchange Server has the weird habit of returning names that
-							// contain quote characters in a new line.
-							if (Regex.IsMatch(name, @"^{(\d+)}$"))
-								name = GetResponse();
+						string name = m.Groups[3].Value;
+						// MS Exchange Server has the weird habit of returning names that
+						// contain quote characters in a new line.
+						if (Regex.IsMatch(name, @"^{(\d+)}$"))
+							name = GetResponse();
+						if (add)
 							mailboxes.Add(name.Trim('"'));
-						}
 					}
 					response = GetResponse();
 				}

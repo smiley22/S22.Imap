@@ -123,11 +123,12 @@ namespace S22.Imap {
 		private static NameValueCollection ParseMIMEField(string field) {
 			NameValueCollection coll = new NameValueCollection();
 			try {
-				MatchCollection matches = Regex.Matches(field, "([\\w\\-]+)=\"?([\\w\\-\\/\\.]+)");
+				MatchCollection matches = Regex.Matches(field,
+					"([\\w\\-]+)\\s*=\\s*([^;]+)");
 				foreach (Match m in matches)
-					coll.Add(m.Groups[1].Value, m.Groups[2].Value);
-				Match mvalue = Regex.Match(field, @"^\s*([\w\/]+)");
-				coll.Add("value", mvalue.Success ? mvalue.Groups[1].Value : "");
+					coll.Add(m.Groups[1].Value, m.Groups[2].Value.Trim('"'));
+				Match mvalue = Regex.Match(field, @"^\s*([^;]+)");
+				coll.Add("value", mvalue.Success ? mvalue.Groups[1].Value.Trim() : "");
 			} catch {
 				// We don't want this to blow up on the user with weird mails so
 				// just return an empty collection.

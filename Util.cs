@@ -254,7 +254,7 @@ namespace S22.Imap {
 							"The input string is not in the correct Format", e);
 					}
 				} else {
-					if (reader.Peek() == '-')
+					if (c == '&' && reader.Peek() == '-')
 						reader.Read();
 					builder.Append(c);
 				}

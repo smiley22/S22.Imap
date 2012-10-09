@@ -504,6 +504,7 @@ namespace S22.Imap {
 		/// <exception cref="BadServerResponseException">Thrown if the mailbox could
 		/// not be selected. The message property of the exception contains the error message
 		/// returned by the server.</exception>
+		/// <remarks>IMAP Idle must be paused or stopped before calling this method.</remarks>
 		private void SelectMailbox(string mailbox) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
@@ -513,16 +514,12 @@ namespace S22.Imap {
 			if (selectedMailbox == mailbox)
 				return;
 			lock (sequenceLock) {
-				PauseIdling();
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "SELECT " +
-					mailbox.QuoteString());
-				/* evaluate untagged data */
-				while (response.StartsWith("*")) {
-					// Fixme: evaluate data
+					Util.UTF7Encode(mailbox).QuoteString());
+				// Fixme: evaluate untagged data?
+				while (response.StartsWith("*"))
 					response = GetResponse();
-				}
-				ResumeIdling();
 				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
 				selectedMailbox = mailbox;
@@ -560,13 +557,19 @@ namespace S22.Imap {
 							if (a.ToLower() == @"\noselect")
 								add = false;
 						}
-						string name = m.Groups[3].Value;
+						string name = m.Groups[3].Value.Trim('"');
 						// MS Exchange Server has the weird habit of returning names that
 						// contain quote characters in a new line.
 						if (Regex.IsMatch(name, @"^{(\d+)}$"))
 							name = GetResponse();
+						try {
+							name = Util.UTF7Decode(name);
+						} catch {
+							// Include the unaltered string in the result if UTF-7 decoding
+							// failed for any reason.
+						}
 						if (add)
-							mailboxes.Add(name.Trim('"'));
+							mailboxes.Add(name);
 					}
 					response = GetResponse();
 				}
@@ -1538,7 +1541,7 @@ namespace S22.Imap {
 				throw new InvalidOperationException("The server does not support the " +
 					"IMAP4 IDLE command");
 			lock (sequenceLock) {
-				/* Make sure a mailbox is selected */
+				/* Make sure the default mailbox is selected */
 				SelectMailbox(null);
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "IDLE");
@@ -1646,7 +1649,7 @@ namespace S22.Imap {
 			pauseRefCount = pauseRefCount - 1;
 			if (pauseRefCount != 0)
 				return;
-			/* Make sure a mailbox is selected */
+			/* Make sure the default mailbox is selected */
 			lock (sequenceLock) {
 				SelectMailbox(null);
 				string tag = GetTag();

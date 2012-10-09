@@ -438,7 +438,8 @@ namespace S22.Imap {
 				PauseIdling();
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "RENAME " +
-					mailbox.QuoteString() + " " + newName.QuoteString());
+					Util.UTF7Encode(mailbox).QuoteString() + " " +
+					Util.UTF7Encode(newName).QuoteString());
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
@@ -462,7 +463,7 @@ namespace S22.Imap {
 				PauseIdling();
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "DELETE " +
-					mailbox.QuoteString());
+					Util.UTF7Encode(mailbox).QuoteString());
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
@@ -486,7 +487,7 @@ namespace S22.Imap {
 				PauseIdling();
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "CREATE " +
-					mailbox.QuoteString());
+					Util.UTF7Encode(mailbox).QuoteString());
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
@@ -640,7 +641,7 @@ namespace S22.Imap {
 					mailbox = defaultMailbox;
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "STATUS " +
-					mailbox.QuoteString() + " (MESSAGES UNSEEN)");
+					Util.UTF7Encode(mailbox).QuoteString() + " (MESSAGES UNSEEN)");
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response, @"\* STATUS.*MESSAGES (\d+)");
 					if (m.Success)
@@ -970,7 +971,7 @@ namespace S22.Imap {
 					mailbox = defaultMailbox;
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "APPEND " +
-					mailbox.QuoteString() + (seen ? @" (\Seen)" : "") +
+					Util.UTF7Encode(mailbox).QuoteString() + (seen ? @" (\Seen)" : "") +
 					" {" + mime822.Length + "}");
 				/* Server is required to send a continuation response to signal
 				 * we can go ahead with the actual message data */
@@ -1223,7 +1224,7 @@ namespace S22.Imap {
 				SelectMailbox(mailbox);
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "STATUS " +
-					selectedMailbox.QuoteString() + " (UIDNEXT)");
+					Util.UTF7Encode(selectedMailbox).QuoteString() + " (UIDNEXT)");
 				uint nextUID = 0;
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response, @"\* STATUS.*UIDNEXT (\d+)");
@@ -1769,7 +1770,7 @@ namespace S22.Imap {
 				List<MailboxQuota> Quotas = new List<MailboxQuota>();
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "GETQUOTAROOT " +
-					mailbox.QuoteString());
+					Util.UTF7Encode(mailbox).QuoteString());
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response,
 						"\\* QUOTA \"(\\w*)\" \\((\\w+)\\s+(\\d+)\\s+(\\d+)\\)");

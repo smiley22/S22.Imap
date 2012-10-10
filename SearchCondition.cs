@@ -179,6 +179,30 @@ namespace S22.Imap {
 				Value = uids };
 		}
 		/// <summary>
+		/// Finds messages with a unique identifier greater than the specified
+		/// unique identifier. Because of the nature of the IMAP search mechanism,
+		/// the result set will always contain the UID of the last message in the
+		/// mailbox, even if said UID is smaller than the UID specified.
+		/// </summary>
+		/// <param name="uid">A unique identifier (UID).</param>
+		/// <returns>A SearchCondition object representing the "UID" search
+		/// criterion</returns>
+		public static SearchCondition GreaterThan(uint uid) {
+			return new SearchCondition { Field = Fields.UID,
+				Value = (uid + 1).ToString() + ":*", Quote = false };
+		}
+		/// <summary>
+		/// Finds messages with a unique identifier less than the specified
+		/// unique identifier.
+		/// </summary>
+		/// <param name="uid">A unique identifier (UID).</param>
+		/// <returns>A SearchCondition object representing the "UID" search
+		/// criterion</returns>
+		public static SearchCondition LessThan(uint uid) {
+			return new SearchCondition { Field = Fields.UID,
+				Value = "1:" + (uid - 1).ToString(), Quote = false };
+		}
+		/// <summary>
 		/// Finds messages that do not have the specified keyword flag set.
 		/// </summary>
 		/// <param name="text">A valid IMAP keyword flag</param>
@@ -341,6 +365,7 @@ namespace S22.Imap {
 		private Fields? Field { get; set; }
 		private List<SearchCondition> Conditions { get; set; }
 		private string Operator { get; set; }
+		private bool Quote = true;
 
 		private static SearchCondition Join(string condition, SearchCondition left,
 			params SearchCondition[] right) {
@@ -370,7 +395,8 @@ namespace S22.Imap {
 				builder.Append(Field.ToString().ToUpper());
 			if (Value != null) {
 				if (Value is string) {
-					Value = ((string)Value).QuoteString();
+					if(Quote)
+						Value = ((string)Value).QuoteString();
 				} else if (Value is DateTime) {
 					Value = ((DateTime)Value).ToString("dd-MMM-yyyy",
 						CultureInfo.InvariantCulture).QuoteString();

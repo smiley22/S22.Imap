@@ -12,6 +12,15 @@ namespace S22.Imap {
 	/// extension methods for some existing classes.
 	/// </summary>
 	internal static class Util {
+        /// <summary>
+        /// Determines ISO-8859-1 encoding, which corresponds to first 256 code points in Unicode.
+        /// </summary>
+        private static readonly Encoding Latin1Encoding = Encoding.GetEncoding("ISO-8859-1");
+        /// <summary>
+        /// Determines Windows-1252 encoding, which adds several characters to ISO-8859-1 .
+        /// </summary>
+        private static readonly Encoding Windows1252Encoding = Encoding.GetEncoding(1252);
+
 		/// <summary>
 		/// Returns a copy of the string enclosed in double-quotes and with escaped
 		/// CRLF, back-slash and double-quote characters (as is expected by some
@@ -120,6 +129,18 @@ namespace S22.Imap {
 			}
 		}
 
+        /// <summary>
+        /// Interprets text which was decoded from Latin-1 as text in specified encoding.
+        /// </summary>
+        /// <param name="value">String decoded from Latin-1.</param>
+        /// <param name="encoding">Target encoding.</param>
+        /// <returns>String interpreted as specified encoding.</returns>
+        internal static string ReinterpretLatin1(string value, Encoding encoding) {
+            if(Latin1Encoding.Equals(encoding) || Windows1252Encoding.Equals(encoding))
+                return value;
+            return encoding.GetString(Latin1Encoding.GetBytes(value));
+        }
+
 		/// <summary>
 		/// Takes a Q-encoded string and decodes it using the specified
 		/// encoding.
@@ -137,8 +158,7 @@ namespace S22.Imap {
 				value = value.Replace(match.Groups[0].Value, hexChar.ToString());
 			}
 			value = value.Replace("=\r\n", "").Replace("_", " ");
-			return encoding.GetString(
-				Encoding.Default.GetBytes(value));
+			return ReinterpretLatin1(value, encoding);
 		}
 
 		/// <summary>
@@ -159,8 +179,7 @@ namespace S22.Imap {
 				value = value.Replace(match.Groups[0].Value, hexChar.ToString());
 			}
 			value = value.Replace("=\r\n", "");
-			return encoding.GetString(
-				Encoding.Default.GetBytes(value));
+            return ReinterpretLatin1(value, encoding);
 		}
 
 		/// <summary>

@@ -393,19 +393,27 @@ namespace S22.Imap {
 			StringBuilder builder = new StringBuilder();
 			if (Field != null)
 				builder.Append(Field.ToString().ToUpper());
-			if (Value != null) {
-				if (Value is string) {
-					if(Quote)
-						Value = ((string)Value).QuoteString();
-				} else if (Value is DateTime) {
-					Value = ((DateTime)Value).ToString("dd-MMM-yyyy",
-						CultureInfo.InvariantCulture).QuoteString();
-				} else if (Value is uint[]) {
-					Value = string.Join<uint>(",", (uint[])Value);
-				}
+			object Val = Value;
+			if (Val != null) {
 				if (Field != null)
 					builder.Append(" ");
-				builder.Append(Value);
+				if (Val is string) {
+					string s = (string)Val;
+					// If the string contains non-ASCII characters we must use the somewhat
+					// cumbersome literal form as is outlined in RFC 3501 Section 4.3.
+					if (!s.IsASCII()) {
+						builder.AppendLine("{" + Encoding.UTF8.GetBytes(s).Length + "}");
+					} else {
+						if (Quote)
+							Val = ((string)Val).QuoteString();
+					}
+				} else if (Val is DateTime) {
+					Val = ((DateTime)Val).ToString("dd-MMM-yyyy",
+						CultureInfo.InvariantCulture).QuoteString();
+				} else if (Val is uint[]) {
+					Val = string.Join<uint>(",", (uint[])Val);
+				}
+				builder.Append(Val);
 			}
 			return builder.ToString();
 		}

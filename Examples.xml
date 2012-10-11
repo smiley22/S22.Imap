@@ -102,6 +102,29 @@
 					Client.Dispose();
 				</code>
 			</example>
+			<example>
+				The following example demonstrates how to perform a search using characters outside
+				the ASCII range.
+				<code>
+					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_Username",
+						"My_Password", true, AuthMethod.Login);
+
+					// get a list of unique identifiers (UIDs) of all messages that have
+					// the Japanese expression "フーリエ変換" in their subject lines.
+					try {
+						uint[] uids = Client.Search(SearchCondition.Subject("フーリエ変換"));
+
+						Console.WriteLine("Found " + uids.Length + " messages");
+					} catch(NotSupportedException e) {
+						// If this exception is thrown, the server does not support searching for characters
+						// outside the ASCII range.
+						Console.WriteLine("The server does not support searching for non-ASCII values");
+					}
+					
+					// free up any resources associated with this instance
+					Client.Dispose();					
+				</code>
+			</example>
 		</ImapClient>
 		
 		<ImapClient name="GetMessage-1">

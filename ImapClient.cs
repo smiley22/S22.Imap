@@ -306,7 +306,10 @@ namespace S22.Imap {
 		/// <param name="command">Command string to be sent to the server. The command string is
 		/// suffixed by CRLF (as is required by the IMAP protocol) prior to sending.</param>
 		private void SendCommand(string command) {
-			byte[] bytes = Encoding.ASCII.GetBytes(command + "\r\n");
+			// We can safely use UTF-8 here since it's backwards compatible with ASCII
+			// and comes in handy when sending strings in literal form
+			// (see RFC 3501, 4.3).
+			byte[] bytes = Encoding.UTF8.GetBytes(command + "\r\n");
 			lock (writeLock) {
 				stream.Write(bytes, 0, bytes.Length);
 			}
@@ -688,6 +691,9 @@ namespace S22.Imap {
 		/// <exception cref="BadServerResponseException">Thrown if the search could
 		/// not be completed. The message property of the exception contains the error
 		/// message returned by the server.</exception>
+		/// <exception cref="NotSupportedException">Thrown if the search values
+		/// contain characters beyond the ASCII range and the server does not support
+		/// handling such strings.</exception>
 		/// <returns>An array of unique identifier (UID) message attributes which
 		/// can be used with the GetMessage family of methods to download mail
 		/// messages.</returns>
@@ -701,9 +707,22 @@ namespace S22.Imap {
 			lock (sequenceLock) {
 				PauseIdling();
 				SelectMailbox(mailbox);
-				string tag = GetTag();
+				string tag = GetTag(), str = criteria.ToString();
+				StringReader reader = new StringReader(str);
+				bool useUTF8 = str.Contains("\r\n");
+				string line = reader.ReadLine();
 				string response = SendCommandGetResponse(tag + "UID SEARCH " +
-					criteria.ToString());
+					(useUTF8 ? "CHARSET UTF-8 " : "") + line);
+				// If our search string consists of multiple lines, we're sending some
+				// strings in literal form and need to issue continuation requests.
+				while ((line = reader.ReadLine()) != null) {
+					if (!response.StartsWith("+")) {
+						ResumeIdling();
+						throw new NotSupportedException("Please restrict your search " +
+							"to ASCII-only characters", new BadServerResponseException(response));
+					}
+					response = SendCommandGetResponse(line);
+				}
 				List<uint> result = new List<uint>();
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response, @"^\* SEARCH (.+)");

@@ -127,40 +127,60 @@ namespace S22.Imap {
 		/// <param name="value">The Q-encoded string to decode</param>
 		/// <param name="encoding">The encoding to use for encoding the
 		/// returned string</param>
+		/// <exception cref="FormatException">Thrown if the string is
+		/// not a valid Q-encoded string.</exception>
 		/// <returns>A Q-decoded string</returns>
 		internal static string QDecode(string value, Encoding encoding) {
-			MatchCollection matches = Regex.Matches(value, @"=[0-9A-Z]{2}",
-				RegexOptions.Multiline);
-			foreach (Match match in matches) {
-				char hexChar = (char)Convert.ToInt32(
-					match.Groups[0].Value.Substring(1), 16);
-				value = value.Replace(match.Groups[0].Value, hexChar.ToString());
+			try {
+				using (MemoryStream m = new MemoryStream()) {
+					for (int i = 0; i < value.Length; i++) {
+						if (value[i] == '=') {
+							string hex = value.Substring(i + 1, 2);
+							m.WriteByte(Convert.ToByte(hex, 16));
+							i = i + 2;
+						} else if (value[i] == '_') {
+							m.WriteByte(Convert.ToByte(' '));
+						} else {
+							m.WriteByte(Convert.ToByte(value[i]));
+						}
+					}
+					return encoding.GetString(m.ToArray());
+				}
+			} catch {
+				throw new FormatException("value is not a valid Q-encoded " +
+					"string");
 			}
-			value = value.Replace("=\r\n", "").Replace("_", " ");
-			return encoding.GetString(
-				Encoding.Default.GetBytes(value));
 		}
 
 		/// <summary>
-		/// Takes a quoted-printable-encoded string and decodes it using
+		/// Takes a quoted-printable encoded string and decodes it using
 		/// the specified encoding.
 		/// </summary>
 		/// <param name="value">The quoted-printable-encoded string to
 		/// decode</param>
 		/// <param name="encoding">The encoding to use for encoding the
 		/// returned string</param>
-		/// <returns>A quoted-printable-decoded string</returns>
+		/// <exception cref="FormatException">Thrown if the string is
+		/// not a valid quoted-printable encoded string.</exception>
+		/// <returns>A quoted-printable decoded string</returns>
 		internal static string QPDecode(string value, Encoding encoding) {
-			MatchCollection matches = Regex.Matches(value, @"=[0-9A-Z]{2}",
-				RegexOptions.Multiline);
-			foreach (Match match in matches) {
-				char hexChar = (char)Convert.ToInt32(
-					match.Groups[0].Value.Substring(1), 16);
-				value = value.Replace(match.Groups[0].Value, hexChar.ToString());
+			try {
+				using (MemoryStream m = new MemoryStream()) {
+					for (int i = 0; i < value.Length; i++) {
+						if (value[i] == '=') {
+							string hex = value.Substring(i + 1, 2);
+							m.WriteByte(Convert.ToByte(hex, 16));
+							i = i + 2;
+						} else {
+							m.WriteByte(Convert.ToByte(value[i]));
+						}
+					}
+					return encoding.GetString(m.ToArray());
+				}
+			} catch {
+				throw new FormatException("value is not a valid quoted-printable " +
+					"encoded string");
 			}
-			value = value.Replace("=\r\n", "");
-			return encoding.GetString(
-				Encoding.Default.GetBytes(value));
 		}
 
 		/// <summary>

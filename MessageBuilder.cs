@@ -257,22 +257,24 @@ namespace S22.Imap {
 				Util.GetEncoding(part.Parameters["Charset"]) : Encoding.ASCII;
 			// decode content if it was encoded
 			byte[] bytes;
-			switch (part.Encoding) {
-				case ContentTransferEncoding.QuotedPrintable:
-					bytes = encoding.GetBytes(Util.QPDecode(content, encoding));
-					break;
-				case ContentTransferEncoding.Base64:
-					try {
+			try {
+				switch (part.Encoding) {
+					case ContentTransferEncoding.QuotedPrintable:
+						bytes = encoding.GetBytes(Util.QPDecode(content, encoding));
+						break;
+					case ContentTransferEncoding.Base64:
 						bytes = Util.Base64Decode(content);
-					} catch {
-						// If it's not a valid Base64 string just leave the data as is
+						break;
+					default:
 						bytes = Encoding.ASCII.GetBytes(content);
-					}
-					break;
-				default:
-					bytes = Encoding.ASCII.GetBytes(content);
-					break;
+						break;
+				}
+			} catch {
+				// If it's not a valid Base64 or quoted-printable encoded string
+				// just leave the data as is
+				bytes = Encoding.ASCII.GetBytes(content);
 			}
+	
 			// If the MailMessage's Body fields haven't been initialized yet, put it there.
 			// Some weird (i.e. spam) mails like to omit content-types so don't check for
 			// that here and just assume it's text.

@@ -324,7 +324,7 @@ namespace S22.Imap {
 		/// SearchCondition instance with</param>
 		/// <returns>A new SearchCondition instance which can be further chained
 		/// with other search conditions.</returns>
-		public SearchCondition And(params SearchCondition[] other) {
+		public SearchCondition And(SearchCondition other) {
 			return Join(string.Empty, this, other);
 		}
 
@@ -337,7 +337,7 @@ namespace S22.Imap {
 		/// message for it to be included in the search result set</param>
 		/// <returns>A new SearchCondition instance which can be further chained
 		/// with other search conditions.</returns>
-		public SearchCondition Not(params SearchCondition[] other) {
+		public SearchCondition Not(SearchCondition other) {
 			return Join("NOT", this, other);
 		}
 
@@ -350,10 +350,14 @@ namespace S22.Imap {
 		/// SearchCondition instance with</param>
 		/// <returns>A new SearchCondition instance which can be further chained
 		/// with other search conditions.</returns>
-		public SearchCondition Or(params SearchCondition[] other) {
+		public SearchCondition Or(SearchCondition other) {
 			return Join("OR", this, other);
 		}
 
+		/// <summary>
+		/// The search keys which can be used with the IMAP SEARCH command, as
+		/// are defined in section 6.4.4 of RFC 3501.
+		/// </summary>
 		private enum Fields {
 			BCC, Before, Body, Cc, From, Header, Keyword,
 			Larger, On, SentBefore, SentOn, SentSince, Since, Smaller, Subject,
@@ -367,16 +371,23 @@ namespace S22.Imap {
 		private string Operator { get; set; }
 		private bool Quote = true;
 
+		/// <summary>
+		/// Joins two SearchCondition objects into a new one using the specified
+		/// logical operator.
+		/// </summary>
+		/// <param name="condition">The logical operator to use for joining the
+		/// search conditions. Possible values are "OR", "NOT" and the empty
+		/// string "" which denotes a logical AND.</param>
+		/// <param name="left">The first SearchCondition object</param>
+		/// <param name="right">The second SearchCondition object</param>
+		/// <returns>A new SearchCondition object representing the two
+		/// search conditions joined by the specified logical operator.</returns>
 		private static SearchCondition Join(string condition, SearchCondition left,
-			params SearchCondition[] right) {
-			condition = condition.ToUpper();
-			if (left.Operator != condition)
-				left = new SearchCondition {
-					Operator = condition,
-					Conditions = new List<SearchCondition> { left }
-				};
-			left.Conditions.AddRange(right);
-			return left;
+			SearchCondition right) {
+			return new SearchCondition {
+				Operator = condition.ToUpper(),
+				Conditions = new List<SearchCondition> { left, right }
+			};
 		}
 
 		/// <summary>

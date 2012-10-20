@@ -322,13 +322,15 @@ namespace S22.Imap {
 		/// </summary>
 		/// <param name="command">Command string to be sent to the server. The command string is
 		/// suffixed by CRLF (as is required by the IMAP protocol) prior to sending.</param>
+		/// <param name="resolveLiterals">Set to true to resolve possible literals
+		/// returned by the server (Refer to RFC 3501 Section 4.3 for details).</param>
 		/// <returns>The response received by the server.</returns>
-		private string SendCommandGetResponse(string command) {
+		private string SendCommandGetResponse(string command, bool resolveLiterals = true) {
 			lock (readLock) {
 				lock (writeLock) {
 					SendCommand(command);
 				}
-				return GetResponse();
+				return GetResponse(resolveLiterals);
 			}
 		}
 
@@ -336,8 +338,10 @@ namespace S22.Imap {
 		/// Waits for a response from the server. This method blocks
 		/// until a response has been received.
 		/// </summary>
+		/// <param name="resolveLiterals">Set to true to resolve possible literals
+		/// returned by the server (Refer to RFC 3501 Section 4.3 for details).</param>
 		/// <returns>A response string from the server</returns>
-		private string GetResponse() {
+		private string GetResponse(bool resolveLiterals = true) {
 			const int Newline = 10, CarriageReturn = 13;
 			using (var mem = new MemoryStream()) {
 				lock (readLock) {
@@ -346,7 +350,14 @@ namespace S22.Imap {
 						if (b == CarriageReturn)
 							continue;
 						if (b == Newline) {
-							return Encoding.ASCII.GetString(mem.ToArray());
+							string s = Encoding.ASCII.GetString(mem.ToArray());
+							if (resolveLiterals) {
+								s = Regex.Replace(s, @"{(\d+)}$", m => {
+									return "\"" + GetData(Convert.ToInt32(m.Groups[1].Value)) +
+										"\"" + GetResponse(false);
+								});
+							}
+							return s;
 						} else
 							mem.WriteByte(b);
 					}
@@ -561,11 +572,9 @@ namespace S22.Imap {
 							if (a.ToLower() == @"\noselect")
 								add = false;
 						}
-						string name = m.Groups[3].Value.Trim('"');
-						// MS Exchange Server has the weird habit of returning names that
-						// contain quote characters in a new line.
-						if (Regex.IsMatch(name, @"^{(\d+)}$"))
-							name = GetResponse();
+						// Names _should_ be enclosed in double-quotes but not all servers
+						// follow through with this, so we don't enforce it in the above regex.
+						string name = Regex.Replace(m.Groups[3].Value, "^\"(.+)\"$", "$1");
 						try {
 							name = Util.UTF7Decode(name);
 						} catch {
@@ -617,6 +626,113 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
+		/// Retrieves status information (total number of messages, various attributes
+		/// as well as quota information) for the specified mailbox.</summary>
+		/// <param name="mailbox">The mailbox to retrieve status information for. If this
+		/// parameter is omitted, the value of the DefaultMailbox property is used to
+		/// determine the mailbox to operate on.</param>
+		/// <returns>A MailboxInfo object containing status information for the
+		/// mailbox.</returns>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the operation could
+		/// not be completed. The message property of the exception contains the error message
+		/// returned by the server.</exception>
+		/// <remarks>Not all IMAP servers support the retrieval of quota information. If
+		/// it is not possible to retrieve this information, the UsedStorage and FreeStorage
+		/// properties of the returned MailboxStatus instance are set to 0.</remarks>
+		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMailboxInfo"]/*'/>
+		public MailboxInfo GetMailboxInfo(string mailbox = null) {
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			// this is not a cheap method to call, it involves a couple of round-trips
+			// to the server.
+			lock (sequenceLock) {
+				PauseIdling();
+				if (mailbox == null)
+					mailbox = defaultMailbox;
+				MailboxStatus status = GetMailboxStatus(mailbox);
+
+				/* Collect quota information if the server supports it */
+				UInt64 Used = 0, Free = 0;
+				if (Supports("QUOTA")) {
+					MailboxQuota[] Quotas = GetQuota(mailbox);
+					foreach (MailboxQuota Q in Quotas) {
+						if (Q.ResourceName == "STORAGE") {
+							Used = Q.Usage;
+							Free = Q.Limit - Q.Usage;
+						}
+					}
+				}
+				/* Try to collect special-use flags */
+				MailboxFlag[] flags = GetMailboxFlags(mailbox);
+
+				return new MailboxInfo(mailbox, flags, status.Messages,
+					status.Unread, status.NextUID, Used, Free);
+			}
+		}
+
+		/// <summary>
+		/// Retrieves the set of special-use flags associated with the specified
+		/// mailbox.
+		/// </summary>
+		/// <param name="mailbox">The mailbox to receive the special-use flags for.
+		/// If this parameter is omitted, the value of the DefaultMailbox property
+		/// is used to determine the mailbox to operate on.</param>
+		/// <exception cref="NotAuthenticatedException">Thrown if the method was called
+		/// in a non-authenticated state, i.e. before logging into the server with
+		/// valid credentials.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the operation could
+		/// not be completed. The message property of the exception contains the error
+		/// message returned by the server.</exception>
+		/// <returns>An array containing the special-use flags set on the
+		/// mailbox.</returns>
+		/// <remarks>This feature is an optional extension to the IMAP protocol and as
+		/// such some servers may not report any flags at all.</remarks>
+		private MailboxFlag[] GetMailboxFlags(string mailbox = null) {
+			Dictionary<string, MailboxFlag> dictFlags =
+				new Dictionary<string, MailboxFlag>(StringComparer.OrdinalIgnoreCase) {
+				{ @"\All", MailboxFlag.AllMail },	{ @"\AllMail", MailboxFlag.AllMail },
+				{ @"\Archive", MailboxFlag.Archive }, { @"\Drafts", MailboxFlag.Drafts },
+				{ @"\Junk", MailboxFlag.Spam },	{ @"\Spam", MailboxFlag.Spam },
+				{ @"\Trash", MailboxFlag.Trash },	{ @"\Rubbish", MailboxFlag.Trash },
+				{ @"\Sent", MailboxFlag.Sent },	{ @"\SentItems", MailboxFlag.Sent }
+			};
+			List<MailboxFlag> list = new List<MailboxFlag>();
+			if (!Authed)
+				throw new NotAuthenticatedException();
+			lock (sequenceLock) {
+				PauseIdling();
+				if (mailbox == null)
+					mailbox = defaultMailbox;
+				string tag = GetTag();
+				// Use XLIST if server supports it, otherwise at least try LIST and
+				// hope server implements the "LIST Extension for Special-Use Mailboxes"
+				// (Refer to RFC6154).
+				string command = Supports("XLIST") ? "XLIST" : "LIST";
+				string response = SendCommandGetResponse(tag + command + " \"\" " +
+					Util.UTF7Encode(mailbox).QuoteString());
+				while (response.StartsWith("*")) {
+					Match m = Regex.Match(response,
+						"\\* X?LIST \\((.*)\\)\\s+\"([^\"]+)\"\\s+(.+)");
+					if (m.Success) {
+						string[] flags = m.Groups[1].Value.Split(' ');
+						foreach (string f in flags) {
+							if (dictFlags.ContainsKey(f))
+								list.Add(dictFlags[f]);
+						}
+					}
+					response = GetResponse();
+				}
+				ResumeIdling();
+				if (!IsResponseOK(response, tag))
+					throw new BadServerResponseException(response);
+			}
+			return list.ToArray();
+		}
+
+		/// <summary>
 		/// Retrieves status information (total number of messages, number of unread
 		/// messages, etc.) for the specified mailbox.</summary>
 		/// <param name="mailbox">The mailbox to retrieve status information for. If this
@@ -630,21 +746,18 @@ namespace S22.Imap {
 		/// <exception cref="BadServerResponseException">Thrown if the operation could
 		/// not be completed. The message property of the exception contains the error message
 		/// returned by the server.</exception>
-		/// <remarks>Not all IMAP servers support the retrieval of quota information. If
-		/// it is not possible to retrieve this information, the UsedStorage and FreeStorage
-		/// properties of the returned MailboxStatus instance are set to 0.</remarks>
-		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetStatus"]/*'/>
-		public MailboxStatus GetStatus(string mailbox = null) {
+		private MailboxStatus GetMailboxStatus(string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
 			int messages = 0, unread = 0;
+			uint uid = 0;
 			lock (sequenceLock) {
 				PauseIdling();
 				if (mailbox == null)
 					mailbox = defaultMailbox;
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "STATUS " +
-					Util.UTF7Encode(mailbox).QuoteString() + " (MESSAGES UNSEEN)");
+					Util.UTF7Encode(mailbox).QuoteString() + " (MESSAGES UNSEEN UIDNEXT)");
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response, @"\* STATUS.*MESSAGES (\d+)");
 					if (m.Success)
@@ -652,27 +765,16 @@ namespace S22.Imap {
 					m = Regex.Match(response, @"\* STATUS.*UNSEEN (\d+)");
 					if (m.Success)
 						unread = Convert.ToInt32(m.Groups[1].Value);
+					m = Regex.Match(response, @"\* STATUS.*UIDNEXT (\d+)");
+					if (m.Success)
+						uid = Convert.ToUInt32(m.Groups[1].Value);
 					response = GetResponse();
 				}
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
 			}
-
-			/* Collect quota information if server supports it */
-			UInt64 usedStorage = 0, freeStorage = 0;
-
-			if (Supports("QUOTA")) {
-				MailboxQuota[] Quotas = GetQuota(mailbox);
-				foreach (MailboxQuota Q in Quotas) {
-					if (Q.ResourceName == "STORAGE") {
-						usedStorage = Q.Usage;
-						freeStorage = Q.Limit - Q.Usage;
-					}
-				}
-			}
-
-			return new MailboxStatus(messages, unread, usedStorage, freeStorage);
+			return new MailboxStatus(messages, unread, uid);
 		}
 
 		/// <summary>
@@ -1062,7 +1164,7 @@ namespace S22.Imap {
 				StringBuilder builder = new StringBuilder();
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "UID FETCH " + uid + " (BODY" +
-					(seen ? null : ".PEEK") + "[HEADER])");
+					(seen ? null : ".PEEK") + "[HEADER])", false);
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response, @"\* \d+ FETCH .* {(\d+)}");
 					if (m.Success) {
@@ -1072,7 +1174,7 @@ namespace S22.Imap {
 						if (!Regex.IsMatch(response, @"\)\s*$"))
 							throw new BadServerResponseException(response);
 					}
-					response = GetResponse();
+					response = GetResponse(false);
 				}
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
@@ -1154,7 +1256,7 @@ namespace S22.Imap {
 				StringBuilder builder = new StringBuilder();
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
-					" (BODY" + (seen ? null : ".PEEK") + "[" + partNumber + "])");
+					" (BODY" + (seen ? null : ".PEEK") + "[" + partNumber + "])", false);
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response, @"\* \d+ FETCH .* {(\d+)}");
 					if (m.Success) {
@@ -1164,7 +1266,7 @@ namespace S22.Imap {
 						if (!Regex.IsMatch(response, @"\)\s*$"))
 							throw new BadServerResponseException(response);
 					}
-					response = GetResponse();
+					response = GetResponse(false);
 				}
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
@@ -1201,7 +1303,7 @@ namespace S22.Imap {
 				StringBuilder builder = new StringBuilder();
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
-					" (BODY" + (seen ? null : ".PEEK") + "[])");
+					" (BODY" + (seen ? null : ".PEEK") + "[])", false);
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response, @"\* \d+ FETCH .* {(\d+)}");
 					if (m.Success) {
@@ -1211,7 +1313,7 @@ namespace S22.Imap {
 						if (!Regex.IsMatch(response, @"\)\s*$"))
 							throw new BadServerResponseException(response);
 					}
-					response = GetResponse();
+					response = GetResponse(false);
 				}
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
@@ -1364,6 +1466,15 @@ namespace S22.Imap {
 		/// <seealso cref="AddMessageFlags"/>
 		/// <seealso cref="RemoveMessageFlags"/>
 		public MessageFlag[] GetMessageFlags(uint uid, string mailbox = null) {
+			Dictionary<string, MessageFlag> messageFlagsMapping =
+			new Dictionary<string, MessageFlag>(StringComparer.OrdinalIgnoreCase) {
+				{ @"\Seen", MessageFlag.Seen },
+				{ @"\Answered", MessageFlag.Answered },
+				{ @"\Flagged", MessageFlag.Flagged },
+				{ @"\Deleted", MessageFlag.Deleted },
+				{ @"\Draft", MessageFlag.Draft },
+				{ @"\Recent",	MessageFlag.Recent }
+			};
 			if (!Authed)
 				throw new NotAuthenticatedException();
 			lock (sequenceLock) {
@@ -1521,20 +1632,6 @@ namespace S22.Imap {
 					throw new BadServerResponseException(response);
 			}
 		}
-
-		/// <summary>
-		/// A mapping to map IMAP message flag attribute values to their 
-		/// corresponding MessageFlag enum counterparts.
-		/// </summary>
-		static private Dictionary<string, MessageFlag> messageFlagsMapping =
-			new Dictionary<string, MessageFlag>(StringComparer.OrdinalIgnoreCase) {
-				{ @"\Seen", MessageFlag.Seen },
-				{ @"\Answered", MessageFlag.Answered },
-				{ @"\Flagged", MessageFlag.Flagged },
-				{ @"\Deleted", MessageFlag.Deleted },
-				{ @"\Draft", MessageFlag.Draft },
-				{ @"\Recent",	MessageFlag.Recent }
-			};
 
 		/// <summary>
 		/// Starts receiving of IMAP IDLE notifications from the IMAP server.

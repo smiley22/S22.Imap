@@ -52,6 +52,8 @@
     <Compile Include="IdleEvents.cs" />
     <Compile Include="ImapClient.cs" />
     <Compile Include="Exceptions.cs" />
+    <Compile Include="MailboxInfo.cs" />
+    <Compile Include="MailboxFlags.cs" />
     <Compile Include="MailboxQuota.cs" />
     <Compile Include="MailboxStatus.cs" />
     <Compile Include="MailMessage.cs" />

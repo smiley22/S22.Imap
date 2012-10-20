@@ -2,29 +2,36 @@
 
 namespace S22.Imap {
 	/// <summary>
-	/// Contains status information for a mailbox.
+	/// Represents the status information of a mailbox which can be
+	/// constructed from the server response to a STATUS command.
 	/// </summary>
 	[Serializable]
-	public class MailboxStatus {
+	internal class MailboxStatus {
 		/// <summary>
 		/// Initializes a new MailboxStatus instance with the specified number
 		/// of total and unread messages.
 		/// </summary>
 		/// <param name="Messages">The total number of messages in the mailbox.</param>
 		/// <param name="Unread">The number of unread (unseen) messages in the mailbox.</param>
-		/// <param name="Usage">The amount of occupied space in the mailbox, in bytes.</param>
-		/// <param name="Free">The amount of free space in the mailbox, in bytes.</param>
-		internal MailboxStatus(int Messages, int Unread, UInt64 Usage, UInt64 Free) {
+		/// <param name="NextUID">The next unique identifier value of the mailbox</param>
+		internal MailboxStatus(int Messages, int Unread, uint NextUID) {
 			this.Messages = Messages;
 			this.Unread = Unread;
-			this.UsedStorage = Usage;
-			this.FreeStorage = Free;
+			this.NextUID = NextUID;
+		}
+
+		/// <summary>
+		/// The next unique identifier value of the mailbox.
+		/// </summary>
+		internal uint NextUID {
+			get;
+			private set;
 		}
 
 		/// <summary>
 		/// The total number of messages in the mailbox.
 		/// </summary>
-		public int Messages {
+		internal int Messages {
 			get;
 			private set;
 		}
@@ -32,23 +39,7 @@ namespace S22.Imap {
 		/// <summary>
 		/// The number of unread (unseen) messages in the mailbox.
 		/// </summary>
-		public int Unread {
-			get;
-			private set;
-		}
-
-		/// <summary>
-		/// The amount of used storage in the mailbox, measured in bytes.
-		/// </summary>
-		public UInt64 UsedStorage {
-			get;
-			private set;
-		}
-
-		/// <summary>
-		/// The amount of free storage in the mailbox, measured in bytes.
-		/// </summary>
-		public UInt64 FreeStorage {
+		internal int Unread {
 			get;
 			private set;
 		}

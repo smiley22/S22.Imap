@@ -240,16 +240,28 @@
 			</example>
 		</ImapClient>		
 		
-		<ImapClient name="GetStatus">
+		<ImapClient name="GetMailboxInfo">
 			<example>
 				<code>
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
 						"My_Password", true, AuthMethod.Login);
 
-					MailboxStatus status = Client.GetStatus();
-
-					Console.WriteLine("Number of messages in the mailbox: " + status.Messages);
-					Console.WriteLine("Number of unread messages in the mailbox: " + status.Unread);
+					// Get a list of all mailboxes
+					foreach(string m in Client.ListMailboxes())
+					{
+						MailboxInfo info = Client.GetMailboxInfo(m);
+						
+						Console.WriteLine(info.Name);
+						Console.WriteLine("Used storage: " + info.UsedStorage);
+						Console.WriteLine("Free storage: " + info.FreeStorage);
+						Console.WriteLine("Next UID: " + info.NextUID);
+						Console.WriteLine("Messages: " + info.Messages);
+						Console.WriteLine("Unread: " + info.Unread);
+						Console.WriteLine("Set Flags: ");
+						foreach (MailboxFlag f in info.Flags)
+							Console.Write(f.ToString() + ",");
+						Console.WriteLine();	
+					}
 
 					Client.Dispose();
 				</code>

@@ -16,7 +16,8 @@ namespace S22.Imap {
 	/// Allows applications to communicate with a mail server by using the
 	/// Internet Message Access Protocol (IMAP).
 	/// </summary>
-	public class ImapClient : IDisposable {
+	public class ImapClient : IDisposable, IImapClient
+	{
 		private Stream stream;
 		private TcpClient client;
 		private readonly object readLock = new object();

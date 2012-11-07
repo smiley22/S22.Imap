@@ -50,6 +50,7 @@
     <Compile Include="Bodystructure\Reader.cs" />
     <Compile Include="FetchOptions.cs" />
     <Compile Include="IdleEvents.cs" />
+    <Compile Include="IImapClient.cs" />
     <Compile Include="ImapClient.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="MailboxInfo.cs" />

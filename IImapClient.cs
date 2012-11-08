@@ -563,10 +563,5 @@ namespace S22.Imap
         /// <seealso cref="SetMessageFlags"/>
         /// <seealso cref="AddMessageFlags"/>
         void RemoveMessageFlags(uint uid, string mailbox, params MessageFlag[] flags);
-
-        /// <summary>
-        /// Releases all resources used by this ImapClient object.
-        /// </summary>
-        void Dispose();
     }
 }

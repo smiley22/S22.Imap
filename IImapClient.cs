@@ -3,7 +3,7 @@ using System.Net.Mail;
 
 namespace S22.Imap
 {
-    public interface IImapClient
+    public interface IImapClient: IDisposable
     {
         /// <summary>
         /// The default mailbox to operate on, when no specific mailbox name was indicated

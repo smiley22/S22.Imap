@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Mail;
@@ -39,6 +40,7 @@ namespace S22.Imap {
 		private int pauseRefCount = 0;
 		private SafeQueue<string> idleEvents = new SafeQueue<string>();
 		private System.Timers.Timer noopTimer = new System.Timers.Timer();
+		private static readonly TraceSource ts = new TraceSource("S22.Imap");
 
 		/// <summary>
 		/// The default mailbox to operate on, when no specific mailbox name was indicated
@@ -307,6 +309,7 @@ namespace S22.Imap {
 		/// <param name="command">Command string to be sent to the server. The command string is
 		/// suffixed by CRLF (as is required by the IMAP protocol) prior to sending.</param>
 		private void SendCommand(string command) {
+			ts.TraceInformation("C -> " + command);
 			// We can safely use UTF-8 here since it's backwards compatible with ASCII
 			// and comes in handy when sending strings in literal form
 			// (see RFC 3501, 4.3).
@@ -358,6 +361,7 @@ namespace S22.Imap {
 										"\"" + GetResponse(false);
 								});
 							}
+							ts.TraceInformation("S -> " + s);
 							return s;
 						} else
 							mem.WriteByte(b);

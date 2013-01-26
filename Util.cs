@@ -169,7 +169,10 @@ namespace S22.Imap {
 					for (int i = 0; i < value.Length; i++) {
 						if (value[i] == '=') {
 							string hex = value.Substring(i + 1, 2);
-							m.WriteByte(Convert.ToByte(hex, 16));
+							// deal with soft line breaks
+							// see: https://github.com/smiley22/S22.Imap/issues/21
+							if(hex != "\r\n")
+								m.WriteByte(Convert.ToByte(hex, 16));
 							i = i + 2;
 						} else {
 							m.WriteByte(Convert.ToByte(value[i]));

@@ -1,0 +1,39 @@
+Return-Path: <xxxxxxx@canon.no>
+Received: from mail-gtw.canon.no (mail.canon.no [194.248.71.4])
+	by mail29.nsc.no (8.9.3p2/8.9.3) with ESMTP id LAA17991
+	for <xxxxxxxx@online.no>; Fri, 4 Jul 2003 11:07:01 +0200 (MEST)
+From: "Helpdesk/NL-NOTES,.CANON"@canon.no
+Sensitivity: 
+Subject: =?ISO-8859-1?Q?Feil_p=E5_PowerShot_A70?=
+To: "Martin Bergersen" <xxxxxxxx@online.no>
+X-Mailer: Lotus Notes Release 5.0.11   July 24, 2002
+Message-ID: <OFA7E5D94E.E33F8ECB-ONC1256D59.0031C285-C1256D59.0031E75A@canon.no>
+Sender: xxxxxxx@canon.no
+Date: Fri, 4 Jul 2003 11:05:33 +0200
+X-MIMETrack: Serialize by Router on GTW/Canon(Release 6.0.1CF1 | March 06, 2003) at
+ 04.07.2003 11:12:03
+MIME-Version: 1.0
+Content-type: text/plain; charset=ISO-8859-1
+Content-transfer-encoding: quoted-printable
+
+Hei!
+Jeg har n=E5 nylig kj=F8pt et=A0"PowerShot  A70" digital=A0kamera fra m=
+in onkel i
+Canon. Det har fungert helt  fint, helt til forige l=F8rdag. Da jeg skr=
+udde
+det av, gikk ikke linsen inn  igjen.=A0Og n=E5r jeg skrur det p=E5 igje=
+n, kommer
+"startup" bilde, men s=E5  begynner det =E5 pipe, og viser med beskjede=
+n E18,
+og skrur seg  av igjen. Og linsa er fortsatt ute!
+Lenger har jeg ikke kommet. Nytter ikke og bytte  batterier, flash card=
+,
+eller koble til pc'n. Pr=F8vde =E5 finne et oppslagsverk  etter E18 ogs=
+=E5, men
+forgjeves.
+Er det noe jeg kan trykke p=E5? Er det bare kameraet  som har f=E5tt hi=
+kkas,
+elller har linsa kj=F8rt seg fast, og det m=E5 sendes  inn?
+Hjelp!
+
+Martin.

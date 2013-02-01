@@ -157,7 +157,8 @@ namespace S22.Imap {
 					// at all, so just wrap this in a try/catch block in case
 					// MailAddress' ctor complains.
 					try {
-						mails.Add(new MailAddress(m.Groups[2].Value, m.Groups[1].Value));
+						string displayName = Util.DecodeWord(m.Groups[1].Value);
+						mails.Add(new MailAddress(m.Groups[2].Value, displayName));
 					} catch { }
 				}
 			}
@@ -278,7 +279,8 @@ namespace S22.Imap {
 			// If the MailMessage's Body fields haven't been initialized yet, put it there.
 			// Some weird (i.e. spam) mails like to omit content-types so don't check for
 			// that here and just assume it's text.
-			if (message.Body == string.Empty) {
+			if (message.Body == string.Empty &&
+				part.Disposition.Type != ContentDispositionType.Attachment) {
 				message.Body = encoding.GetString(bytes);
 				message.BodyEncoding = encoding;
 				message.IsBodyHtml = part.Subtype.ToLower() == "html";
@@ -403,9 +405,9 @@ namespace S22.Imap {
 					body.AppendLine(line);
 				}
 				p.body = body.ToString();
-				// Add the MIME part to the list unless body is null which means the
-				// body contained nested multipart content
-				if (!String.IsNullOrEmpty(p.body))
+				// Add the MIME part to the list unless body is null or empty which means
+				// the body contained nested multipart content
+				if (!String.IsNullOrWhiteSpace(p.body))
 					list.Add(p);
 				// If the boundary is actually the end boundary, we're done 
 				if (line == null || line.StartsWith(end))
@@ -422,7 +424,7 @@ namespace S22.Imap {
 		/// <returns>An initialized instance of the Bodypart class.</returns>
 		private static Bodypart BodypartFromMIME(MIMEPart mimePart) {
 			NameValueCollection contentType = ParseMIMEField(
-				mimePart.header["Content-Type"]);
+				mimePart.header["Content-Type"]); 
 			Bodypart p = new Bodypart(null);
 			Match m = Regex.Match(contentType["value"], "(.+)/(.+)");
 			if (m.Success) {

@@ -1,0 +1,10 @@
+* LIST (\HasNoChildren) "/" "INBOX"
+* LIST (\Noselect \HasChildren) "/" "[Gmail]"
+* LIST (\HasChildren \HasNoChildren \All) "/" "[Gmail]/&A4wDuwOx- &A8QDsQ- &A7wDtwO9A80DvAOxA8QDsQ-"
+* LIST (\HasNoChildren \Junk) "/" "[Gmail]/&A5EDvQO1A8ADuQO4A80DvAO3A8QDsQ-"
+* LIST (\HasChildren \HasNoChildren \Sent) "/" "[Gmail]/&A5EDwAO1A8MDxAOxA7sDvAOtA70DsQ-"
+* LIST (\HasChildren \HasNoChildren \Trash) "/" "[Gmail]/&A5oDrAO0A78Dwg- &A7EDwAO,A8EDwQO5A7wDvAOsA8QDyQO9-"
+* LIST (\HasNoChildren \Flagged) "/" "[Gmail]/&A5wDtQ- &A7EDwwPEA60DwQO5-"
+* LIST (\HasNoChildren \Drafts) "/" "[Gmail]/&A6ADwQPMA8cDtQO5A8EDsQ-"
+* LIST (\HasNoChildren \Important) "/" "[Gmail]/&A6MDtwO8A7EDvQPEA7kDugOs-"
+xm001 OK Success

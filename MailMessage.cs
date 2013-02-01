@@ -72,7 +72,7 @@ namespace S22.Imap {
 				throw new InvalidOperationException("The From property must not be null");
 			header.Add("From", m.From.To822Address());
 			if (m.Subject != null)
-				header.Add("Subject", m.Subject.IsASCII() ? m.Subject : QEncode(m.Subject));
+				header.Add("Subject", m.Subject.IsASCII() ? m.Subject : Base64Encode(m.Subject));
 			foreach (MailAddress a in m.To)
 				header.Add("To", a.To822Address());
 			foreach (MailAddress a in m.CC)
@@ -147,6 +147,18 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
+		/// Takes a unicode string and encodes it using Base64-encoding.
+		/// </summary>
+		/// <param name="s">The string to encode.</param>
+		/// <returns>The input string encoded as Base64-encoded string
+		/// containing only ASCII characters.</returns>
+		static string Base64Encode(string s) {
+			StringBuilder builder = new StringBuilder("=?UTF-8?B?");
+			string b64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(s));
+			return builder.Append(b64).ToString() + "?=";
+		}
+
+		/// <summary>
 		/// Creates an address string from the specified MailAddress instance in
 		/// compliance with the address specification as outlined in RFC2822 under
 		/// section 3.4
@@ -157,7 +169,7 @@ namespace S22.Imap {
 		static string To822Address(this MailAddress address) {
 			if (!String.IsNullOrEmpty(address.DisplayName)) {
 				string name = address.DisplayName.IsASCII() ?
-					address.DisplayName : QEncode(address.DisplayName);
+					address.DisplayName : Base64Encode(address.DisplayName);
 				return name + " <" + address.Address + ">";
 			}
 			return address.Address;

@@ -115,6 +115,16 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
+		/// This constructor is solely used for unit testing.
+		/// </summary>
+		/// <param name="stream">A stream to initialize the ImapClient instance
+		/// with.</param>
+		internal ImapClient(Stream stream) {
+			this.stream = stream;
+			Authed = true;
+		}
+
+		/// <summary>
 		/// Initializes a new instance of the ImapClient class and connects to the specified port
 		/// on the specified host, optionally using the Secure Socket Layer (SSL) security protocol.
 		/// </summary>
@@ -1809,11 +1819,22 @@ namespace S22.Imap {
 					/* Let the dispatcher thread take care of the IDLE notification so we
 					 * can go back to receiving responses */
 					idleEvents.Enqueue(response);
-				} catch (IOException) {
+				} catch (IOException e) {
 					/* Closing _Stream or the underlying _Connection instance will
 					 * cause a WSACancelBlockingCall exception on a blocking socket.
 					 * This is not an error so just let it pass.
 					 */
+					if (e.InnerException is SocketException) {
+						/* WSAEINTR = 10004 */
+						if (((SocketException)e.InnerException).ErrorCode == 10004)
+							return;
+					}
+					/* If the IO exception was raised because of an underlying
+					 * ThreadAbortException, we can ignore it. */
+					if (e.InnerException is ThreadAbortException)
+						return;
+					/* Otherwise let it bubble up */
+					throw;
 				}
 			}
 		}
@@ -1927,8 +1948,9 @@ namespace S22.Imap {
 				idleDispatch = null;
 			}
 			stream.Close();
-			client.Close();
 			stream = null;
+			if(client != null)
+				client.Close();
 			client = null;
 		}
 	}

@@ -5,17 +5,14 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("S22.Imap")]
-[assembly: AssemblyDescription("A library for communicating with an IMAP mail server")]
+[assembly: AssemblyTitle("S22.Imap.Test")]
+[assembly: AssemblyDescription("Unit tests for S22.Imap")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("None")]
-[assembly: AssemblyProduct("S22.Imap")]
-[assembly: AssemblyCopyright("Copyright © Torben Könke 2012-2013")]
+[assembly: AssemblyCompany("Microsoft")]
+[assembly: AssemblyProduct("S22.Imap.Test")]
+[assembly: AssemblyCopyright("Copyright © Torben Könke 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-
-// Expose internals to Test project assembly.
-[assembly: InternalsVisibleTo("S22.Imap.Test")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
@@ -23,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("df1a2cd6-fa4f-4398-8d3a-0a4f61225203")]
+[assembly: Guid("90e10042-514e-471b-b573-3726678e7147")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -35,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.8.*")]
-[assembly: AssemblyFileVersion("2.8.0.0")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]

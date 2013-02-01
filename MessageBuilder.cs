@@ -41,7 +41,7 @@ namespace S22.Imap {
 				m.SubjectEncoding = Util.GetEncoding(ma.Groups[1].Value);
 				try {
 					m.Subject = Util.DecodeWords(header["Subject"]).
-						Replace(Environment.NewLine, "");
+						Replace("\n", "").Replace("\r", "");
 				} catch {
 					// if, for any reason encoding fails, set the subject to the
 					// original, unaltered string.

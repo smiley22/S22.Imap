@@ -1801,7 +1801,7 @@ namespace S22.Imap {
 		/// <summary>
 		/// The main idle loop. Waits for incoming IMAP IDLE notifications and dispatches
 		/// them as events. This runs in its own thread whenever IMAP IDLE
-		/// notifications are to be received.
+		/// notifications are being received.
 		/// </summary>
 		private void IdleLoop() {
 			if (idleDispatch == null) {
@@ -1844,22 +1844,27 @@ namespace S22.Imap {
 		/// queue. The notification is then examined and dispatched as an event.
 		/// </summary>
 		private void EventDispatcher() {
+			uint lastUid = 0;
 			while (true) {
 				string response = idleEvents.Dequeue();
 				Match m = Regex.Match(response, @"\*\s+(\d+)\s+(\w+)");
 				if (!m.Success)
 					continue;
-				uint numberOfMessages = Convert.ToUInt32(m.Groups[1].Value);
+				uint numberOfMessages = Convert.ToUInt32(m.Groups[1].Value),
+					uid = GetHighestUID();
 				switch (m.Groups[2].Value.ToUpper()) {
 					case "EXISTS":
-						newMessageEvent.Raise(this,
-							new IdleMessageEventArgs(numberOfMessages, GetHighestUID(), this));
+						if (lastUid != uid) {
+							newMessageEvent.Raise(this,
+								new IdleMessageEventArgs(numberOfMessages, uid, this));
+						}
 						break;
 					case "EXPUNGE":
 						messageDeleteEvent.Raise(
-							this, new IdleMessageEventArgs(numberOfMessages, GetHighestUID(), this));
+							this, new IdleMessageEventArgs(numberOfMessages, uid, this));
 						break;
 				}
+				lastUid = uid;
 			}
 		}
 

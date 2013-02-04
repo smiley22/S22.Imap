@@ -35,7 +35,8 @@ namespace S22.Imap {
 		/// being thrown. </param>
 		/// <param name="context">An object that contains contextual information about the source
 		/// or destination. </param>
-		protected BadServerResponseException(SerializationInfo info, StreamingContext context) { }
+		protected BadServerResponseException(SerializationInfo info, StreamingContext context)
+			: base(info, context) { }
 	}
 
 	/// <summary>
@@ -72,7 +73,8 @@ namespace S22.Imap {
 		/// being thrown. </param>
 		/// <param name="context">An object that contains contextual information about the source
 		/// or destination. </param>
-		protected InvalidCredentialsException(SerializationInfo info, StreamingContext context) { }
+		protected InvalidCredentialsException(SerializationInfo info, StreamingContext context)
+			: base(info, context) { }
 	}
 
 	/// <summary>
@@ -109,7 +111,7 @@ namespace S22.Imap {
 		/// being thrown. </param>
 		/// <param name="context">An object that contains contextual information about the source
 		/// or destination. </param>
-		protected NotAuthenticatedException(SerializationInfo info, StreamingContext context) { }
+		protected NotAuthenticatedException(SerializationInfo info, StreamingContext context)
+			: base(info, context) { }
 	}
-
 }

@@ -279,7 +279,7 @@ namespace S22.Imap {
 			// If the MailMessage's Body fields haven't been initialized yet, put it there.
 			// Some weird (i.e. spam) mails like to omit content-types so don't check for
 			// that here and just assume it's text.
-			if (message.Body == string.Empty &&
+			if (String.IsNullOrEmpty(message.Body) &&
 				part.Disposition.Type != ContentDispositionType.Attachment) {
 				message.Body = encoding.GetString(bytes);
 				message.BodyEncoding = encoding;

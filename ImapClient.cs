@@ -1280,6 +1280,11 @@ namespace S22.Imap {
 						response = GetResponse();
 						if (!Regex.IsMatch(response, @"\)\s*$"))
 							throw new BadServerResponseException(response);
+					} else {
+						/* some servers inline the data in the FETCH response line */
+						m = Regex.Match(response, "\\* \\d+ FETCH \\(.*\"(.*)\".*\\)");
+						if (m.Success)
+							builder.Append(m.Groups[1]);
 					}
 					response = GetResponse(false);
 				}
@@ -1401,6 +1406,8 @@ namespace S22.Imap {
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "UID COPY " + uid + " "
 					+ destination.QuoteString());
+				while (response.StartsWith("*"))
+					response = GetResponse();
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
@@ -1500,7 +1507,7 @@ namespace S22.Imap {
 					" (FLAGS)");
 				List<MessageFlag> flags = new List<MessageFlag>();
 				while (response.StartsWith("*")) {
-					Match m = Regex.Match(response, @"FLAGS \(([\w\s\\]*)\)");
+					Match m = Regex.Match(response, @"FLAGS \(([\w\s\\$-]*)\)");
 					if (m.Success) {
 						string[] setFlags = m.Groups[1].Value.Split(' ');
 						foreach (string flag in setFlags) {

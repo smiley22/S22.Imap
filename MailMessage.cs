@@ -11,7 +11,7 @@ namespace S22.Imap {
 	/// <summary>
 	/// Adds extension methods to the MailMessage class of the .Net Framework.
 	/// These are only used internally and are not visible outside of the
-	/// S22.Imap assembly so as to not interfere with other assemblies.
+	/// S22.Imap assembly.
 	/// </summary>
 	internal static class MailMessageExtension {
 		/// <summary>
@@ -40,7 +40,7 @@ namespace S22.Imap {
  */
 				builder.AppendLine(line);
 			}
-			// The mail body is separated by an empty line from the header
+			// The mail body is separated by an empty line from the header.
 			builder.AppendLine();
 			builder.Append(BuildBody(message, header));
 			builder.AppendLine();
@@ -93,7 +93,7 @@ namespace S22.Imap {
 					GenerateContentBoundary();
 				header.Add("Content-Type", contentType);
 			}
-			// Add any custom headers added by user
+			// Add any custom headers added by the user.
 			foreach (string key in m.Headers) {
 				if (ignore.Contains(key, StringComparer.OrdinalIgnoreCase))
 					continue;
@@ -201,14 +201,14 @@ namespace S22.Imap {
 		static string BuildBody(MailMessage m, NameValueCollection header) {
 			StringBuilder builder = new StringBuilder();
 			bool multipart = header["Content-Type"].Contains("boundary");
-			// Just a regular RFC822 mail w/o any MIME parts
+			// Just a regular RFC822 mail w/o any MIME parts.
 			if (!multipart) {
 				AddBody(builder, m, header);
 				return builder.ToString();
 			}
 			Match match = Regex.Match(header["Content-Type"], @"boundary=(\w+)");
 			string boundary = match.Groups[1].Value;
-			// Start boundary
+			// Add the start boundary.
 			builder.AppendLine("--" + boundary);
 			bool nestParts = m.AlternateViews.Count > 0 && m.Attachments.Count > 0;
 			if (nestParts) {
@@ -226,7 +226,7 @@ namespace S22.Imap {
 					AddAttachment(builder, a);
 				}
 			}
-			// End boundary
+			// Add the end boundary.
 			builder.AppendLine("--" + boundary + "--");
 			return builder.ToString();
 		}
@@ -290,7 +290,7 @@ namespace S22.Imap {
 			if (view is Attachment)
 				builder.AppendLine("Content-Disposition: attachment");
 			builder.AppendLine();
-			// Append the actual body part contents encoded as Base64
+			// Append the actual body part contents encoded as Base64.
 			using (MemoryStream memstream = new MemoryStream()) {
 				int bytesRead;
 				byte[] buffer = new byte[4096];
@@ -305,7 +305,7 @@ namespace S22.Imap {
 				while ((read = reader.Read(line, 0, line.Length)) > 0)
 					builder.AppendLine(new string(line, 0, read));
 			}
-			// Rewind the stream if it supports seeking
+			// Rewind the stream if it supports seeking.
 			if (view.ContentStream.CanSeek)
 				view.ContentStream.Seek(0, SeekOrigin.Begin);
 		}
@@ -329,7 +329,7 @@ namespace S22.Imap {
 			string boundary = GenerateContentBoundary();
 			builder.AppendLine("Content-Type: multipart/alternative; boundary=" + boundary);
 			builder.AppendLine();
-			// Add the body parts to the nested multipart/alternative part
+			// Add the body parts to the nested multipart/alternative part.
 			builder.AppendLine("--" + boundary);
 			AddBody(builder, m, header, true);
 			foreach (AlternateView v in m.AlternateViews) {
@@ -353,7 +353,7 @@ namespace S22.Imap {
 			string boundary = GenerateContentBoundary();
 			builder.AppendLine("Content-Type: multipart/mixed; boundary=" + boundary);
 			builder.AppendLine();
-			// Add the body parts to the nested multipart/mixed part
+			// Add the body parts to the nested multipart/mixed part.
 			foreach (Attachment a in m.Attachments) {
 				builder.AppendLine("--" + boundary);
 				AddAttachment(builder, a);

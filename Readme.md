@@ -16,7 +16,7 @@ IMAP server:
 	namespace Test {
 		class Program {
 			static void Main(string[] args) {
-				/* connect on port 993 using SSL */
+				// Connect on port 993 using SSL.
 				using (ImapClient Client = new ImapClient("imap.gmail.com", 993, true))
 				{
 					Console.WriteLine("We are connected!");
@@ -42,7 +42,7 @@ further details on using the classes and methods exposed by the S22.Imap namespa
 
 ### Credits
 
-This library is copyright © 2012 Torben Könke.
+This library is copyright © 2012-2013 Torben Könke.
 
 Parts of this library are based on the AE.Net.Mail project (copyright © 2012 Andy Edinborough).
 

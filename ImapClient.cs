@@ -65,7 +65,7 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Indicates whether the client is authenticated with the server
+		/// Indicates whether the client is authenticated with the server.
 		/// </summary>
 		public bool Authed {
 			get;
@@ -211,7 +211,7 @@ namespace S22.Imap {
 				sslStream.AuthenticateAsClient(hostname);
 				stream = sslStream;
 			}
-			/* Server issues untagged OK greeting upon connect */
+			// Server issues an untagged OK greeting upon connect.
 			string greeting = GetResponse();
 			if (!IsResponseOK(greeting))
 				throw new BadServerResponseException(greeting);
@@ -252,10 +252,10 @@ namespace S22.Imap {
 					break;
 				case AuthMethod.CRAMMD5:
 					response = SendCommandGetResponse(tag + "AUTHENTICATE CRAM-MD5");
-					/* retrieve server key */
-					string key = Encoding.Default.GetString(
+					// Retrieve the challenge key and create the response.
+					string key = Encoding.ASCII.GetString(
 						Convert.FromBase64String(response.Replace("+ ", "")));
-					/* compute the hash */
+					// Compute the HMAC-MD5 hash.
 					using (var kMd5 = new HMACMD5(Encoding.ASCII.GetBytes(password))) {
 						byte[] hash1 = kMd5.ComputeHash(Encoding.ASCII.GetBytes(key));
 						key = BitConverter.ToString(hash1).ToLower().Replace("-", "");
@@ -268,7 +268,7 @@ namespace S22.Imap {
 					response = SendCommandGetResponse(tag + "AUTHENTICATE XOAUTH " + password);
 					break;
 			}
-			/* Server may include a CAPABILITY response */
+			// The server may include an untagged CAPABILITY line in the response.
 			if (response.StartsWith("* CAPABILITY")) {
 				capabilities = response.Substring(13).Trim().Split(' ')
 					.Select(s => s.ToUpperInvariant()).ToArray();
@@ -421,12 +421,11 @@ namespace S22.Imap {
 				string tag = GetTag();
 				string command = tag + "CAPABILITY";
 				string response = SendCommandGetResponse(command);
-				/* Server is required to issue untagged capability response */
+				// The server is required to issue an untagged capability response.
 				if (response.StartsWith("* CAPABILITY "))
 					response = response.Substring(13);
 				capabilities = response.Trim().Split(' ')
 					.Select(s => s.ToUpperInvariant()).ToArray();
-				/* should return OK */
 				response = GetResponse();
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
@@ -540,7 +539,7 @@ namespace S22.Imap {
 				throw new NotAuthenticatedException();
 			if (mailbox == null)
 				mailbox = defaultMailbox;
-			/* requested mailbox is already selected */
+			// The requested mailbox is already selected.
 			if (selectedMailbox == mailbox)
 				return;
 			lock (sequenceLock) {
@@ -583,7 +582,7 @@ namespace S22.Imap {
 						string[] attr = m.Groups[1].Value.Split(' ');
 						bool add = true;
 						foreach (string a in attr) {
-							/* Only list selectable mailboxes */
+							// We will only list mailboxes which can actually be selected.
 							if (a.ToLower() == @"\noselect")
 								add = false;
 						}
@@ -630,8 +629,8 @@ namespace S22.Imap {
 				SelectMailbox(mailbox);
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "EXPUNGE");
-				/* Server is required to send an untagged response for each message that is
-				 * deleted before sending OK */
+				// The server is required to send an untagged response for each message which is
+				// deleted before sending OK.
 				while (response.StartsWith("*"))
 					response = GetResponse();
 				ResumeIdling();
@@ -661,7 +660,7 @@ namespace S22.Imap {
 		public MailboxInfo GetMailboxInfo(string mailbox = null) {
 			if (!Authed)
 				throw new NotAuthenticatedException();
-			// this is not a cheap method to call, it involves a couple of round-trips
+			// This is not a cheap method to call, it involves a couple of round-trips
 			// to the server.
 			lock (sequenceLock) {
 				PauseIdling();
@@ -669,7 +668,7 @@ namespace S22.Imap {
 					mailbox = defaultMailbox;
 				MailboxStatus status = GetMailboxStatus(mailbox);
 
-				/* Collect quota information if the server supports it */
+				// Collect quota information if the server supports it.
 				UInt64 Used = 0, Free = 0;
 				if (Supports("QUOTA")) {
 					MailboxQuota[] Quotas = GetQuota(mailbox);
@@ -680,7 +679,7 @@ namespace S22.Imap {
 						}
 					}
 				}
-				/* Try to collect special-use flags */
+				// Try to collect special-use flags.
 				MailboxFlag[] flags = GetMailboxFlags(mailbox);
 
 				return new MailboxInfo(mailbox, flags, status.Messages,
@@ -967,7 +966,7 @@ namespace S22.Imap {
 				try {
 					Bodypart[] parts = Bodystructure.Parse(structure);
 					foreach (Bodypart part in parts) {
-						/* Let delegate decide if part should be fetched or not */
+						// Let the delegate decide whether the part should be fetched or not.
 						if (callback(part) == true) {
 							string content = GetBodypart(uid, part.PartNumber, seen, mailbox);
 							message.AddBodypart(part, content);
@@ -1109,8 +1108,8 @@ namespace S22.Imap {
 				string response = SendCommandGetResponse(tag + "APPEND " +
 					Util.UTF7Encode(mailbox).QuoteString() + (seen ? @" (\Seen)" : "") +
 					" {" + mime822.Length + "}");
-				/* Server is required to send a continuation response to signal
-				 * we can go ahead with the actual message data */
+				// The server is required to send a continuation response before
+				// we can go ahead with the actual message data.
 				if (!response.StartsWith("+"))
 					throw new BadServerResponseException(response);
 				response = SendCommandGetResponse(mime822);
@@ -1281,7 +1280,7 @@ namespace S22.Imap {
 						if (!Regex.IsMatch(response, @"\)\s*$"))
 							throw new BadServerResponseException(response);
 					} else {
-						/* some servers inline the data in the FETCH response line */
+						// Some servers inline the data in the FETCH response line.
 						m = Regex.Match(response, "\\* \\d+ FETCH \\(.*\"(.*)\".*\\)");
 						if (m.Success)
 							builder.Append(m.Groups[1]);
@@ -1680,22 +1679,22 @@ namespace S22.Imap {
 				throw new InvalidOperationException("The server does not support the " +
 					"IMAP4 IDLE command");
 			lock (sequenceLock) {
-				/* Make sure the default mailbox is selected */
+				// Make sure the default mailbox is selected.
 				SelectMailbox(null);
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "IDLE");
-				/* Server must respond with a '+' continuation response */
+				// The server must respond with a continuation response.
 				if (!response.StartsWith("+"))
 					throw new BadServerResponseException(response);
 			}
-			/* setup and start the idle thread */
+			// Setup and start the idle thread.
 			if (idleThread != null)
 				throw new ApplicationException("idleThread is not null");
 			idling = true;
 			idleThread = new Thread(IdleLoop);
 			idleThread.IsBackground = true;
 			idleThread.Start();
-			/* setup a timer to issue NOOPs every once in a while */
+			// Setup a timer to issue NOOPs every once in a while.
 			noopTimer.Interval = 1000 * 60 * 10;
 			noopTimer.Elapsed += IssueNoop;
 			noopTimer.Start();
@@ -1722,7 +1721,7 @@ namespace S22.Imap {
 			if (!idling)
 				return;
 			SendCommand("DONE");
-			/* Wait until idle thread has shutdown */
+			// Wait until the idle thread has shutdown.
 			idleThread.Join();
 			idleThread = null;
 			idling = false;
@@ -1753,13 +1752,12 @@ namespace S22.Imap {
 			pauseRefCount = pauseRefCount + 1;
 			if (pauseRefCount != 1)
 				return;
-			/* Send server "DONE" continuation-command to indicate we no longer wish
-			 * to receive idle notifications. The server response is consumed by
-			 * the idle thread and signals it to shut down.
-			 */
+			// Send a "DONE" continuation-command to indicate we no longer want
+			// to receive idle notifications. The server response is consumed by
+			// the idle thread and signals it to shut down.
 			SendCommand("DONE");
 
-			/* Wait until idle thread has shutdown */
+			// Wait until the idle thread has shutdown.
 			idleThread.Join();
 			idleThread = null;
 		}
@@ -1788,16 +1786,16 @@ namespace S22.Imap {
 			pauseRefCount = pauseRefCount - 1;
 			if (pauseRefCount != 0)
 				return;
-			/* Make sure the default mailbox is selected */
+			// Make sure the default mailbox is selected.
 			lock (sequenceLock) {
 				SelectMailbox(null);
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "IDLE");
-				/* Server must respond with a '+' continuation response */
+				// The server must respond with a continuation response.
 				if (!response.StartsWith("+"))
 					throw new BadServerResponseException(response);
 			}
-			/* setup and start the idle thread */
+			// Setup and start the idle thread.
 			if (idleThread != null)
 				throw new ApplicationException("idleThread is not null");
 			idleThread = new Thread(IdleLoop);
@@ -1820,27 +1818,26 @@ namespace S22.Imap {
 			while (true) {
 				try {
 					string response = GetResponse();
-					/* A request was made to stop idling so quit the thread */
+					// A request was made to stop idling so quit the thread.
 					if (response.Contains("OK IDLE"))
 						return;
-					/* Let the dispatcher thread take care of the IDLE notification so we
-					 * can go back to receiving responses */
+					// Let the dispatcher thread take care of the IDLE notification so we
+					// can go back to receiving responses.
 					idleEvents.Enqueue(response);
 				} catch (IOException e) {
-					/* Closing _Stream or the underlying _Connection instance will
-					 * cause a WSACancelBlockingCall exception on a blocking socket.
-					 * This is not an error so just let it pass.
-					 */
+					// Closing _Stream or the underlying _Connection instance will
+					// cause a WSACancelBlockingCall exception on a blocking socket.
+					// This is not an error so just let it pass.
 					if (e.InnerException is SocketException) {
-						/* WSAEINTR = 10004 */
+						// WSAEINTR = 10004
 						if (((SocketException)e.InnerException).ErrorCode == 10004)
 							return;
 					}
-					/* If the IO exception was raised because of an underlying
-					 * ThreadAbortException, we can ignore it. */
+					// If the IO exception was raised because of an underlying
+					// ThreadAbortException, we can ignore it.
 					if (e.InnerException is ThreadAbortException)
 						return;
-					/* Otherwise let it bubble up */
+					// Otherwise we should let it bubble up.
 					throw;
 				}
 			}

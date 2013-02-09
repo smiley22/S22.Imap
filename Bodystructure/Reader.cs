@@ -109,7 +109,7 @@ namespace S22.Imap {
 			StringBuilder builder = new StringBuilder();
 			last[0] = ' ';
 			while (true) {
-				/* account for backslash-escaped double-quote characters */
+				// Account for backslash-escaped double-quote characters.
 				if ((c = (char)Read()) == '"' && last[0] != '\\')
 					break;
 				builder.Append(c);
@@ -160,7 +160,7 @@ namespace S22.Imap {
 			}
 			StringBuilder pairs = new StringBuilder();
 			last[0] = ' ';
-			/* attribute/value literals my contain parenthesis */
+			// Attribute/Value literals my contain parentheses.
 			bool inQuotes = false;
 			while (Peek() > 0) {
 				c = (char)Read();

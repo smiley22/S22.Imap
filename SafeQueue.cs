@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace S22.Imap {
 	/// <summary>
-	/// A thread-safe Queue
+	/// A thread-safe Queue.
 	/// </summary>
 	internal class SafeQueue<T> {
 		private readonly Queue<T> _queue = new Queue<T>();

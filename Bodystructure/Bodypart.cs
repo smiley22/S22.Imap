@@ -16,7 +16,7 @@ namespace S22.Imap {
 		/// <param name="partNumber">The part number as is expected by the
 		/// IMAP FETCH command.</param>
 		internal Bodypart(string partNumber) {
-			// Initialize all fields with default values
+			// Initialize all fields with default values.
 			PartNumber = partNumber;
 			Type = ContentType.Other;
 			Subtype = Id = Description = Md5 = Language = Location = "";

@@ -35,7 +35,7 @@ namespace S22.Imap {
 		/// <returns>Returns true if the string contains only ASCII characters,
 		/// otherwise false is returned.</returns>
 		internal static bool IsASCII(this string s) {
-			return s.ToCharArray().All(c => c < 127);
+			return s.All(c => c < 127);
 		}
 
 		/// <summary>
@@ -61,7 +61,7 @@ namespace S22.Imap {
 		/// <summary>
 		/// Raises the event. Ensures the event is only raised, if it is not null.
 		/// </summary>
-		/// <typeparam name="T">Extends System.EventHandler class"/></typeparam>
+		/// <typeparam name="T">Extends System.EventHandler class</typeparam>
 		/// <param name="event">Extends System.EventHandler class</param>
 		/// <param name="sender">The sender of the event</param>
 		/// <param name="args">The event arguments associated with this event</param>
@@ -169,8 +169,7 @@ namespace S22.Imap {
 					for (int i = 0; i < value.Length; i++) {
 						if (value[i] == '=') {
 							string hex = value.Substring(i + 1, 2);
-							// deal with soft line breaks
-							// see: https://github.com/smiley22/S22.Imap/issues/21
+							// Deal with soft line breaks.
 							if(hex != "\r\n")
 								m.WriteByte(Convert.ToByte(hex, 16));
 							i = i + 2;
@@ -219,11 +218,11 @@ namespace S22.Imap {
 			while (reader.Peek() != -1) {
 				char c = (char)reader.Read();
 				int codepoint = Convert.ToInt32(c);
-				/* it's a printable ASCII character */
+				// It's a printable ASCII character.
 				if (codepoint > 0x1F && codepoint < 0x80) {
 					builder.Append(c == '&' ? "&-" : c.ToString());
 				} else {
-					/* character sequence needs to be encoded */
+					// The character sequence needs to be encoded.
 					StringBuilder sequence = new StringBuilder(c.ToString());
 					while (reader.Peek() != -1) {
 						codepoint = Convert.ToInt32((char)reader.Peek());
@@ -258,7 +257,7 @@ namespace S22.Imap {
 			while (reader.Peek() != -1) {
 				char c = (char)reader.Read();
 				if (c == '&' && reader.Peek() != '-') {
-					/* character sequence needs to be decoded */
+					// The character sequence needs to be decoded.
 					StringBuilder sequence = new StringBuilder();
 					while (reader.Peek() != -1) {
 						if ((c = (char)reader.Read()) == '-')

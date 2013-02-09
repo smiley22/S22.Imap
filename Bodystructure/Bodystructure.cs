@@ -143,8 +143,8 @@ namespace S22.Imap {
 			List<Bodypart> list = new List<Bodypart>();
 			int count = 1;
 
-			// consume opening bracket. If next character is another opening
-			// bracket, it's a nested list
+			// Consume opening bracket; If the next character is another opening
+			// bracket, it's a nested list.
 			while (reader.Peek(true) == '(') {
 				reader.Read();
 				char c = (char)reader.Peek(true);
@@ -157,7 +157,7 @@ namespace S22.Imap {
 				}
 				count = count + 1;
 			}
-			/* Skip over multipart */
+			// Skip over multipart information.
 			SkipMultipart();
 			return list.ToArray();
 		}

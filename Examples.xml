@@ -5,10 +5,10 @@
 				This example shows how to establish a connection with an IMAP server
 				and print out the IMAP options, which the server supports.
 				<code>
-					/* Connect to Gmail's IMAP server on port 993 using SSL */
+					// Connect to Gmail's IMAP server on port 993 using SSL.
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, true);
 
-					/* Print out the server's capabilities */
+					// Print out the server's capabilities.
 					foreach(string s in Client.Capabilities())
 						Console.WriteLine(s);
 
@@ -21,23 +21,26 @@
 			<example>
 				This example demonstrates how to connect and login to an IMAP server.
 				<code>
-					/* Connect to Gmail's IMAP server on port 993 using SSL */
+					// Connect to Gmail's IMAP server on port 993 using SSL.
+          ImapClient Client = null;
 					try {
-						ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_Username",
+						Client = new ImapClient("imap.gmail.com", 993, "My_Username",
 							"My_Password", true, AuthMethod.Login);
 
-						/* Check if the server supports IMAP IDLE */
+						// Check if the server supports IMAP IDLE.
 						if(Client.Supports("IDLE"))
 							Console.WriteLine("This server supports the IMAP4 IDLE specification");
 						else
 							Console.WriteLine("This server does not support IMAP IDLE");
-
-						/* release resources */
-						Client.Dispose();
 					}
 					catch(InvalidCredentialsException) {
 						Console.WriteLine("The server rejected the supplied credentials");
 					}
+          finally {
+						// Release resources.          
+            if(Client != null)
+						  Client.Dispose();          
+          }
 				</code>
 			</example>
 		</ImapClient>
@@ -48,7 +51,7 @@
 				has been established. Notice that you can also connect and login in one step
 				using one of the overloaded constructors. 
 				<code>
-					/* Connect to Gmail's IMAP server on port 993 using SSL */
+					// Connect to Gmail's IMAP server on port 993 using SSL.
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, true);
 
 					try {
@@ -71,17 +74,17 @@
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_Username",
 						"My_Password", true, AuthMethod.Login);
 
-					/* get a list of unique identifiers (UIDs) of all unread messages in the mailbox */
+					// Get a list of unique identifiers (UIDs) of all unread messages in the mailbox.
 					uint[] uids = Client.Search( SearchCondition.Unseen() );
 					
-					/* fetch the messages and print out their subject lines */
+					// Fetch the messages and print out their subject lines.
 					foreach(uint uid in uids) {
 						MailMessage message = Client.GetMessage(uid);
 						
 						Console.WriteLine(message.Subject);
 					}
 					
-					/* free up any resources associated with this instance */
+					// Free up any resources associated with this instance.
 					Client.Dispose();
 				</code>
 			</example>
@@ -91,14 +94,14 @@
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_Username",
 						"My_Password", true, AuthMethod.Login);
 
-					/* get a list of unique identifiers (UIDs) of all messages sent before the 01.04.2012
-							and that are larger than 1 Kilobyte */
+					// Get a list of unique identifiers (UIDs) of all messages sent before the 01.04.2012
+					// and that are larger than 1 Kilobyte.
 					uint[] uids = Client.Search( SearchCondition.SentBefore(new DateTime(2012, 4, 1))
 						.And( SearchCondition.Larger(1024) ));
 
 					Console.WriteLine("Found " + uids.Length + " messages");
 					
-					/* free up any resources associated with this instance */
+					// Free up any resources associated with this instance.
 					Client.Dispose();
 				</code>
 			</example>
@@ -109,7 +112,7 @@
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_Username",
 						"My_Password", true, AuthMethod.Login);
 
-					// get a list of unique identifiers (UIDs) of all messages that have
+					// Get a list of unique identifiers (UIDs) of all messages that have
 					// the Japanese expression "フーリエ変換" in their subject lines.
 					try {
 						uint[] uids = Client.Search(SearchCondition.Subject("フーリエ変換"));
@@ -121,7 +124,7 @@
 						Console.WriteLine("The server does not support searching for non-ASCII values");
 					}
 					
-					// free up any resources associated with this instance
+					// Free up any resources associated with this instance.
 					Client.Dispose();					
 				</code>
 			</example>
@@ -133,10 +136,10 @@
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
 						"My_Password", true, AuthMethod.Login);
 					
-					/* find all messages in the mailbox that were sent from "John.Doe@gmail.com" */
+					// Find all messages in the mailbox that were sent from "John.Doe@gmail.com".
 					uint uids = Client.Search( SearchCondition.From("John.Doe@gmail.com") );
 					
-					/* fetch the first message and print it's subject and body */
+					// Fetch the first message and print it's subject and body.
 					if(uids.Length > 0) {
 						MailMessage msg = Client.GetMessage(uids[0]);
 						
@@ -157,10 +160,10 @@
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
 					"My_Password", true, AuthMethod.Login);
 
-					/* find all messages in the mailbox that have "Hello" in the subject */
+					// Find all messages in the mailbox that have "Hello" in the subject.
 					uint uids = Client.Search( SearchCondition.Subject("Hello") );
 
-					/* fetch the mail headers of the first message and print it's subject line */
+					// Fetch the mail headers of the first message and print it's subject line.
 					if(uids.Length > 0) {
 						MailMessage msg = Client.GetMessage(uids[0], FetchOptions.HeadersOnly);
 
@@ -180,10 +183,10 @@
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
 					"My_Password", true, AuthMethod.Login);
 
-					/* find all messages in the inbox */
+					// Find all messages in the inbox.
 					uint uids = Client.Search( SearchCondition.All() );
 
-					/* Download each message but skip message parts that are larger than 1 Megabyte */
+					// Download each message but skip message parts that are larger than 1 Megabyte.
 					foreach(uint uid in uids) {
 						MailMessage msg = Client.GetMessage(uids[0], (Bodypart part) => {
 								if(part.Size > (1024 * 1024))
@@ -205,10 +208,10 @@
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
 						"My_Password", true, AuthMethod.Login);
 
-					/* find all messages that have been sent since June the 1st */
+					// Find all messages that have been sent since June the 1st.
 					uint uids = Client.Search( SearchCondition.SentSince( new DateTime(2012, 6, 1) ) );
 
-					/* fetch the messages and print out their subject lines */
+					// Fetch the messages and print out their subject lines.
 					MailMessage[] messages = Client.GetMessages( uids );
 
 					foreach(MailMessage m in messages)
@@ -225,11 +228,11 @@
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
 					"My_Password", true, AuthMethod.Login);
 
-					/* find all messages that have been sent since June the 1st */
+					// Find all messages that have been sent since June the 1st.
 					uint uids = Client.Search( SearchCondition.SentSince( new DateTime(2012, 6, 1) ) );
 
-					/* Retrieve the messages and print out their subject lines. If any of the messages are multipart
-							messages, only those parts, that have a content-type of text will be fetched. */
+					// Retrieve the messages and print out their subject lines. If any of the messages are multipart
+					// messages, only those parts, that have a content-type of text will be fetched.
 					MailMessage[] messages = Client.GetMessages( uids, FetchOptions.TextOnly );
 
 					foreach(MailMessage m in messages)
@@ -246,7 +249,7 @@
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
 						"My_Password", true, AuthMethod.Login);
 
-					// Get a list of all mailboxes
+					// Get a list of all mailboxes.
 					foreach(string m in Client.ListMailboxes())
 					{
 						MailboxInfo info = Client.GetMailboxInfo(m);
@@ -275,17 +278,19 @@
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
 						"My_Password", true, AuthMethod.Login);
 
-					/* make sure our server actually supports IMAP IDLE */
+					// Make sure our server actually supports IMAP IDLE.
 					if(!Client.Supports("IDLE"))
 						throw new Exception("This server does not support IMAP IDLE");
 
-					/* Our event handler will be called whenever a new message is received
-					by the server. */
+					// Our event handler will be called whenever a new message is received
+					// by the server.
 					Client.NewMessage += new EventHandler&lt;IdleMessageEventArgs&gt;(OnNewMessage);
+          
+          // ........
 					
 					Client.Dispose();
 					
-					/* ........ */
+					// ........
 					
 					void OnNewMessage(object sender, IdleMessageEventArgs e) {
 						Console.WriteLine("Received a new message!");
@@ -303,16 +308,19 @@
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
 						"My_Password", true, AuthMethod.Login);
 
-					/* make sure our server actually supports IMAP IDLE */
+					// Make sure our server actually supports IMAP IDLE.
 					if(!Client.Supports("IDLE"))
 						throw new Exception("This server does not support IMAP IDLE");
 
-					/* Our event handler will be called whenever a message is deleted on the server. */
+					// Our event handler will be called whenever a message is deleted on the server.
 					Client.MessageDeleted += new EventHandler&lt;IdleMessageEventArgs&gt;(OnMessageDeleted);
+          
+          // .........
 
+          // Free resource once we're done.
 					Client.Dispose();
 
-					/* ........ */
+					// ........
 
 					void OnMessageDeleted(object sender, IdleMessageEventArgs e) {
 						Console.WriteLine("A mail message was deleted on the server!");
@@ -338,12 +346,11 @@
 					
 					Client.Dispose();
 
-					/* ........... */
+					// ...........
 
-					/* This creates a simple mail message with a text/plain body and a PNG image
-					 * as a file attachment.
-					 * Consult the MSDN website for details on the System.Net.Mail.Mailmessage class
-					 */
+					// This creates a simple mail message with a text/plain body and a PNG image
+					// as a file attachment.
+					// Consult the MSDN website for more details on the System.Net.Mail.Mailmessage class.
 					static MailMessage CreateSimpleMailMessage() {
 						MailMessage message = new MailMessage();
 
@@ -354,7 +361,7 @@
 						message.Body = "This is the text/plain body. An additional HTML body " +
 							"can optionally be attached as an alternate view";
 
-						// Add the attachment
+						// Add the attachment.
 						Attachment attachment = new Attachment("some_image.png", "image/png");
 						attachment.Name = "my_attached_image.png";
 						message.Attachments.Add(attachment);

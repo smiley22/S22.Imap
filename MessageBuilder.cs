@@ -43,7 +43,7 @@ namespace S22.Imap {
 					m.Subject = Util.DecodeWords(header["Subject"]).
 						Replace("\n", "").Replace("\r", "");
 				} catch {
-					// if, for any reason encoding fails, set the subject to the
+					// If, for any reason, encoding fails set the subject to the
 					// original, unaltered string.
 					m.Subject = header["Subject"];
 				}
@@ -93,13 +93,13 @@ namespace S22.Imap {
 			while ((line = reader.ReadLine()) != null) {
 				if (line == String.Empty)
 					continue;
-				/* Values may stretch over several lines */
+				// Values may stretch over several lines.
 				if (line[0] == ' ' || line[0] == '\t') {
 					if(fieldname != null)
 						coll[fieldname] = coll[fieldname] + line.TrimEnd();
 					continue;
 				}
-				/* The mail header consists of field:value pairs */
+				// The mail header consists of field:value pairs.
 				int delimiter = line.IndexOf(':');
 				if (delimiter < 0)
 					continue;
@@ -175,7 +175,7 @@ namespace S22.Imap {
 		/// <remarks>A message identifier (msg-id) is a globally unique
 		/// identifier for a message.</remarks>
 		private static string ParseMessageId(string field) {
-			/* a msg-id is enclosed in < > brackets */
+			// A msg-id is enclosed in < > brackets.
 			Match m = Regex.Match(field, @"<(.+)>");
 			if (m.Success)
 				return m.Groups[1].Value;
@@ -256,7 +256,7 @@ namespace S22.Imap {
 		internal static void AddBodypart(this MailMessage message, Bodypart part, string content) {
 			Encoding encoding = part.Parameters.ContainsKey("Charset") ?
 				Util.GetEncoding(part.Parameters["Charset"]) : Encoding.ASCII;
-			// decode content if it was encoded
+			// Decode the content if it is encoded.
 			byte[] bytes;
 			try {
 				switch (part.Encoding) {
@@ -277,7 +277,7 @@ namespace S22.Imap {
 			}
 	
 			// If the MailMessage's Body fields haven't been initialized yet, put it there.
-			// Some weird (i.e. spam) mails like to omit content-types so don't check for
+			// Some weird (i.e. spam) mails like to omit content-types so we don't check for
 			// that here and just assume it's text.
 			if (String.IsNullOrEmpty(message.Body) &&
 				part.Disposition.Type != ContentDispositionType.Attachment) {
@@ -380,24 +380,24 @@ namespace S22.Imap {
 		private static MIMEPart[] ParseMIMEParts(StringReader reader, string boundary) {
 			List<MIMEPart> list = new List<MIMEPart>();
 			string start = "--" + boundary, end = "--" + boundary + "--", line;
-			// Skip everything up to the first boundary
+			// Skip everything up to the first boundary.
 			while ((line = reader.ReadLine()) != null) {
 				if (line.StartsWith(start))
 					break;
 			}
-			// Read MIME parts delimited by boundary strings
+			// Read the MIME parts which are delimited by boundary strings.
 			while (line != null && line.StartsWith(start)) {
 				MIMEPart p = new MIMEPart();
-				// Read the part header
+				// Read the part header.
 				StringBuilder header = new StringBuilder();
 				while (!String.IsNullOrEmpty(line = reader.ReadLine()))
 					header.AppendLine(line);
 				p.header = ParseMailHeader(header.ToString());
-				// Account for nested multipart content
+				// Account for nested multipart content.
 				NameValueCollection contentType = ParseMIMEField(p.header["Content-Type"]);
 				if (contentType["Boundary"] != null)
 					list.AddRange(ParseMIMEParts(reader, contentType["boundary"]));
-				// Read the part body
+				// Read the part body.
 				StringBuilder body = new StringBuilder();
 				while ((line = reader.ReadLine()) != null) {
 					if (line.StartsWith(start))
@@ -406,10 +406,10 @@ namespace S22.Imap {
 				}
 				p.body = body.ToString();
 				// Add the MIME part to the list unless body is null or empty which means
-				// the body contained nested multipart content
+				// the body contained nested multipart content.
 				if (!String.IsNullOrWhiteSpace(p.body))
 					list.Add(p);
-				// If the boundary is actually the end boundary, we're done 
+				// If this boundary is actually the end boundary, we're done.
 				if (line == null || line.StartsWith(end))
 					break;
 			}

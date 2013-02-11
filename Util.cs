@@ -9,7 +9,7 @@ namespace S22.Imap {
 	/// <summary>
 	/// A static utility class containing methods for decoding encoded
 	/// non-ASCII data as is often used in mail messages as well as
-	/// extension methods for some existing classes.
+	/// extension methods for some classes of the base class library.
 	/// </summary>
 	internal static class Util {
 		/// <summary>
@@ -70,6 +70,30 @@ namespace S22.Imap {
 			if (@event == null)
 				return;
 			@event(sender, args);
+		}
+
+		/// <summary>
+		/// Throws an ArgumentNullException if the given data item is null.
+		/// </summary>
+		/// <param name="data">The item to check for nullity.</param>
+		/// <param name="name">The name to use when throwing an
+		/// exception, if necessary</param>
+		/// <remarks>Courtesy of Jon Skeet.</remarks>
+		internal static void ThrowIfNull<T>(this T data, string name)
+			where T : class {
+			if (data == null)
+				throw new ArgumentNullException(name);
+		}
+
+		/// <summary>
+		/// Throws an ArgumentNullException if the given data item is null.
+		/// </summary>
+		/// <param name="data">The item to check for nullity.</param>
+		/// <remarks>Courtesy of Jon Skeet.</remarks>
+		internal static void ThrowIfNull<T>(this T data)
+			where T : class {
+			if (data == null)
+				throw new ArgumentNullException();
 		}
 
 		/// <summary>

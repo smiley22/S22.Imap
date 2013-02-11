@@ -178,7 +178,7 @@ namespace S22.Imap {
 		/// supplied credentials failed.</exception>
 		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="ctor-2"]/*'/>
 		public ImapClient(string hostname, int port, string username, string password, AuthMethod method =
-			AuthMethod.Login, bool ssl = false, RemoteCertificateValidationCallback validate = null) {
+			AuthMethod.Auto, bool ssl = false, RemoteCertificateValidationCallback validate = null) {
 			Connect(hostname, port, ssl, validate);
 			Login(username, password, method);
 		}
@@ -243,31 +243,16 @@ namespace S22.Imap {
 		/// supplied credentials failed.</exception>
 		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="Login"]/*'/>
 		public void Login(string username, string password, AuthMethod method) {
-			string tag = GetTag();
-			string response = null;
-			switch (method) {
-				case AuthMethod.Login:
-					response = SendCommandGetResponse(tag + "LOGIN " + username.QuoteString() + " " +
-						password.QuoteString());
-					break;
-				case AuthMethod.CRAMMD5:
-					response = SendCommandGetResponse(tag + "AUTHENTICATE CRAM-MD5");
-					// Retrieve the challenge key and create the response.
-					string key = Encoding.ASCII.GetString(
-						Convert.FromBase64String(response.Replace("+ ", "")));
-					// Compute the HMAC-MD5 hash.
-					using (var kMd5 = new HMACMD5(Encoding.ASCII.GetBytes(password))) {
-						byte[] hash1 = kMd5.ComputeHash(Encoding.ASCII.GetBytes(key));
-						key = BitConverter.ToString(hash1).ToLower().Replace("-", "");
-						string command = Convert.ToBase64String(
-							Encoding.ASCII.GetBytes(username + " " + key));
-						response = SendCommandGetResponse(command);
-					}
-					break;
-				case AuthMethod.SaslOAuth:
-					response = SendCommandGetResponse(tag + "AUTHENTICATE XOAUTH " + password);
-					break;
-			}
+			string tag = GetTag();		
+			var dict = new Dictionary<AuthMethod, Func<string, string, string, string>>() {
+				{ AuthMethod.Auto, AuthAuto },
+				{ AuthMethod.Login, AuthLogin },
+				{ AuthMethod.Plain, AuthPlain },
+				{ AuthMethod.CramMD5, AuthCramMd5 },
+				{ AuthMethod.DigestMD5, AuthDigestMD5 }
+			};
+			string response = dict[method].Invoke(tag, username, password);
+
 			// The server may include an untagged CAPABILITY line in the response.
 			if (response.StartsWith("* CAPABILITY")) {
 				capabilities = response.Substring(13).Trim().Split(' ')
@@ -277,6 +262,145 @@ namespace S22.Imap {
 			if (!IsResponseOK(response, tag))
 				throw new InvalidCredentialsException(response);
 			Authed = true;
+		}
+
+		/// <summary>
+		/// Performs authentication using the most secure authentication
+		/// mechanism supported by the server.
+		/// </summary>
+		/// <param name="tag">The tag identifier to use for performing the
+		/// authentication commands.</param>
+		/// <param name="username">The username with which to login in to the
+		/// IMAP server.</param>
+		/// <param name="password">The password with which to log in to the
+		/// IMAP server.</param>
+		/// <returns>The response sent by the server.</returns>
+		/// <remarks>The order of preference of authentication types employed
+		/// by this method is Digest-Md5, followed by Cram-Md5 and finally
+		/// plaintext Login as a last resort.</remarks>
+		private string AuthAuto(string tag, string username, string password) {
+			var methods = new Func<string, string, string, string>[] {
+				AuthDigestMD5, AuthCramMd5
+			};
+			foreach (var m in methods) {
+				try {
+					return m.Invoke(tag, username, password);
+				} catch {
+					// Go on with next method.
+				}
+			}
+			// If all of the above failed, use login as a last resort.
+			return AuthLogin(tag, username, password);
+		}
+
+		/// <summary>
+		/// Performs authentication using plaintext username and password.
+		/// </summary>
+		/// <param name="tag">The tag identifier to use for performing the
+		/// authentication commands.</param>
+		/// <param name="username">The username with which to login in to the
+		/// IMAP server.</param>
+		/// <param name="password">The password with which to log in to the
+		/// IMAP server.</param>
+		/// <returns>The response sent by the server.</returns>
+		private string AuthLogin(string tag, string username, string password) {
+			return SendCommandGetResponse(tag + "LOGIN " + username.QuoteString() +
+				" " + password.QuoteString());
+		}
+
+		/// <summary>
+		/// Performs authentication using the SASL PLAIN authentication
+		/// mechanism.
+		/// </summary>
+		/// <param name="tag">The tag identifier to use for performing the
+		/// authentication commands.</param>
+		/// <param name="username">The username with which to login in to the
+		/// IMAP server.</param>
+		/// <param name="password">The password with which to log in to the
+		/// IMAP server.</param>
+		/// <returns>The response sent by the server.</returns>
+		/// <exception cref="NotSupportedException">Thrown if the server does not
+		/// support the PLAIN authentication mechanism.</exception>
+		private string AuthPlain(string tag, string username, string password) {
+			string response = SendCommandGetResponse(tag + "AUTHENTICATE PLAIN");
+			// If the server doesn't respond with a continuation request, PLAIN
+			// is not supported.
+			if (!response.StartsWith("+")) {
+				throw new NotSupportedException("This server does not support " +
+					"PLAIN authentication.");
+			}
+			response = Authentication.Plain(username, password);
+			return SendCommandGetResponse(response);
+		}
+
+		/// <summary>
+		/// Performs authentication using the CRAM-MD5 authentication mechanism.
+		/// </summary>
+		/// <param name="tag">The tag identifier to use for performing the
+		/// authentication commands.</param>
+		/// <param name="username">The username with which to login in to the
+		/// IMAP server.</param>
+		/// <param name="password">The password with which to log in to the
+		/// IMAP server.</param>
+		/// <returns>The response sent by the server.</returns>
+		/// <exception cref="NotSupportedException">Thrown if the server does not
+		/// support the CRAM-MD5 authentication mechanism.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the server
+		/// responds with unexpected or invalid data.</exception>
+		private string AuthCramMd5(string tag, string username, string password) {
+			string response = SendCommandGetResponse(tag + "AUTHENTICATE CRAM-MD5");
+			// If the server doesn't respond with a continuation request, CRAM-MD5
+			// is not supported.
+			if (!response.StartsWith("+")) {
+				throw new NotSupportedException("This server does not support " +
+					"CRAM-MD5 authentication.");
+			}
+			string challenge = response.Substring(2);
+			try {
+				response = Authentication.CramMD5(challenge, username, password);
+				return SendCommandGetResponse(response);
+			} catch (Exception e) {
+				throw new BadServerResponseException("Invalid CRAM-MD5 challenge", e);
+			}
+		}
+
+		/// <summary>
+		/// Performs authentication using the DIGEST-MD5 authentication mechanism.
+		/// </summary>
+		/// <param name="tag">The tag identifier to use for performing the
+		/// authentication commands.</param>
+		/// <param name="username">The username with which to login in to the
+		/// IMAP server.</param>
+		/// <param name="password">The password with which to log in to the
+		/// IMAP server.</param>
+		/// <returns>The response sent by the server.</returns>
+		/// <exception cref="NotSupportedException">Thrown if the server does not
+		/// support the DIGEST-MD5 authentication mechanism.</exception>
+		/// <exception cref="BadServerResponseException">Thrown if the server
+		/// responds with unexpected or invalid data.</exception>
+		private string AuthDigestMD5(string tag, string username, string password) {
+			string response = SendCommandGetResponse(tag + "AUTHENTICATE DIGEST-MD5");
+			// If the server doesn't respond with a continuation request, DIGEST-MD5
+			// is not supported.
+			if (!response.StartsWith("+")) {
+				throw new NotSupportedException("This server does not support " +
+					"DIGEST-MD5 authentication.");
+			}
+			string challenge = response.Substring(2);
+			try {
+				response = Authentication.DigestMD5(challenge, username, password);
+				response = SendCommandGetResponse(response);
+
+				// If authentication succeeded, the server responds with another
+				// continuation request, which the client must acknowledge with a
+				// CRLF.
+				if (response.StartsWith("+"))
+					return SendCommandGetResponse(String.Empty);
+				// Otherwise, return last received response.
+				return response;
+			} catch (Exception e) {
+				throw new BadServerResponseException("Invalid DIGEST-MD5 challenge", e);
+			}
 		}
 
 		/// <summary>
@@ -421,12 +545,14 @@ namespace S22.Imap {
 				string tag = GetTag();
 				string command = tag + "CAPABILITY";
 				string response = SendCommandGetResponse(command);
-				// The server is required to issue an untagged capability response.
-				if (response.StartsWith("* CAPABILITY "))
-					response = response.Substring(13);
-				capabilities = response.Trim().Split(' ')
-					.Select(s => s.ToUpperInvariant()).ToArray();
-				response = GetResponse();
+				while (response.StartsWith("*")) {
+					// The server is required to issue an untagged capability response.
+					if (response.StartsWith("* CAPABILITY ")) {
+						capabilities = response.Substring(13).Trim().Split(' ')
+							.Select(s => s.ToUpperInvariant()).ToArray();
+					}
+					response = GetResponse();
+				}
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);

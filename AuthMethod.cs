@@ -6,18 +6,26 @@ namespace S22.Imap {
 	/// </summary>
 	public enum AuthMethod {
 		/// <summary>
+		/// Automatically selects the most-secure authentication mechanism
+		/// supported by the server.
+		/// </summary>
+		Auto,
+		/// <summary>
 		/// Login using plaintext password authentication. This is
 		/// the default supported by most servers.
 		/// </summary>
 		Login,
 		/// <summary>
+		/// Login using the SASL PLAIN authentication mechanism.
+		/// </summary>
+		Plain,
+		/// <summary>
 		/// Login using the CRAM-MD5 authentication mechanism.
 		/// </summary>
-		CRAMMD5,
+		CramMD5,
 		/// <summary>
-		/// Login using the OAuth authentication mechanism over
-		/// the Simple Authentication and Security Layer (Sasl).
+		/// Login using the DIGEST-MD5 authentication mechanism.
 		/// </summary>
-		SaslOAuth
+		DigestMD5
 	}
 }

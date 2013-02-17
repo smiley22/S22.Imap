@@ -26,6 +26,18 @@ namespace S22.Imap {
 		/// <summary>
 		/// Login using the DIGEST-MD5 authentication mechanism.
 		/// </summary>
-		DigestMD5
+		DigestMD5,
+		/// <summary>
+		/// Login using OAuth via the SASL XOAuth mechanism.
+		/// </summary>
+		OAuth,
+		/// <summary>
+		/// Login using OAuth 2.0 via the SASL XOAUTH2 mechanism.
+		/// </summary>
+		OAuth2,
+		/// <summary>
+		/// Login using the NTLM authentication mechanism.
+		/// </summary>
+		Ntlm
 	}
 }

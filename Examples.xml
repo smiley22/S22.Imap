@@ -22,10 +22,10 @@
 				This example demonstrates how to connect and login to an IMAP server.
 				<code>
 					// Connect to Gmail's IMAP server on port 993 using SSL.
-          ImapClient Client = null;
+					ImapClient Client = null;
 					try {
 						Client = new ImapClient("imap.gmail.com", 993, "My_Username",
-							"My_Password", true, AuthMethod.Login);
+							"My_Password", true, AuthMethod.Auto);
 
 						// Check if the server supports IMAP IDLE.
 						if(Client.Supports("IDLE"))
@@ -36,11 +36,11 @@
 					catch(InvalidCredentialsException) {
 						Console.WriteLine("The server rejected the supplied credentials");
 					}
-          finally {
-						// Release resources.          
-            if(Client != null)
-						  Client.Dispose();          
-          }
+					finally {
+						// Release resources. 
+						if(Client != null)
+							Client.Dispose();
+					}
 				</code>
 			</example>
 		</ImapClient>
@@ -55,7 +55,7 @@
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, true);
 
 					try {
-						Client.Login("My_Username", "My_Password", AuthMethod.Login);
+						Client.Login("My_Username", "My_Password", AuthMethod.Auto);
 					}
 					catch(InvalidCredentialsException) {
 						Console.WriteLine("The server rejected the supplied credentials");
@@ -125,7 +125,7 @@
 					}
 					
 					// Free up any resources associated with this instance.
-					Client.Dispose();					
+					Client.Dispose();
 				</code>
 			</example>
 		</ImapClient>
@@ -285,8 +285,8 @@
 					// Our event handler will be called whenever a new message is received
 					// by the server.
 					Client.NewMessage += new EventHandler&lt;IdleMessageEventArgs&gt;(OnNewMessage);
-          
-          // ........
+
+					// .........
 					
 					Client.Dispose();
 					
@@ -314,10 +314,10 @@
 
 					// Our event handler will be called whenever a message is deleted on the server.
 					Client.MessageDeleted += new EventHandler&lt;IdleMessageEventArgs&gt;(OnMessageDeleted);
-          
-          // .........
 
-          // Free resource once we're done.
+					// .........
+
+					// Don't forget to dispose the client once you're done with it.
 					Client.Dispose();
 
 					// ........

@@ -1,99 +1,136 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace S22.Imap {
+namespace S22.Imap.Sasl.Mechanisms {
 	/// <summary>
-	/// Contains methods for computing challenge-responses for the various
-	/// authentication mechanisms.
+	/// Implements the Sasl Cram-Md5 authentication method as described in
+	/// RFC 2831.
 	/// </summary>
-	internal static class Authentication {
-		/// <summary>
-		/// Computes the client response for a PLAIN challenge sent by the
-		/// server.
-		/// </summary>
-		/// <param name="username">The username to use for constructing the
-		/// challenge-reponse.</param>
-		/// <param name="password">The username to use for constructing the
-		/// challenge-response.</param>
-		/// <returns>A base64-encoded string containing the response to the
-		/// challenge.</returns>
-		public static string Plain(string username, string password) {
-			// Username and password are delimited by a NUL (U+0000) character.
-			string s = "\0" + username + "\0" + password;
-			// The response is a UTF-8 string, encoded as base64. 
-			byte[] data = Encoding.UTF8.GetBytes(s);
-			return Convert.ToBase64String(data);
-		}
+	internal class SaslDigestMd5 : SaslMechanism {
+		bool Completed = false;
 
 		/// <summary>
-		/// Computes the client response for a CRAM-MD5 challenge sent by the
-		/// server.
+		/// Cram-Md5 involves several steps.
 		/// </summary>
-		/// <param name="challenge">The base64-encoded challenge received from the
-		/// server.</param>
-		/// <param name="username">The username to use for constructing the
-		/// challenge-reponse.</param>
-		/// <param name="password">The username to use for constructing the
-		/// challenge-response.</param>
-		/// <returns>A base64-encoded string containing the response to the
-		/// challenge.</returns>
-		/// <exception cref="FormatException">Thrown if the specified challenge
-		/// is not a valid base-64 encoded challenge-string.</exception>
-		public static string CramMD5(string challenge, string username,
-			string password) {
-			// Precondition.
-			challenge.ThrowIfNull("challenge");
-			username.ThrowIfNull("username");
-			password.ThrowIfNull("password");
-			// Decode the Base64-encoded challenge.
-			byte[] decoded = Convert.FromBase64String(challenge);
-			// Compute the encrypted challenge as a hex-string.
-			string hex = String.Empty;
-			using (var hmac = new HMACMD5(Encoding.ASCII.GetBytes(password))) {
-				byte[] encrypted = hmac.ComputeHash(decoded);
-				hex = BitConverter.ToString(encrypted).ToLower().Replace("-",
-					String.Empty);
+		int Step = 0;
+
+		/// <summary>
+		/// True if the authentication exchange between client and server
+		/// has been completed.
+		/// </summary>
+		public override bool IsCompleted {
+			get {
+				return Completed;
 			}
-			// Construct the Base64-encoded response.
-			byte[] data = Encoding.ASCII.GetBytes(username + " " + hex);			
-			return Convert.ToBase64String(data);
 		}
 
 		/// <summary>
-		/// Computes the "digest-response" for a DIGEST-MD5 challenge sent by the
-		/// server.
+		/// The IANA name for the Digest-Md5 authentication mechanism as described
+		/// in RFC 2195.
 		/// </summary>
-		/// <param name="challenge">The base64-encoded challenge received from the
-		/// server.</param>
-		/// <param name="username">The username to use for constructing the
-		/// challenge-reponse.</param>
-		/// <param name="password">The username to use for constructing the
-		/// challenge-response.</param>
-		/// <returns>A base64-encoded string containing the response to the
-		/// challenge.</returns>
-		/// <exception cref="FormatException">Thrown if the specified challenge
-		/// is not a valid base-64 encoded challenge-string.</exception>
-		public static string DigestMD5(string challenge, string username, string password) {
-			// Precondition.
-			challenge.ThrowIfNull("challenge");
+		public override string Name {
+			get {
+				return "DIGEST-MD5";
+			}
+		}
+
+		/// <summary>
+		/// The username to authenticate with.
+		/// </summary>
+		string Username {
+			get {
+				return Properties.ContainsKey("Username") ?
+					Properties["Username"] as string : null;
+			}
+			set {
+				Properties["Username"] = value;
+			}
+		}
+
+		/// <summary>
+		/// The password to authenticate with.
+		/// </summary>
+		string Password {
+			get {
+				return Properties.ContainsKey("Password") ?
+					Properties["Password"] as string : null;
+			}
+			set {
+				Properties["Password"] = value;
+			}
+		}
+
+		/// <summary>
+		/// Private constructor for use with Sasl.SaslFactory.
+		/// </summary>
+		private SaslDigestMd5() {
+			// Nothing to do here.
+		}
+
+		/// <summary>
+		/// Creates and initializes a new instance of the SaslDigestMd5 class
+		/// using the specified username and password.
+		/// </summary>
+		/// <param name="username">The username to authenticate with.</param>
+		/// <param name="password">The plaintext password to authenticate
+		/// with.</param>
+		/// <exception cref="ArgumentNullException">Thrown if the username
+		/// or the password parameter is null.</exception>
+		/// <exception cref="ArgumentException">Thrown if the username
+		/// parameter is empty.</exception>
+		public SaslDigestMd5(string username, string password) {
 			username.ThrowIfNull("username");
+			if (username == String.Empty)
+				throw new ArgumentException("The username must not be empty.");
 			password.ThrowIfNull("password");
-			// Decode the Base64-encoded challenge.
-			string decoded = Encoding.ASCII.GetString(Convert.FromBase64String(challenge));
+
+			Username = username;
+			Password = password;
+		}
+
+		/// <summary>
+		/// Computes the client response to the specified Digest-Md5 challenge.
+		/// </summary>
+		/// <param name="challenge">The challenge sent by the server</param>
+		/// <returns>The response to the Digest-Md5 challenge.</returns>
+		/// <exception cref="SaslException">Thrown if the response could not
+		/// be computed.</exception>
+		protected override byte[] ComputeResponse(byte[] challenge) {
+			if (Step == 1)
+				Completed = true;
+			// If authentication succeeded, the server responds with another
+			// challenge (which we ignore) which the client must acknowledge
+			// with a CRLF.
+			byte[] ret = Step == 0 ? ComputeDigestResponse(challenge) :
+				new byte[0];
+			Step = Step + 1;
+			return ret;
+		}
+
+		private byte[] ComputeDigestResponse(byte[] challenge) {
+			// Precondition: Ensure username and password are not null and
+			// username is not empty.
+			if (String.IsNullOrEmpty(Username) || Password == null) {
+				throw new SaslException("The username must not be null or empty and " +
+					"the password must not be null.");
+			}
 			// Parse the challenge-string and construct the "response-value" from it.
+			string decoded = Encoding.ASCII.GetString(challenge);
 			NameValueCollection fields = ParseDigestChallenge(decoded);
 			string cnonce = GenerateCnonce(),
 				digestUri = "imap/" + fields["realm"];
 			string responseValue = ComputeDigestResponseValue(fields, cnonce, digestUri,
-				username, password);
+				Username, Password);
 
 			// Create the challenge-response string.
 			string[] directives = new string[] {
 				// We don't use UTF-8 in the current implementation.
 				//"charset=utf-8",
-				"username=" + Dquote(username),
+				"username=" + Dquote(Username),
 				"realm=" + Dquote(fields["realm"]),
 				"nonce="+ Dquote(fields["nonce"]),
 				"nc=00000001",
@@ -103,9 +140,8 @@ namespace S22.Imap {
 				"qop=" + fields["qop"]
 			};
 			string challengeResponse = String.Join(",", directives);
-			// Finally, return the response as a base64-encoded string as is expected
-			// by the server.
-			return Convert.ToBase64String(Encoding.ASCII.GetBytes(challengeResponse));
+			// Finally, return the response as a byte array.
+			return Encoding.ASCII.GetBytes(challengeResponse);
 		}
 
 		/// <summary>
@@ -127,7 +163,7 @@ namespace S22.Imap {
 			foreach (string p in parts) {
 				string[] kv = p.Split(new char[] { '=' }, 2);
 				if (kv.Length == 2)
-					coll.Add(kv[0], kv[1].Trim('"'));			  
+					coll.Add(kv[0], kv[1].Trim('"'));
 			}
 			return coll;
 		}
@@ -173,15 +209,6 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Generates a random cnonce-value which is a "client-specified data string
-		/// which must be different each time a digest-response is sent".
-		/// </summary>
-		/// <returns>A random "cnonce-value" string.</returns>
-		private static string GenerateCnonce() {
-			return Guid.NewGuid().ToString("N").Substring(0, 16);
-		}
-
-		/// <summary>
 		/// Calculates the MD5 hash value for the specified string.
 		/// </summary>
 		/// <param name="s">The string to calculate the MD5 hash value for.</param>
@@ -209,10 +236,17 @@ namespace S22.Imap {
 		/// </summary>
 		/// <param name="s">The string to enclose in double-quote characters.</param>
 		/// <returns>The enclosed string.</returns>
-		/// <remarks>Needed by the DIGEST-MD5 mechanism.</remarks>
 		private static string Dquote(string s) {
 			return "\"" + s + "\"";
 		}
 
+		/// <summary>
+		/// Generates a random cnonce-value which is a "client-specified data string
+		/// which must be different each time a digest-response is sent".
+		/// </summary>
+		/// <returns>A random "cnonce-value" string.</returns>
+		private static string GenerateCnonce() {
+			return Guid.NewGuid().ToString("N").Substring(0, 16);
+		}
 	}
 }

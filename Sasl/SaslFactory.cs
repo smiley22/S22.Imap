@@ -78,7 +78,8 @@ namespace S22.Imap.Sasl {
 				{ "DigestMd5", typeof(Sasl.Mechanisms.SaslDigestMd5) },
 				{ "OAuth", typeof(Sasl.Mechanisms.SaslOAuth) },
 				{ "OAuth2", typeof(Sasl.Mechanisms.SaslOAuth2) },
-				{ "Ntlm", typeof(Sasl.Mechanisms.SaslNtlm) }
+				{ "Ntlm", typeof(Sasl.Mechanisms.SaslNtlm) },
+				{ "Ntlmv2", typeof(Sasl.Mechanisms.SaslNtlmv2) }
 			};
 			foreach (string key in list.Keys)
 				Mechanisms.Add(key, list[key]);

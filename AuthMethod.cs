@@ -38,6 +38,10 @@ namespace S22.Imap {
 		/// <summary>
 		/// Login using the NTLM authentication mechanism.
 		/// </summary>
-		Ntlm
+		Ntlm,
+		/// <summary>
+		/// Login using the NTLMv2 authentication mechanism.
+		/// </summary>
+		Ntlmv2
 	}
 }

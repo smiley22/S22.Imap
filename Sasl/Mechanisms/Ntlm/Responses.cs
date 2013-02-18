@@ -37,6 +37,44 @@ namespace S22.Imap.Sasl.Mechanisms.Ntlm {
 		}
 
 		/// <summary>
+		/// Computes the NTLMv2-response to the challenge sent as part of an
+		/// NTLM type 2 message.
+		/// </summary>
+		/// <param name="target">The name of the authentication target.</param>
+		/// <param name="username">The user account name to authenticate with.</param>
+		/// <param name="password">The user account password.</param>
+		/// <param name="targetInformation">The target information block from
+		/// the NTLM type 2 message.</param>
+		/// <param name="challenge">The challenge sent by the server.</param>
+		/// <param name="clientNonce">A random 8-byte client nonce.</param>
+		/// <returns>An array of bytes representing the response to the
+		/// specified challenge.</returns>
+		internal static byte[] ComputeNtlmv2Response(string target, string username,
+			string password, byte[] targetInformation, byte[] challenge,
+			byte[] clientNonce) {
+			byte[] ntlmv2Hash = Ntlmv2Hash(target, username, password),
+				blob = CreateBlob(targetInformation, clientNonce);
+			return LMv2Response(ntlmv2Hash, blob, challenge);
+		}
+
+		/// <summary>
+		/// Computes the LMv2-response to the challenge sent as part of an
+		/// NTLM type 2 message.
+		/// </summary>
+		/// <param name="target">The name of the authentication target.</param>
+		/// <param name="username">The user account to authenticate with.</param>
+		/// <param name="password">The user account password.</param>
+		/// <param name="challenge">The challenge sent by the server.</param>
+		/// <param name="clientNonce">A random 8-byte client nonce.</param>
+		/// <returns>An array of bytes representing the response to the
+		/// specified challenge.</returns>
+		internal static byte[] ComputeLMv2Response(string target, string username,
+			string password, byte[] challenge, byte[] clientNonce) {
+			byte[] ntlmv2Hash = Ntlmv2Hash(target, username, password);
+			return LMv2Response(ntlmv2Hash, clientNonce, challenge);
+		}
+
+		/// <summary>
 		/// Creates the LM Hash of the specified password.
 		/// </summary>
 		/// <param name="password">The password to create the LM Hash of.</param>
@@ -176,6 +214,81 @@ namespace S22.Imap.Sasl.Mechanisms.Ntlm {
 			byte[] data = Encoding.Unicode.GetBytes(password);
 			using (MD4 md4 = new MD4()) {
 				return md4.ComputeHash(data);
+			}
+		}
+
+		/// <summary>
+		/// Creates the NTLMv2 Hash of the specified target, username
+		/// and password values.
+		/// </summary>
+		/// <param name="target">The name of the authentication target as is
+		/// specified in the target name field of the NTLM type 3 message.</param>
+		/// <param name="username">The user account name.</param>
+		/// <param name="password">The password for the user account.</param>
+		/// <returns>The NTLMv2 hash for the specified input values.</returns>
+		/// <exception cref="ArgumentNullException">Thrown if the username or
+		/// the password parameter is null.</exception>
+		private static byte[] Ntlmv2Hash(string target, string username,
+			string password) {
+			username.ThrowIfNull("username");
+			password.ThrowIfNull("password");
+			byte[] ntlmHash = NtlmHash(password);
+			string identity = username.ToUpperInvariant() + target;
+			using (var hmac = new HMACMD5(ntlmHash))
+				return hmac.ComputeHash(Encoding.Unicode.GetBytes(identity));
+		}
+
+		/// <summary>
+		/// Returns the current time as the number of tenths of a microsecond
+		/// since January 1, 1601.
+		/// </summary>
+		/// <returns>The current time as the number of tenths of a microsecond
+		/// since January 1, 1601.</returns>
+		private static long GetTimestamp() {
+			return DateTime.Now.ToFileTimeUtc();
+		}
+
+		/// <summary>
+		/// Creates the "blob" data block which is part of the NTLMv2 challenge
+		/// response.
+		/// </summary>
+		/// <param name="targetInformation">The target information block from
+		/// the NTLM type 2 message.</param>
+		/// <param name="clientNonce">A random 8-byte client nonce.</param>
+		/// <returns>The blob, used in the calculation of the NTLMv2 Response.</returns>
+		private static byte[] CreateBlob(byte[] targetInformation,
+			byte[] clientNonce) {
+			return new ByteBuilder()
+				.Append(0x00000101)
+				.Append(0)
+				.Append(GetTimestamp())
+				.Append(clientNonce)
+				.Append(0)
+				.Append(targetInformation)
+				.Append(0)
+				.ToArray();
+		}
+
+		/// <summary>
+		/// Creates the LMv2 Response from the given NTLMv2 hash, client data, and
+		/// Type 2 challenge.
+		/// </summary>
+		/// <param name="hash">The NTLMv2 Hash.</param>
+		/// <param name="clientData">The client data (blob or client nonce).</param>
+		/// <param name="challenge">The server challenge from the Type 2 message.</param>
+		/// <returns>The response which is either for NTLMv2 or LMv2, depending
+		/// on the client data.</returns>
+		private static byte[] LMv2Response(byte[] hash, byte[] clientData,
+			byte[] challenge) {
+			byte[] data = new ByteBuilder()
+				.Append(challenge)
+				.Append(clientData)
+				.ToArray();
+			using (var hmac = new HMACMD5(hash)) {
+				return new ByteBuilder()
+					.Append(hmac.ComputeHash(data))
+					.Append(clientData)
+					.ToArray();
 			}
 		}
 	}

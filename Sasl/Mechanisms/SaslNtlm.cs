@@ -9,12 +9,12 @@ namespace S22.Imap.Sasl.Mechanisms {
 	/// <remarks>Implemented with the help of the excellent documentation on
 	/// NTLM composed by Eric Glass.</remarks>
 	internal class SaslNtlm : SaslMechanism {
-		bool completed = false;
+		protected bool completed = false;
 
 		/// <summary>
 		/// NTLM involves several steps.
 		/// </summary>
-		int step = 0;
+		protected int step = 0;
 
 		/// <summary>
 		/// True if the authentication exchange between client and server
@@ -38,7 +38,7 @@ namespace S22.Imap.Sasl.Mechanisms {
 		/// <summary>
 		/// The username to authenticate with.
 		/// </summary>
-		string Username {
+		protected string Username {
 			get {
 				return Properties.ContainsKey("Username") ?
 					Properties["Username"] as string : null;
@@ -51,7 +51,7 @@ namespace S22.Imap.Sasl.Mechanisms {
 		/// <summary>
 		/// The password to authenticate with.
 		/// </summary>
-		string Password {
+		protected string Password {
 			get {
 				return Properties.ContainsKey("Password") ?
 					Properties["Password"] as string : null;
@@ -86,7 +86,7 @@ namespace S22.Imap.Sasl.Mechanisms {
 		/// <returns>The initial response to the NTLM challenge.</returns>
 		/// <exception cref="SaslException">Thrown if the response could not
 		/// be computed.</exception>
-		private byte[] ComputeInitialResponse(byte[] challenge) {
+		protected byte[] ComputeInitialResponse(byte[] challenge) {
 			try {
 				string domain = Properties.ContainsKey("Domain") ?
 					Properties["Domain"] as string : "domain";
@@ -109,7 +109,7 @@ namespace S22.Imap.Sasl.Mechanisms {
 		/// <returns>The response to the NTLM challenge.</returns>
 		/// <exception cref="SaslException">Thrown if the challenge
 		/// response could not be computed.</exception>
-		private byte[] ComputeChallengeResponse(byte[] challenge) {
+		protected byte[] ComputeChallengeResponse(byte[] challenge) {
 			try {
 				Type2Message msg = Type2Message.Deserialize(challenge);
 				byte[] data = new Type3Message(Username, Password, msg.Challenge,

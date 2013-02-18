@@ -77,6 +77,14 @@ namespace S22.Imap.Sasl.Mechanisms.Ntlm {
 		}
 
 		/// <summary>
+		/// Contains the raw data present in the target information block.
+		/// </summary>
+		public byte[] RawTargetInformation {
+			get;
+			private set;
+		}
+
+		/// <summary>
 		/// Private constructor.
 		/// </summary>
 		private Type2Message() {
@@ -111,16 +119,21 @@ namespace S22.Imap.Sasl.Mechanisms.Ntlm {
 						t2.Version = GetType2Version(targetOffset);
 						if (t2.Version > Type2Version.Version1) {
 							t2.Context = r.ReadInt64();
+							// Read the target information security buffer
 							int informationLength = r.ReadInt16(), informationSpace =
 								r.ReadInt16(), informationOffset = r.ReadInt32();
+							t2.RawTargetInformation = new byte[informationLength];
+							Array.Copy(buffer, informationOffset,
+								t2.RawTargetInformation, 0, informationLength);
 							// Version 3 has an additional OS version structure.
 							if (t2.Version > Type2Version.Version2)
 								t2.OSVersion = ReadOSVersion(r);
 						}
 						t2.TargetName = GetTargetName(r.ReadBytes(targetLength),
 							t2.Flags.HasFlag(Flags.NegotiateUnicode));
-						if (t2.Version > Type2Version.Version1)
+						if (t2.Version > Type2Version.Version1) {
 							t2.TargetInformation = ReadTargetInformation(r);
+						}
 					}
 				}
 				return t2;

@@ -157,15 +157,22 @@ namespace S22.Imap.Sasl.Mechanisms.Ntlm {
 		/// authentication.</param>
 		/// <param name="challenge">The challenge received from the server as part
 		/// of the NTLM type 2 message.</param>
-		/// <param name="workstation">The client's workstation name.</param> 
+		/// <param name="workstation">The client's workstation name.</param>
+		/// <param name="ntlmv2">Set to true to send an NTLMv2 challenge
+		/// response.</param>
 		/// <param name="targetName">The authentication realm in which the
 		/// authenticating account has membership.</param>
+		/// <param name="targetInformation">The target information block from
+		/// the NTLM type 2 message.</param>
 		/// <remarks>The target name is a domain name for domain accounts, or
 		/// a server name for local machine accounts. All security buffers will
 		/// be encoded as Unicode.</remarks>
 		public Type3Message(string username, string password, byte[] challenge,
-			string workstation, string targetName = null)
-			: this(username, password, challenge, true, workstation, targetName) {
+			string workstation, bool ntlmv2 = false, string targetName = null,
+			byte[] targetInformation = null)
+			: this(username, password, challenge, true, workstation, ntlmv2,
+					targetName, targetInformation)
+		{
 		}
 
 		/// <summary>
@@ -180,15 +187,20 @@ namespace S22.Imap.Sasl.Mechanisms.Ntlm {
 		/// of the NTLM type 2 message.</param>
 		/// <param name="useUnicode">Set this to true, if Unicode encoding has been
 		/// negotiated between client and server.</param>
-		/// <param name="workstation">The client's workstation name.</param> 
+		/// <param name="workstation">The client's workstation name.</param>
+		/// <param name="ntlmv2">Set to true to send an NTLMv2 challenge
+		/// response.</param> 
 		/// <param name="targetName">The authentication realm in which the
 		/// authenticating account has membership.</param>
+		/// <param name="targetInformation">The target information block from
+		/// the NTLM type 2 message.</param>
 		/// <remarks>The target name is a domain name for domain accounts, or
 		/// a server name for local machine accounts.</remarks>
 		/// <exception cref="ArgumentNullException">Thrown if the username, password
 		/// or challenge parameters are null.</exception>
 		public Type3Message(string username, string password, byte[] challenge,
-			bool useUnicode, string workstation, string targetName = null) {
+			bool useUnicode, string workstation, bool ntlmv2 = false,
+			string targetName = null, byte[] targetInformation = null) {
 			// Preconditions.
 			username.ThrowIfNull("username");
 			password.ThrowIfNull("password");
@@ -203,8 +215,16 @@ namespace S22.Imap.Sasl.Mechanisms.Ntlm {
 			// The session key is not relevant to authentication.
 			this.sessionKey = new byte[0];
 			// Compute the actual challenge response data.
-			LMResponse = Responses.ComputeLMResponse(challenge, password);
-			NtlmResponse = Responses.ComputeNtlmResponse(challenge, password);
+			if (!ntlmv2) {
+				LMResponse = Responses.ComputeLMResponse(challenge, password);
+				NtlmResponse = Responses.ComputeNtlmResponse(challenge, password);
+			} else {
+				byte[] cnonce = GetCNonce();
+				LMResponse = Responses.ComputeLMv2Response(targetName, username,
+					password, challenge, cnonce);
+				NtlmResponse = Responses.ComputeNtlmv2Response(targetName,
+					username, password, targetInformation, challenge, cnonce);
+			}
 			// We spoof an OS version of Windows 7 Build 7601.
 			OSVersion = new OSVersion(6, 1, 7601);
 		}
@@ -233,6 +253,16 @@ namespace S22.Imap.Sasl.Mechanisms.Ntlm {
 				.Append(workstation)
 				.Append(sessionKey)
 				.ToArray();
+		}
+
+		/// <summary>
+		/// Returns a random 8-byte cnonce value.
+		/// </summary>
+		/// <returns>A random 8-byte cnonce value.</returns>
+		private static byte[] GetCNonce() {
+			byte[] b = new byte[8];
+			new Random().NextBytes(b);
+			return b;
 		}
 	}
 }

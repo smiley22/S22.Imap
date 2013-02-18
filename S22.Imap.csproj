@@ -78,6 +78,7 @@
     <Compile Include="Sasl\Mechanisms\SaslCramMd5.cs" />
     <Compile Include="Sasl\Mechanisms\SaslDigestMd5.cs" />
     <Compile Include="Sasl\Mechanisms\SaslNtlm.cs" />
+    <Compile Include="Sasl\Mechanisms\SaslNtlmv2.cs" />
     <Compile Include="Sasl\Mechanisms\SaslOAuth.cs" />
     <Compile Include="Sasl\Mechanisms\SaslOAuth2.cs" />
     <Compile Include="Sasl\Mechanisms\SaslPlain.cs" />

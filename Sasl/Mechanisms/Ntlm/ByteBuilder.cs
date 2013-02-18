@@ -76,6 +76,23 @@ namespace S22.Imap.Sasl.Mechanisms.Ntlm {
 		}
 
 		/// <summary>
+		/// Appends the specified 64-bit integer value to this instance.
+		/// </summary>
+		/// <param name="value">A 64-bit integer value to append.</param>
+		/// <param name="bigEndian">Set this to true, to append the value as
+		/// big-endian.</param>
+		/// <returns>A reference to the calling instance.</returns>
+		public ByteBuilder Append(long value, bool bigEndian = false) {
+			if ((position + 8) >= buffer.Length)
+				Resize();
+			int[] o = bigEndian ? new int[8] { 7, 6, 5, 4, 3, 2, 1, 0 } :
+				new int[8] { 0, 1, 2, 3, 4, 5, 6, 7 };
+			for (int i = 0; i < 8; i++)
+				buffer[position++] = (byte) ((value >> (o[i] * 8)) & 0xFF);
+			return this;
+		}
+
+		/// <summary>
 		/// Appends the specified string using the specified encoding to this
 		/// instance.
 		/// </summary>

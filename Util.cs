@@ -59,6 +59,24 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
+		/// Returns a value indicating whether the specified string occurs within
+		/// this string. A parameter specifies the type of search to use for the
+		/// specified string.
+		/// </summary>
+		/// <param name="str">Extension method for the String class.</param>
+		/// <param name="value">The string to seek.</param>
+		/// <param name="comparer">One of the enumeration values that specifies
+		/// the rules for the search.</param>
+		/// <returns>true if the value parameter occurs within this string, or
+		/// if value is the empty string (""); otherwise, false.</returns>
+		/// <exception cref="ArgumentNullException">Thrown if the value
+		/// parameter is null.</exception>
+		internal static bool Contains(this string str, string value,
+			StringComparison comparer) {
+			return str.IndexOf(value, comparer) >= 0;
+		}
+
+		/// <summary>
 		/// Raises the event. Ensures the event is only raised, if it is not null.
 		/// </summary>
 		/// <typeparam name="T">Extends System.EventHandler class</typeparam>

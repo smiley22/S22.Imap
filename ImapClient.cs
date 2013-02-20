@@ -764,6 +764,7 @@ namespace S22.Imap {
 				// Try to collect special-use flags.
 				MailboxFlag[] flags = GetMailboxFlags(mailbox);
 
+				ResumeIdling();
 				return new MailboxInfo(mailbox, flags, status.Messages,
 					status.Unread, status.NextUID, Used, Free);
 			}
@@ -1901,7 +1902,8 @@ namespace S22.Imap {
 				try {
 					string response = GetResponse();
 					// A request was made to stop idling so quit the thread.
-					if (response.Contains("OK IDLE"))
+					if (response.Contains("OK IDLE",
+						StringComparison.InvariantCultureIgnoreCase))
 						return;
 					// Let the dispatcher thread take care of the IDLE notification so we
 					// can go back to receiving responses.

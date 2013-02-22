@@ -2,7 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace S22.Imap.Sasl.Mechanisms.Ntlm {
+namespace S22.Imap.Auth.Sasl.Mechanisms.Ntlm {
 	/// <summary>
 	/// Contains methods for calculating the various Type 3 challenge
 	/// responses.

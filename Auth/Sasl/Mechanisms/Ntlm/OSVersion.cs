@@ -1,5 +1,6 @@
-﻿
-namespace S22.Imap.Sasl.Mechanisms.Ntlm {
+﻿using S22.Imap.Auth;
+
+namespace S22.Imap.Auth.Sasl.Mechanisms.Ntlm {
 	/// <summary>
 	/// Indicates the version and build number of the operating system.
 	/// </summary>

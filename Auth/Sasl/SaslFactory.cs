@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace S22.Imap.Sasl {
+namespace S22.Imap.Auth.Sasl {
 	/// <summary>
 	/// A factory class for producing instances of Sasl mechanisms.
 	/// </summary>

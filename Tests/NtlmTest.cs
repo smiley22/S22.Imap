@@ -1,5 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using S22.Imap.Sasl.Mechanisms.Ntlm;
+using S22.Imap.Auth.Sasl.Mechanisms.Ntlm;
 using System;
 using System.Linq;
 using System.Text;

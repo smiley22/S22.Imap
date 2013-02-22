@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Text;
 
-namespace S22.Imap.Sasl.Mechanisms.Ntlm {
+namespace S22.Imap.Auth {
 	/// <summary>
 	/// A utility class modeled after the BCL StringBuilder to simplify
-	/// building NTLM messages.
+	/// building binary-data messages.
 	/// </summary>
 	internal class ByteBuilder {
 		/// <summary>
@@ -16,6 +16,15 @@ namespace S22.Imap.Sasl.Mechanisms.Ntlm {
 		/// The current position in the buffer.
 		/// </summary>
 		int position = 0;
+
+		/// <summary>
+		/// The length of the underlying data buffer.
+		/// </summary>
+		public int Length {
+			get {
+				return position;
+			}
+		}
 
 		/// <summary>
 		/// Resizes the internal byte buffer.
@@ -34,10 +43,27 @@ namespace S22.Imap.Sasl.Mechanisms.Ntlm {
 		/// <param name="values">Byte values to append.</param>
 		/// <returns>A reference to the calling instance.</returns>
 		public ByteBuilder Append(params byte[] values) {
-			if (position >= buffer.Length)
+			if ((position + values.Length) >= buffer.Length)
 				Resize();
 			foreach (byte b in values)
 				buffer[position++] = b;
+			return this;
+		}
+
+		/// <summary>
+		/// Appends the specified number of bytes from the specified buffer
+		/// starting at the specified offset to this instance.
+		/// </summary>
+		/// <param name="buffer">The buffer to append bytes from.</param>
+		/// <param name="offset">The offset into the buffert at which to start
+		/// reading bytes from.</param>
+		/// <param name="count">The number of bytes to read from the buffer.</param>
+		/// <returns>A reference to the calling instance.</returns>
+		public ByteBuilder Append(byte[] buffer, int offset, int count) {
+			if ((position + count) >= buffer.Length)
+				Resize();
+			for (int i = 0; i < count; i++)
+				this.buffer[position++] = buffer[offset + i];
 			return this;
 		}
 
@@ -76,6 +102,23 @@ namespace S22.Imap.Sasl.Mechanisms.Ntlm {
 		}
 
 		/// <summary>
+		/// Appends the specified 16-bit unsigend short value to this instance.
+		/// </summary>
+		/// <param name="value">A 16-bit unsigend short value to append.</param>
+		/// <param name="bigEndian">Set this to true, to append the value as
+		/// big-endian.</param>
+		/// <returns>A reference to the calling instance.</returns>
+		public ByteBuilder Append(ushort value, bool bigEndian = false) {
+			if ((position + 2) >= buffer.Length)
+				Resize();
+			int[] o = bigEndian ? new int[2] { 1, 0 } :
+				new int[2] { 0, 1 };
+			for (int i = 0; i < 2; i++)
+				buffer[position++] = (byte) ((value >> (o[i] * 8)) & 0xFF);
+			return this;
+		}
+
+		/// <summary>
 		/// Appends the specified 64-bit integer value to this instance.
 		/// </summary>
 		/// <param name="value">A 64-bit integer value to append.</param>
@@ -90,6 +133,7 @@ namespace S22.Imap.Sasl.Mechanisms.Ntlm {
 			for (int i = 0; i < 8; i++)
 				buffer[position++] = (byte) ((value >> (o[i] * 8)) & 0xFF);
 			return this;
+
 		}
 
 		/// <summary>
@@ -121,6 +165,14 @@ namespace S22.Imap.Sasl.Mechanisms.Ntlm {
 			byte[] b = new byte[position];
 			Array.Copy(buffer, b, position);
 			return b;
+		}
+
+		/// <summary>
+		/// Removes all bytes from the current ByteBuilder instance.
+		/// </summary>
+		public void Clear() {
+			buffer = new byte[1024];
+			position = 0;
 		}
 	}
 }

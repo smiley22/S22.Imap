@@ -1,17 +1,18 @@
-﻿using System;
+﻿using S22.Imap.Auth;
+using S22.Imap.Auth.Sasl;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Mail;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Timers;
-using S22.Imap.Sasl;
 
 namespace S22.Imap {
 	/// <summary>
@@ -254,6 +255,12 @@ namespace S22.Imap {
 				case AuthMethod.Auto:
 					response = AuthAuto(tag, username, password);
 					break;
+				case AuthMethod.NtlmOverSspi:
+					response = SspiAuthenticate(tag, username, password, true);
+					break;
+				case AuthMethod.Gssapi:
+					response = SspiAuthenticate(tag, username, password, false);
+					break;
 				default:
 					response = Authenticate(tag, username, password, method.ToString());
 					break;
@@ -281,10 +288,10 @@ namespace S22.Imap {
 		/// IMAP server.</param>
 		/// <returns>The response sent by the server.</returns>
 		/// <remarks>The order of preference of authentication types employed
-		/// by this method is Digest-Md5, followed by Cram-Md5 and finally
+		/// by this method is Ntlm, Digest-Md5, followed by Cram-Md5 and finally
 		/// plaintext Login as a last resort.</remarks>
 		private string AuthAuto(string tag, string username, string password) {
-			string[] methods = new string[] { "DigestMd5", "CramMd5" };
+			string[] methods = new string[] { "Ntlm", "DigestMd5", "CramMd5" };
 			foreach (string m in methods) {
 				try {
 					string response = Authenticate(tag, username, password, m);
@@ -312,6 +319,49 @@ namespace S22.Imap {
 		private string Login(string tag, string username, string password) {
 			return SendCommandGetResponse(tag + "LOGIN " + username.QuoteString() +
 				" " + password.QuoteString());
+		}
+
+		/// <summary>
+		/// Performs NTLM and Kerberos authentication via the Security Support
+		/// Provider Interface (SSPI).
+		/// </summary>
+		/// <param name="tag">The tag identifier to use for performing the
+		/// authentication commands.</param>
+		/// <param name="username">The username with which to login in to the
+		/// IMAP server.</param>
+		/// <param name="password">The password with which to log in to the
+		/// IMAP server.</param>
+		/// <param name="useNtlm">True to authenticate using NTLM, otherwise
+		/// GSSAPI (Kerberos) is used.</param>
+		/// <returns>The response sent by the server.</returns>
+		private string SspiAuthenticate(string tag, string username, string password,
+			bool useNtlm) {
+			string response = SendCommandGetResponse(tag + "AUTHENTICATE " + (useNtlm ?
+				"NTLM" : "GSSAPI"));
+			// If we get a BAD or NO response, the mechanism is not supported.
+			if (response.StartsWith(tag + "BAD") || response.StartsWith(tag + "NO")) {
+				throw new NotSupportedException("The requested authentication " +
+					"mechanism is not supported by the server.");
+			}
+			using (FilterStream fs = new FilterStream(stream, true)) {
+				using (NegotiateStream ns = new NegotiateStream(fs, true)) {
+					try {
+						ns.AuthenticateAsClient(
+							new NetworkCredential(username, password),
+							null,
+							String.Empty,
+							useNtlm ? ProtectionLevel.None : ProtectionLevel.EncryptAndSign,
+							System.Security.Principal.TokenImpersonationLevel.Delegation);
+					} catch {
+						return String.Empty;
+					}
+				}
+			}
+			response = GetResponse();
+			// Swallow any continuation data we unexpectedly receive from the server.
+			while (response.StartsWith("+ "))
+				response = SendCommandGetResponse(String.Empty);
+			return response;
 		}
 
 		/// <summary>
@@ -497,7 +547,8 @@ namespace S22.Imap {
 			if (capabilities != null)
 				return capabilities;
 			lock (sequenceLock) {
-				PauseIdling();
+				if(Authed)
+					PauseIdling();
 				string tag = GetTag();
 				string command = tag + "CAPABILITY";
 				string response = SendCommandGetResponse(command);
@@ -509,7 +560,8 @@ namespace S22.Imap {
 					}
 					response = GetResponse();
 				}
-				ResumeIdling();
+				if(Authed)
+					ResumeIdling();
 				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
 				return capabilities;
@@ -527,7 +579,8 @@ namespace S22.Imap {
 		/// otherwise false is returned.</returns>
 		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="ctor-2"]/*'/>
 		public bool Supports(string capability) {
-			return (capabilities ?? Capabilities()).Contains(capability.ToUpper());
+			return (capabilities ?? Capabilities()).Contains(capability,
+				StringComparer.InvariantCultureIgnoreCase);
 		}
 
 		/// <summary>

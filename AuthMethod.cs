@@ -2,7 +2,7 @@
 
 namespace S22.Imap {
 	/// <summary>
-	/// Defines supported means of authenticating with the IMAP server.
+	/// Defines supported means of authenticating with an IMAP server.
 	/// </summary>
 	public enum AuthMethod {
 		/// <summary>
@@ -42,6 +42,15 @@ namespace S22.Imap {
 		/// <summary>
 		/// Login using the NTLMv2 authentication mechanism.
 		/// </summary>
-		Ntlmv2
+		Ntlmv2,
+		/// <summary>
+		/// Login using the NTLM/NTLMv2 authentication mechanism via
+		/// Microsoft's Security Support Provider Interface (SSPI).
+		/// </summary>
+		NtlmOverSspi,
+		/// <summary>
+		/// Login using Kerberos authentication via the SASL GSSAPI mechanism.
+		/// </summary>
+		Gssapi
 	}
 }

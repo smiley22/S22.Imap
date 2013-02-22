@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace S22.Imap.Sasl.Mechanisms.Ntlm {
+namespace S22.Imap.Auth.Sasl.Mechanisms.Ntlm {
 	/// <summary>
 	/// Represents an NTLM Type 3 Message.
 	/// </summary>

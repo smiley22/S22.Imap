@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Security.Cryptography;
 
-namespace S22.Imap.Sasl.Mechanisms.Ntlm {
+namespace S22.Imap.Auth.Sasl.Mechanisms.Ntlm {
 	/// <summary>
 	/// Computes the MD4 hash value for the input data.
 	/// Courtesy of Keith Wood.

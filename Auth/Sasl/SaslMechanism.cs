@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System;
 
-namespace S22.Imap.Sasl {
+namespace S22.Imap.Auth.Sasl {
 	/// <summary>
 	/// The abstract base class from which all classes implementing a Sasl
 	/// authentication mechanism must derive.

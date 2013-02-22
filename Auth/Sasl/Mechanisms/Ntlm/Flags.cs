@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace S22.Imap.Sasl.Mechanisms.Ntlm {
+namespace S22.Imap.Auth.Sasl.Mechanisms.Ntlm {
 	/// <summary>
 	/// The NTLM flags which are contained in a bitfield within the header of
 	/// an NTLM message.

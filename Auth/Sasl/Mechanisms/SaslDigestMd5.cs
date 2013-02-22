@@ -5,7 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace S22.Imap.Sasl.Mechanisms {
+namespace S22.Imap.Auth.Sasl.Mechanisms {
 	/// <summary>
 	/// Implements the Sasl Cram-Md5 authentication method as described in
 	/// RFC 2831.

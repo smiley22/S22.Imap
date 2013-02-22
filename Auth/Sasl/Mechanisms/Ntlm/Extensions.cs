@@ -1,8 +1,9 @@
-﻿using System;
+﻿using S22.Imap.Auth;
+using System;
 using System.IO;
 using System.Text;
 
-namespace S22.Imap.Sasl.Mechanisms.Ntlm {
+namespace S22.Imap.Auth.Sasl.Mechanisms.Ntlm {
 	/// <summary>
 	/// Adds extension methods to the BinaryReader class to simplify the
 	/// deserialization of NTLM messages.

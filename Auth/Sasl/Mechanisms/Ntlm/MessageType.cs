@@ -1,5 +1,5 @@
 ﻿
-namespace S22.Imap.Sasl.Mechanisms.Ntlm {
+namespace S22.Imap.Auth.Sasl.Mechanisms.Ntlm {
 	/// <summary>
 	/// Describes the different types of NTLM messages.
 	/// </summary>

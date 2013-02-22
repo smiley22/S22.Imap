@@ -1,7 +1,7 @@
-﻿using S22.Imap.Sasl.Mechanisms.Ntlm;
+﻿using S22.Imap.Auth.Sasl.Mechanisms.Ntlm;
 using System;
 
-namespace S22.Imap.Sasl.Mechanisms {
+namespace S22.Imap.Auth.Sasl.Mechanisms {
 	/// <summary>
 	/// Implements the Sasl NTLMv2 authentication method which addresses
 	/// some of the security issues present in NTLM version 1.

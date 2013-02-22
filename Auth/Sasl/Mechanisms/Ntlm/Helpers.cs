@@ -1,5 +1,5 @@
 ﻿
-namespace S22.Imap.Sasl.Mechanisms.Ntlm {
+namespace S22.Imap.Auth.Sasl.Mechanisms.Ntlm {
 	/// <summary>
 	/// Represents the data contained in the target information block of an
 	/// NTLM type 2 message.

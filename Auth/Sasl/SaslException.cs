@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace S22.Imap.Sasl {
+namespace S22.Imap.Auth.Sasl {
 	/// <summary>
 	/// The exception is thrown when a Sasl-related error or unexpected condition occurs.
 	/// </summary>

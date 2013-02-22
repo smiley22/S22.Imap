@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace S22.Imap.Sasl.Mechanisms {
+namespace S22.Imap.Auth.Sasl.Mechanisms {
 	/// <summary>
 	/// Implements the Sasl OAuth 2.0 authentication method.
 	/// </summary>

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace S22.Imap.Sasl.Mechanisms.Ntlm {
+namespace S22.Imap.Auth.Sasl.Mechanisms.Ntlm {
 	/// <summary>
 	/// Represents an NTLM security buffer, which is a structure used to point
 	/// to a buffer of binary data within an NTLM message.

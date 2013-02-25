@@ -303,7 +303,14 @@ namespace S22.Imap {
 		/// <returns>An initialized instance of the Attachment class</returns>
 		private static Attachment CreateAttachment(Bodypart part, byte[] bytes) {
 			MemoryStream stream = new MemoryStream(bytes);
-			string name = part.Disposition.Filename ?? Path.GetRandomFileName();
+			string name = part.Disposition.Filename;
+			// Many MUAs put the file name in the name parameter of the content-type
+			// header instead of the filename parameter of the content-disposition
+			// header.
+			if (String.IsNullOrEmpty(name))
+				name = part.Parameters["name"];
+			if (String.IsNullOrEmpty(name))
+				name = Path.GetRandomFileName();
 			Attachment attachment = new Attachment(stream, name);
 			try {
 				attachment.ContentId = ParseMessageId(part.Id);
@@ -314,6 +321,9 @@ namespace S22.Imap {
 			} catch {
 				attachment.ContentType = new System.Net.Mime.ContentType();
 			}
+			// Workaround: filename from Attachment constructor is ignored with Mono.
+			attachment.Name = name;
+			attachment.ContentDisposition.FileName = name;
 			return attachment;
 		}
 

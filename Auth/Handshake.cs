@@ -8,12 +8,12 @@ namespace S22.Imap.Auth {
 	/// </summary>
 	internal class Handshake {
 		/// <summary>
-		/// This is the only permissable value according to specification.
+		/// This is the only permissible value according to specification.
 		/// </summary>
 		static readonly byte majorVersion = 0x01;
 
 		/// <summary>
-		/// This is the only permissable value according to specification.
+		/// This is the only permissible value according to specification.
 		/// </summary>
 		static readonly byte minorVersion = 0x00;
 
@@ -75,8 +75,9 @@ namespace S22.Imap.Auth {
 		/// <summary>
 		/// Deserializes a handshake instance from the specified byte array.
 		/// </summary>
-		/// <param name="data"></param>
-		/// <returns></returns>
+		/// <param name="data">An array of bytes containing handshake data.</param>
+		/// <returns>An initialized instance of the Handshake class deserialized
+		/// from the specified byte array.</returns>
 		/// <exception cref="SerializationException">Thrown if the specified byte
 		/// array does not contain valid handshake data.</exception>
 		public static Handshake Deserialize(byte[] data) {

@@ -146,22 +146,12 @@ namespace S22.Imap {
 		/// mail addresses.</returns>
 		private static MailAddress[] ParseAddressList(string list) {
 			List<MailAddress> mails = new List<MailAddress>();
-			string[] addr = list.Split(',');
-			foreach (string a in addr) {
-				Match m = Regex.Match(a.Trim(),
-					@"(.*)\s*<?([A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4})>?",
-					RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
-				if (m.Success) {
-					// The above regex will erroneously match some illegal (very rare)
-					// local-parts. RFC-compliant validation is not worth the effort
-					// at all, so just wrap this in a try/catch block in case
-					// MailAddress' ctor complains.
-					try {
-						string displayName = Util.DecodeWord(m.Groups[1].Value);
-						mails.Add(new MailAddress(m.Groups[2].Value, displayName));
-					} catch { }
-				}
-			}
+			MailAddressCollection mcol = new MailAddressCollection();
+			// Use .NET internal MailAddressParser.ParseMultipleAddresses.
+			// Any invalid addresses in .NET needs to be handled, please create testcases.
+			mcol.Add(list);
+			foreach (MailAddress m in mcol)
+				mails.Add(m);
 			return mails.ToArray();
 		}
 

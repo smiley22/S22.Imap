@@ -51,6 +51,10 @@ namespace S22.Imap {
 		/// <summary>
 		/// Login using Kerberos authentication via the SASL GSSAPI mechanism.
 		/// </summary>
-		Gssapi
+		Gssapi,
+		/// <summary>
+		/// Login using the SCRAM-SHA-1 authentication mechanism.
+		/// </summary>
+		ScramSha1
 	}
 }

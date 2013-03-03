@@ -288,10 +288,11 @@ namespace S22.Imap {
 		/// IMAP server.</param>
 		/// <returns>The response sent by the server.</returns>
 		/// <remarks>The order of preference of authentication types employed
-		/// by this method is Ntlm, Digest-Md5, followed by Cram-Md5 and finally
-		/// plaintext Login as a last resort.</remarks>
+		/// by this method is Ntlm, Scram-Sha-1, Digest-Md5, followed by
+		/// Cram-Md5 and finally plaintext Login as a last resort.</remarks>
 		private string AuthAuto(string tag, string username, string password) {
-			string[] methods = new string[] { "Ntlm", "DigestMd5", "CramMd5" };
+			string[] methods = new string[] { "Ntlm", "ScramSha1", "DigestMd5",
+				"CramMd5" };
 			foreach (string m in methods) {
 				try {
 					string response = Authenticate(tag, username, password, m);

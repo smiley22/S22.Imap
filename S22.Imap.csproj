@@ -45,6 +45,7 @@
     <Compile Include="Auth\ByteBuilder.cs" />
     <Compile Include="Auth\FilterStream.cs" />
     <Compile Include="Auth\Handshake.cs" />
+    <Compile Include="Auth\Sasl\Mechanisms\SaslScramSha1.cs" />
     <Compile Include="Bodystructure\Bodypart.cs" />
     <Compile Include="Bodystructure\Bodystructure.cs" />
     <Compile Include="Bodystructure\ContentDisposition.cs" />

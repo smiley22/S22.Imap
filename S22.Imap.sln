@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "S22.Imap", "S22.Imap.csproj", "{369C32A5-E099-4BD5-BBBF-51713947CA99}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{9F52283D-B191-4145-8EF0-B2C69D7A193E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{369C32A5-E099-4BD5-BBBF-51713947CA99} = {369C32A5-E099-4BD5-BBBF-51713947CA99}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

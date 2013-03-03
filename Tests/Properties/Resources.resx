@@ -131,10 +131,10 @@
     <value>MLAXXXXX@nifty.com</value>
   </data>
   <data name="MailFromName" xml:space="preserve">
-    <value>Hiroyuki Tanaka</value>
+    <value>Hiroyuki Tanaka, Japan</value>
   </data>
   <data name="MailHeader" xml:space="preserve">
-    <value>From: "Hiroyuki Tanaka" &lt;MLAXXXXX@nifty.com&gt;
+    <value>From: "Hiroyuki Tanaka, Japan" &lt;MLAXXXXX@nifty.com&gt;
 Subject: =?iso-2022-jp?B?GyRCIVpFbEZ8S1xCZz9MOlIhWxsoQg==?=
 	=?iso-2022-jp?B?GyRCRWw1fklwQiJMbkI/S2AlLyVpJVYkTjxoQUgkXyFWJF8bKEI=?=
 	=?iso-2022-jp?B?GyRCJHMkSiRHJEQkSiQsJG0kJiEhMjszWiROGyhCV0E=?=

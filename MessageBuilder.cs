@@ -307,7 +307,7 @@ namespace S22.Imap {
 			// Many MUAs put the file name in the name parameter of the content-type
 			// header instead of the filename parameter of the content-disposition
 			// header.
-			if (String.IsNullOrEmpty(name))
+			if (String.IsNullOrEmpty(name) && part.Parameters.ContainsKey("name"))
 				name = part.Parameters["name"];
 			if (String.IsNullOrEmpty(name))
 				name = Path.GetRandomFileName();

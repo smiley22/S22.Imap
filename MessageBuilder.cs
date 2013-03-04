@@ -144,14 +144,20 @@ namespace S22.Imap {
 		/// <param name="list">The address-list field to parse</param>
 		/// <returns>An array of MailAddress objects representing the parsed
 		/// mail addresses.</returns>
-		private static MailAddress[] ParseAddressList(string list) {
+		internal static MailAddress[] ParseAddressList(string list) {
 			List<MailAddress> mails = new List<MailAddress>();
+			if (String.IsNullOrEmpty(list))
+				return mails.ToArray();
 			MailAddressCollection mcol = new MailAddressCollection();
 			// Use .NET internal MailAddressParser.ParseMultipleAddresses.
-			// Any invalid addresses in .NET needs to be handled, please create testcases.
+			// Any invalid addresses in .NET needs to be handled,
+			// Please create testcases for anything that fails!
 			mcol.Add(list);
-			foreach (MailAddress m in mcol)
-				mails.Add(m);
+			foreach (MailAddress m in mcol) {
+				// We might need to do some extra, non standard decode.
+				string displayName = Util.DecodeWord(m.DisplayName);
+				mails.Add(new MailAddress(m.Address, displayName));
+			}
 			return mails.ToArray();
 		}
 

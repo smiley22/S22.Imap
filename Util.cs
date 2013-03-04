@@ -143,14 +143,19 @@ namespace S22.Imap {
 		/// <returns>A concatenation of all enconded-words in the passed
 		/// string</returns>
 		public static string DecodeWords(string words) {
-			MatchCollection matches = Regex.Matches(words,
-				@"(=\?[A-Za-z0-9\-_]+\?[BbQq]\?[^\?]+\?=)");
+			if (String.IsNullOrEmpty(words))
+				return String.Empty;
+			MatchCollection matches = rxDecodeWord.Matches(words);
+			if (matches.Count==0)
+				return words;
 			string decoded = String.Empty;
 			foreach (Match m in matches)
-				decoded = decoded + DecodeWord(m.ToString());
+				decoded = decoded + DecodeWord(m.Groups[0].Value);
 			return decoded;
 		}
 
+		private static readonly Regex rxDecodeWord =
+			new Regex(@"=\?([A-Za-z0-9\-_]+)\?([BbQq])\?([^\?]+)\?=", RegexOptions.Compiled);
 		/// <summary>
 		/// Decodes a MIME 'encoded-word' string.
 		/// </summary>
@@ -163,8 +168,9 @@ namespace S22.Imap {
 		/// sytax are Q-Encoding and Base64. For an in-depth description, refer
 		/// to RFC 2047</remarks>
 		internal static string DecodeWord(string word) {
-			Match m = Regex.Match(word,
-					@"=\?([A-Za-z0-9\-_]+)\?([BbQq])\?(.+)\?=");
+			if (String.IsNullOrEmpty(word))
+				return String.Empty;
+			Match m = rxDecodeWord.Match(word);
 			if (!m.Success)
 				return word;
 			Encoding encoding = Util.GetEncoding(m.Groups[1].Value);

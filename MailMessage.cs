@@ -166,10 +166,11 @@ namespace S22.Imap {
 		/// <param name="address">The MailAddress instance to create the address
 		/// string from.</param>
 		/// <returns>An address string as is used in RFC822 mail headers</returns>
-		static string To822Address(this MailAddress address) {
+		internal static string To822Address(this MailAddress address) {
 			if (!String.IsNullOrEmpty(address.DisplayName)) {
 				string name = address.DisplayName.IsASCII() ?
-					address.DisplayName : Base64Encode(address.DisplayName);
+					String.Format("\"{0}\"", address.DisplayName) :
+					Base64Encode(address.DisplayName);
 				return name + " <" + address.Address + ">";
 			}
 			return address.Address;

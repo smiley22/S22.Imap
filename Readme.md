@@ -3,6 +3,14 @@
 This repository contains an easy-to-use and well-documented .NET assembly for communicating with and
 receiving electronic mail from an Internet Message Access Protocol (IMAP) server.
 
+### Downloads
+
+You can always get the latest package on [Nuget](http://nuget.org/packages/S22.Imap/) or download the
+binaries as a .zip archive from [here](http://smiley22.github.com/Downloads/S22.Imap.zip). The
+[documentation](http://smiley22.github.com/S22.Imap/Documentation/) is also available for offline
+viewing as HTML or CHM and can be downloaded from 
+[here](http://smiley22.github.com/Downloads/S22.Imap.Html.Documentation.zip) and 
+[here](http://smiley22.github.com/Downloads/S22.Imap.Chm.Documentation.zip), respectively.
 
 ### Usage & Examples
 

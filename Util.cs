@@ -146,7 +146,7 @@ namespace S22.Imap {
 			if (String.IsNullOrEmpty(words))
 				return String.Empty;
 			MatchCollection matches = rxDecodeWord.Matches(words);
-			if (matches.Count==0)
+			if (matches.Count == 0)
 				return words;
 			string decoded = String.Empty;
 			foreach (Match m in matches)

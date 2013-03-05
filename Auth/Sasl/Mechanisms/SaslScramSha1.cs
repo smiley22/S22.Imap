@@ -184,7 +184,7 @@ namespace S22.Imap.Auth.Sasl.Mechanisms {
 		/// token.</returns>
 		private byte[] VerifyServerSignature(byte[] challenge) {
 			string s = Encoding.UTF8.GetString(challenge);
-			// The server must response with a "v=signature" message.
+			// The server must respond with a "v=signature" message.
 			if (!s.StartsWith("v=")) {
 				// Cancel authentication process.
 				return Encoding.UTF8.GetBytes("*");

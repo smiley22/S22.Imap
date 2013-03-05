@@ -398,6 +398,11 @@ namespace S22.Imap {
 					"mechanism is not supported by the server.");
 			}
 			while (!m.IsCompleted) {
+				// Annoyingly, Gmail OAUTH2 issues an untagged capability response during
+				// the SASL authentication process. As per spec this is illegal, but we
+				// should still deal with it.
+				while (response.StartsWith("*"))
+					response = GetResponse();
 				// Stop if the server response starts with our tag.
 				if (response.StartsWith(tag))
 					break;

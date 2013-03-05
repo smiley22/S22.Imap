@@ -144,23 +144,19 @@ namespace S22.Imap {
 		/// <param name="list">The address-list field to parse</param>
 		/// <returns>An array of MailAddress objects representing the parsed
 		/// mail addresses.</returns>
-		private static MailAddress[] ParseAddressList(string list) {
+		internal static MailAddress[] ParseAddressList(string list) {
 			List<MailAddress> mails = new List<MailAddress>();
-			string[] addr = list.Split(',');
-			foreach (string a in addr) {
-				Match m = Regex.Match(a.Trim(),
-					@"(.*)\s*<?([A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4})>?",
-					RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
-				if (m.Success) {
-					// The above regex will erroneously match some illegal (very rare)
-					// local-parts. RFC-compliant validation is not worth the effort
-					// at all, so just wrap this in a try/catch block in case
-					// MailAddress' ctor complains.
-					try {
-						string displayName = Util.DecodeWord(m.Groups[1].Value);
-						mails.Add(new MailAddress(m.Groups[2].Value, displayName));
-					} catch { }
-				}
+			if (String.IsNullOrEmpty(list))
+				return mails.ToArray();
+			MailAddressCollection mcol = new MailAddressCollection();
+			// Use .NET internal MailAddressParser.ParseMultipleAddresses.
+			// Any invalid addresses in .NET needs to be handled,
+			// Please create testcases for anything that fails!
+			mcol.Add(list);
+			foreach (MailAddress m in mcol) {
+				// We might need to do some extra, non standard decode.
+				string displayName = Util.DecodeWord(m.DisplayName);
+				mails.Add(new MailAddress(m.Address, displayName));
 			}
 			return mails.ToArray();
 		}

@@ -88,6 +88,22 @@ namespace S22.Imap.Auth.Sasl.Mechanisms {
 		}
 
 		/// <summary>
+		/// Internal constructor used for unit testing.
+		/// </summary>
+		/// <param name="username">The username to authenticate with.</param>
+		/// <param name="password">The plaintext password to authenticate
+		/// with.</param>
+		/// <param name="cnonce">The client nonce value to use.</param>
+		/// <exception cref="ArgumentNullException">Thrown if the username
+		/// or the password parameter is null.</exception>
+		/// <exception cref="ArgumentException">Thrown if the username
+		/// parameter is empty.</exception>
+		internal SaslScramSha1(string username, string password, string cnonce)
+			: this(username, password) {
+				Cnonce = cnonce;
+		}
+
+		/// <summary>
 		/// Creates and initializes a new instance of the SaslScramSha1
 		/// class using the specified username and password.
 		/// </summary>
@@ -155,6 +171,8 @@ namespace S22.Imap.Auth.Sasl.Mechanisms {
 			// Extract the server data needed to calculate the client proof.
 			string salt = nv["s"], nonce = nv["r"];
 			int iterationCount = Int32.Parse(nv["i"]);
+			if (!VerifyServerNonce(nonce))
+				throw new SaslException("Invalid server nonce: " + nonce);
 			// Calculate the client proof (refer to RFC 5802, p.7).
 			string clientFirstBare = "n=" + SaslPrep(Username) + ",r=" + Cnonce,
 				serverFirstMessage = Encoding.UTF8.GetString(challenge),
@@ -171,6 +189,18 @@ namespace S22.Imap.Auth.Sasl.Mechanisms {
 			// Return the client final message.
 			return Encoding.UTF8.GetBytes(withoutProof + ",p=" +
 				Convert.ToBase64String(clientProof));
+		}
+
+		/// <summary>
+		/// Verifies the nonce value sent by the server.
+		/// </summary>
+		/// <param name="nonce">The nonce value sent by the server as part of the
+		/// server-first-message.</param>
+		/// <returns>True if the nonce value is valid, otherwise false.</returns>
+		bool VerifyServerNonce(string nonce) {
+			// The first part of the server nonce must be the nonce sent by the
+			// client in its initial response.
+			return nonce.StartsWith(Cnonce);
 		}
 
 		/// <summary>

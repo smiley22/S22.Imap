@@ -67,6 +67,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="QuotedPrintableTest.cs" />
+    <Compile Include="ScramSha1Test.cs" />
     <Compile Include="SearchConditionTest.cs" />
     <Compile Include="UTF7Test.cs" />
   </ItemGroup>

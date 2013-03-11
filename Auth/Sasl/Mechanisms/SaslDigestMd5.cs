@@ -14,6 +14,11 @@ namespace S22.Imap.Auth.Sasl.Mechanisms {
 		bool Completed = false;
 
 		/// <summary>
+		/// The client nonce value used during authentication.
+		/// </summary>
+		string Cnonce = GenerateCnonce();
+
+		/// <summary>
 		/// Cram-Md5 involves several steps.
 		/// </summary>
 		int Step = 0;
@@ -72,6 +77,22 @@ namespace S22.Imap.Auth.Sasl.Mechanisms {
 		}
 
 		/// <summary>
+		/// Internal constructor used for unit testing.
+		/// </summary>
+		/// <param name="username">The username to authenticate with.</param>
+		/// <param name="password">The plaintext password to authenticate
+		/// with.</param>
+		/// <param name="cnonce">The client nonce value to use.</param>
+		/// <exception cref="ArgumentNullException">Thrown if the username
+		/// or the password parameter is null.</exception>
+		/// <exception cref="ArgumentException">Thrown if the username
+		/// parameter is empty.</exception>
+		internal SaslDigestMd5(string username, string password, string cnonce)
+			: this(username, password) {
+				Cnonce = cnonce;
+		}
+
+		/// <summary>
 		/// Creates and initializes a new instance of the SaslDigestMd5 class
 		/// using the specified username and password.
 		/// </summary>
@@ -121,9 +142,8 @@ namespace S22.Imap.Auth.Sasl.Mechanisms {
 			// Parse the challenge-string and construct the "response-value" from it.
 			string decoded = Encoding.ASCII.GetString(challenge);
 			NameValueCollection fields = ParseDigestChallenge(decoded);
-			string cnonce = GenerateCnonce(),
-				digestUri = "imap/" + fields["realm"];
-			string responseValue = ComputeDigestResponseValue(fields, cnonce, digestUri,
+			string digestUri = "imap/" + fields["realm"];
+			string responseValue = ComputeDigestResponseValue(fields, Cnonce, digestUri,
 				Username, Password);
 
 			// Create the challenge-response string.
@@ -134,7 +154,7 @@ namespace S22.Imap.Auth.Sasl.Mechanisms {
 				"realm=" + Dquote(fields["realm"]),
 				"nonce="+ Dquote(fields["nonce"]),
 				"nc=00000001",
-				"cnonce=" + Dquote(cnonce),
+				"cnonce=" + Dquote(Cnonce),
 				"digest-uri=" + Dquote(digestUri),
 				"response=" + responseValue,
 				"qop=" + fields["qop"]

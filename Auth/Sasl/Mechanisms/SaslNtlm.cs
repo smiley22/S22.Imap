@@ -62,6 +62,34 @@ namespace S22.Imap.Auth.Sasl.Mechanisms {
 		}
 
 		/// <summary>
+		/// Private constructor for use with Sasl.SaslFactory.
+		/// </summary>
+		protected SaslNtlm() {
+			// Nothing to do here.
+		}
+
+		/// <summary>
+		/// Creates and initializes a new instance of the SaslNtlm class
+		/// using the specified username and password.
+		/// </summary>
+		/// <param name="username">The username to authenticate with.</param>
+		/// <param name="password">The plaintext password to authenticate
+		/// with.</param>
+		/// <exception cref="ArgumentNullException">Thrown if the username
+		/// or the password parameter is null.</exception>
+		/// <exception cref="ArgumentException">Thrown if the username
+		/// parameter is empty.</exception>
+		public SaslNtlm(string username, string password) {
+			username.ThrowIfNull("username");
+			if (username == String.Empty)
+				throw new ArgumentException("The username must not be empty.");
+			password.ThrowIfNull("password");
+
+			Username = username;
+			Password = password;
+		}
+
+		/// <summary>
 		/// Computes the client response to the specified NTLM challenge.
 		/// </summary>
 		/// <param name="challenge">The challenge sent by the server</param>

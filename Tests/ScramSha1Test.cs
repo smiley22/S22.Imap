@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace S22.Imap.Test {
 	/// <summary>
-	/// Contains unit tests for the SASL SCRAM-SHA-1 mechanism.
+	/// Contains unit tests for the SASL SCRAM-SHA-1 authentication mechanism.
 	/// </summary>
 	[TestClass]
 	public class ScramSha1Test {
@@ -57,7 +57,7 @@ namespace S22.Imap.Test {
 				cnonce = "fyko+d2lbbFgONRv9qkxdawL";
 			SaslMechanism s = new SaslScramSha1(username, password, cnonce);
 			string initialResponse = Encoding.UTF8.GetString(
-				s.GetResponse(new byte[1]));
+				s.GetResponse(new byte[0]));
 			// Verify the syntax of the client-first-message.
 			Match m = Regex.Match(initialResponse,
 				"^[nyp],(a=[^,]+)?,(m=[^,]+,)?n=([^,]+),r=([^,]+)(,.*)?");
@@ -90,6 +90,13 @@ namespace S22.Imap.Test {
 			return Convert.ToBase64String(Encoding.UTF8.GetBytes(s));
 		}
 
+		/// <summary>
+		/// Helper method for conveniently decoding the specified base64-encoded
+		/// string using a decoding of UTF-8.
+		/// </summary>
+		/// <param name="s">The base64-encoded string to decode.</param>
+		/// <returns>A string constructed from the base64-decoded sequence
+		/// of bytes.</returns>
 		string FromBase64(string s) {
 			return Encoding.UTF8.GetString(Convert.FromBase64String(s));
 		}

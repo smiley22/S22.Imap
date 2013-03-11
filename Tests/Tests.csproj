@@ -69,6 +69,10 @@
     <Compile Include="QuotedPrintableTest.cs" />
     <Compile Include="ScramSha1Test.cs" />
     <Compile Include="SearchConditionTest.cs" />
+    <Compile Include="DigestMd5Test.cs" />
+    <Compile Include="CramMd5Test.cs" />
+    <Compile Include="PlainTest.cs" />
+    <Compile Include="OAuth2Test.cs" />
     <Compile Include="UTF7Test.cs" />
   </ItemGroup>
   <ItemGroup>

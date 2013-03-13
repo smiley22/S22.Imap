@@ -387,6 +387,9 @@ namespace S22.Imap {
 		private string Authenticate(string tag, string username, string password,
 			string mechanism) {
 			SaslMechanism m = SaslFactory.Create(mechanism);
+			if (!Supports("Auth=" + m.Name))
+				throw new NotSupportedException("The requested authentication " +
+					"mechanism is not supported by the server.");
 			m.Properties.Add("Username", username);
 			m.Properties.Add("Password", password);
 			// OAuth and OAuth2 use access tokens.

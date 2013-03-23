@@ -148,10 +148,26 @@ namespace S22.Imap {
 			List<MailAddress> mails = new List<MailAddress>();
 			if (String.IsNullOrEmpty(list))
 				return mails.ToArray();
+
+			// It is not valid to end address header with ; (.NET does not handle)
+			if (list[list.Length - 1] == ';')
+				list = list.Substring(0, list.Length - 1);
+
+			int minValidLength = 3;
+			if (list[0] == '<')
+				minValidLength++;
+			if (list[list.Length - 1] == '>')
+				minValidLength++;
+			// we would like to set displayname to source data if this fails.
+			// but can not create mailadress if there is no @ (.NET limitation)
+			// it also needs valid parts before and after @
+			if (!list.Contains("@") || list.Length < minValidLength)
+				return mails.ToArray();
+
 			MailAddressCollection mcol = new MailAddressCollection();
 			// Use .NET internal MailAddressParser.ParseMultipleAddresses.
 			// Any invalid addresses in .NET needs to be handled,
-			// Please create testcases for anything that fails!
+			// Please add anything that fails to the DecodeEncodedAddressLists Test
 			mcol.Add(list);
 			foreach (MailAddress m in mcol) {
 				// We might need to do some extra, non standard decode.

@@ -10,6 +10,23 @@ namespace S22.Imap.Test {
 	[TestClass]
 	public class MailMessageTest {
 		/// <summary>
+		/// Test Mailadress convertions.
+		/// </summary>
+		[TestMethod]
+		[TestCategory("MailMessageToMIME822")]
+		public void AddressToMIME822()
+		{
+			MailAddress from = new MailAddress("sender@foobar.com", "田中純"),
+				to = new MailAddress("rctp@foobar.com", "山田太郎");
+			MailAddress[] addr;
+
+			addr = MessageBuilder.ParseAddressList(MailMessageExtension.To822Address(from));
+			Assert.AreEqual(from.DisplayName, addr[0].DisplayName);
+
+			addr = MessageBuilder.ParseAddressList(MailMessageExtension.To822Address(to));
+			Assert.AreEqual(to.DisplayName, addr[0].DisplayName);
+		}
+		/// <summary>
 		/// Creates an RFC822/MIME string from an existing MailMessage
 		/// instance.
 		/// </summary>

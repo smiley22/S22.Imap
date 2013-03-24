@@ -43,7 +43,7 @@ namespace S22.Imap {
 					m.Subject = Util.DecodeWords(header["Subject"]).
 						Replace("\n", "").Replace("\r", "");
 				} catch {
-					// If, for any reason, encoding fails set the subject to the
+					// If, for any reason, decoding fails, set the subject to the
 					// original, unaltered string.
 					m.Subject = header["Subject"];
 				}
@@ -146,17 +146,20 @@ namespace S22.Imap {
 		/// mail addresses.</returns>
 		internal static MailAddress[] ParseAddressList(string list) {
 			List<MailAddress> mails = new List<MailAddress>();
-			if (String.IsNullOrEmpty(list))
-				return mails.ToArray();
-			MailAddressCollection mcol = new MailAddressCollection();
-			// Use .NET internal MailAddressParser.ParseMultipleAddresses.
-			// Any invalid addresses in .NET needs to be handled,
-			// Please create testcases for anything that fails!
-			mcol.Add(list);
-			foreach (MailAddress m in mcol) {
-				// We might need to do some extra, non standard decode.
-				string displayName = Util.DecodeWord(m.DisplayName);
-				mails.Add(new MailAddress(m.Address, displayName));
+			try {
+				MailAddressCollection mcol = new MailAddressCollection();
+				// Use .NET internal MailAddressParser.ParseMultipleAddresses
+				// to parse the address list.
+				mcol.Add(list);
+				foreach (MailAddress m in mcol) {
+					// We might still need to decode the display name if it is
+					// q-encoded.
+					string displayName = Util.DecodeWord(m.DisplayName);
+					mails.Add(new MailAddress(m.Address, displayName));
+				}
+			} catch {
+				// We don't want this to throw any exceptions even if the
+				// address list is malformed.
 			}
 			return mails.ToArray();
 		}

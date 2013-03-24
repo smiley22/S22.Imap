@@ -39,6 +39,7 @@
       <HintPath>..\bin\Debug\S22.Imap.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Numerics" />
   </ItemGroup>
   <Choose>
     <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
@@ -73,6 +74,7 @@
     <Compile Include="CramMd5Test.cs" />
     <Compile Include="PlainTest.cs" />
     <Compile Include="OAuth2Test.cs" />
+    <Compile Include="SrpTest.cs" />
     <Compile Include="UTF7Test.cs" />
   </ItemGroup>
   <ItemGroup>

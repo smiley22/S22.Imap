@@ -291,7 +291,7 @@ namespace S22.Imap {
 		/// by this method is Ntlm, Scram-Sha-1, Digest-Md5, followed by
 		/// Cram-Md5 and finally plaintext Login as a last resort.</remarks>
 		private string AuthAuto(string tag, string username, string password) {
-			string[] methods = new string[] { "Ntlm", "ScramSha1", "DigestMd5",
+			string[] methods = new string[] { "Srp", "Ntlm", "ScramSha1", "DigestMd5",
 				"CramMd5" };
 			foreach (string m in methods) {
 				try {
@@ -538,7 +538,10 @@ namespace S22.Imap {
 						byteCount = byteCount - read;
 					}
 				}
-				return Encoding.ASCII.GetString(mem.ToArray());
+				string s = Encoding.ASCII.GetString(mem.ToArray());
+				ts.TraceInformation("S -> " + s);
+
+				return s;
 			}
 		}
 

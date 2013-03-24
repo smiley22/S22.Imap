@@ -22,11 +22,11 @@ namespace S22.Imap {
 		/// <summary>
 		/// Login using the CRAM-MD5 authentication mechanism.
 		/// </summary>
-		CramMD5,
+		CramMd5,
 		/// <summary>
 		/// Login using the DIGEST-MD5 authentication mechanism.
 		/// </summary>
-		DigestMD5,
+		DigestMd5,
 		/// <summary>
 		/// Login using OAuth via the SASL XOAuth mechanism.
 		/// </summary>
@@ -55,6 +55,10 @@ namespace S22.Imap {
 		/// <summary>
 		/// Login using the SCRAM-SHA-1 authentication mechanism.
 		/// </summary>
-		ScramSha1
+		ScramSha1,
+		/// <summary>
+		/// Login using the Secure Remote Password (SRP) authentication mechanism.
+		/// </summary>
+		Srp
 	}
 }

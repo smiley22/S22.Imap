@@ -148,11 +148,42 @@ namespace S22.Imap {
 			MatchCollection matches = rxDecodeWord.Matches(words);
 			if (matches.Count == 0)
 				return words;
-			string decoded = String.Empty;
-			foreach (Match m in matches)
-				decoded = decoded + DecodeWord(m.Groups[0].Value);
-			return decoded;
+
+            // http://tools.ietf.org/html/rfc2047#page-10 :
+            /* When displaying a particular header field that contains multiple
+               'encoded-word's, any 'linear-white-space' that separates a pair of
+               adjacent 'encoded-word's is ignored.  (This is to allow the use of
+               multiple 'encoded-word's to represent long strings of unencoded text,
+               without having to separate 'encoded-word's where spaces occur in the
+               unencoded text.) */
+            // line-white-space ref: http://tools.ietf.org/html/rfc2616#page-16
+
+            StringBuilder decoded = new StringBuilder();
+            // Keep track of and use separation data between 'encoded-word's
+            int LastKnownMatchPos = 0;
+            foreach (Match m in matches) {
+                if (m.Index > LastKnownMatchPos)
+                    HandleFillData(decoded, words.Substring(LastKnownMatchPos, m.Index - LastKnownMatchPos));
+                decoded.Append(DecodeWord(m.Groups[0].Value));
+                LastKnownMatchPos = m.Index + m.Length;
+            }
+            HandleFillData(decoded, words.Substring(LastKnownMatchPos));
+		    return decoded.ToString();
 		}
+
+        /// <summary>
+        /// Internal function reuse to add separation between multiple 'encoded-word's correctly.
+        /// </summary>
+        private static void HandleFillData(StringBuilder decoded, string data) {
+            if (String.IsNullOrEmpty(data))
+                return;
+
+            // cr or lf is not wanted in the result, ever?
+            string FillData = data.Replace("\r", "").Replace("\n", "");
+            // any 'linear-white-space' that separates a pair of adjacent 'encoded-word's is ignored.
+            if (FillData.Trim().Length != 0)
+                decoded.Append(FillData);
+        }
 
 		private static readonly Regex rxDecodeWord =
 			new Regex(@"=\?([A-Za-z0-9\-_]+)\?([BbQq])\?([^\?]+)\?=", RegexOptions.Compiled);

@@ -98,25 +98,35 @@ namespace S22.Imap
         private IList<Tuple<uint, uint>> convertIDsToRanges()
         {
             IList<Tuple<uint, uint>> ranges = new List<Tuple<uint, uint>>();
-            uint? start = null;
+
+            int? startIndex = null;
+            bool inRange = false;
             for (int i = 0; i < _ids.Count; i++)
             {
-                uint id = _ids.ElementAt(i);
-                if (start == null)
-                    start = id;
-                if (id - start > 1)
+                if (startIndex == null)
                 {
-                    if ((id != _ids.ElementAt(i - 1) + 1)) //previous item is last of contiguous set
-                    {
-                        ranges.Add(new Tuple<uint, uint>(start.Value, _ids.ElementAt(i - 1)));
-                        start = id;
-                    }
-                    else if (i == _ids.Count - 1) //we're on the last item
-                    {
-                        ranges.Add(new Tuple<uint, uint>(start.Value, id));
-                    }
+                    startIndex = i;
+                    continue;
                 }
+                if ((_ids.ElementAt(i) - _ids.ElementAt(startIndex.Value) == i - startIndex) && i != _ids.Count - 1)
+                {
+                    inRange = true;
+                    continue; //contiguous
+                }
+                else if (_ids.ElementAt(i) - _ids.ElementAt(startIndex.Value) != i - startIndex)
+                {
+                    ranges.Add(new Tuple<uint, uint>(_ids.ElementAt(startIndex.Value), _ids.ElementAt(i - 1)));
+                    inRange = false;
+                    startIndex = i;
+                }
+                else if (i == _ids.Count - 1 && inRange)
+                {
+                    ranges.Add(new Tuple<uint, uint>(_ids.ElementAt(startIndex.Value), _ids.ElementAt(i)));
+                }
+
             }
+
+
             return ranges;
             
         }

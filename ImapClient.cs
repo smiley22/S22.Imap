@@ -1545,21 +1545,32 @@ namespace S22.Imap {
 		/// exception contains the error message returned by the server.</exception>
 		/// <seealso cref="MoveMessage"/>
 		public void CopyMessage(uint uid, string destination, string mailbox = null) {
-			if (!Authed)
-				throw new NotAuthenticatedException();
-			lock (sequenceLock) {
-				PauseIdling();
-				SelectMailbox(mailbox);
-				string tag = GetTag();
-				string response = SendCommandGetResponse(tag + "UID COPY " + uid + " "
-					+ destination.QuoteString());
-				while (response.StartsWith("*"))
-					response = GetResponse();
-				ResumeIdling();
-				if (!IsResponseOK(response, tag))
-					throw new BadServerResponseException(response);
-			}
+            CopyMessage(new MessageSet(uid), destination, mailbox);
 		}
+
+        public void CopyMessage(IEnumerable<uint> uids, string destination, string mailbox = null)
+        {
+            CopyMessage(new MessageSet(uids), destination, mailbox);
+        }
+
+        public void CopyMessage(MessageSet set, string destination, string mailbox = null)
+        {
+            if (!Authed)
+                throw new NotAuthenticatedException();
+            lock (sequenceLock)
+            {
+                PauseIdling();
+                SelectMailbox(mailbox);
+                string tag = GetTag();
+                string response = SendCommandGetResponse(tag + "UID COPY " + set.ToString() + " "
+                    + destination.QuoteString());
+                while (response.StartsWith("*"))
+                    response = GetResponse();
+                ResumeIdling();
+                if (!IsResponseOK(response, tag))
+                    throw new BadServerResponseException(response);
+            }
+        }
 
 		/// <summary>
 		/// Moves a mail message with the specified UID to the specified destination
@@ -1584,7 +1595,19 @@ namespace S22.Imap {
 			DeleteMessage(uid, mailbox);
 		}
 
-		/// <summary>
+        public void MoveMessage(IEnumerable<uint> uids, string destination, string mailbox = null)
+        {
+            CopyMessage(uids, destination, mailbox);
+            DeleteMessage(uids, mailbox);
+        }
+
+        public void MoveMessage(MessageSet set, string destination, string mailbox = null)
+        {
+            CopyMessage(set, destination, mailbox);
+            DeleteMessage(set, mailbox);
+        }
+
+        /// <summary>
 		/// Deletes the mail message with the specified UID.
 		/// </summary>
 		/// <param name="uid">The UID of the mail message that is to be deleted.</param>
@@ -1599,22 +1622,34 @@ namespace S22.Imap {
 		/// message returned by the server.</exception>
 		/// <seealso cref="MoveMessage"/>
 		public void DeleteMessage(uint uid, string mailbox = null) {
-			if (!Authed)
-				throw new NotAuthenticatedException();
-			lock (sequenceLock) {
-				PauseIdling();
-				SelectMailbox(mailbox);
-				string tag = GetTag();
-				string response = SendCommandGetResponse(tag + "UID STORE " + uid +
-					@" +FLAGS.SILENT (\Deleted \Seen)");
-				while (response.StartsWith("*")) {
-					response = GetResponse();
-				}
-				ResumeIdling();
-				if (!IsResponseOK(response, tag))
-					throw new BadServerResponseException(response);
-			}
+            DeleteMessage(new MessageSet(uid), mailbox);
 		}
+
+        public void DeleteMessage(IEnumerable<uint> uids, string mailbox = null)
+        {
+            DeleteMessage(new MessageSet(uids), mailbox);
+        }
+
+        public void DeleteMessage(MessageSet set, string mailbox = null)
+        {
+            if (!Authed)
+                throw new NotAuthenticatedException();
+            lock (sequenceLock)
+            {
+                PauseIdling();
+                SelectMailbox(mailbox);
+                string tag = GetTag();
+                string response = SendCommandGetResponse(tag + "UID STORE " + set.ToString() +
+                    @" +FLAGS.SILENT (\Deleted \Seen)");
+                while (response.StartsWith("*"))
+                {
+                    response = GetResponse();
+                }
+                ResumeIdling();
+                if (!IsResponseOK(response, tag))
+                    throw new BadServerResponseException(response);
+            }
+        }
 
 		/// <summary>
 		/// Retrieves the IMAP message flag attributes for a mail message.

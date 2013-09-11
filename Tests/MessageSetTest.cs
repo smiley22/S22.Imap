@@ -59,7 +59,6 @@ namespace S22.Imap.Test
             Assert.AreEqual("1:3", set.ToString());
         }
 
-
         [TestMethod]
         [TestCategory("MessageSet")]
         public void RangesAndIDs()
@@ -69,6 +68,40 @@ namespace S22.Imap.Test
             set.AddRange(3, 5);
             set.Add(7);
             Assert.AreEqual("1,3:5,7", set.ToString());
+        }
+
+        [TestMethod]
+        [TestCategory("MessageSet")]
+        public void RemoveID()
+        {
+            var set = new MessageSet();
+            set.Add(1);
+            set.Add(7);
+            set.Remove(1);
+            Assert.AreEqual("7", set.ToString());
+        }
+
+        [TestMethod]
+        [TestCategory("MessageSet")]
+        public void RemoveRange()
+        {
+            var set = new MessageSet();
+            set.AddRange(1,5);
+            set.RemoveRange(1,3);
+            Assert.AreEqual("4:5", set.ToString());
+        }
+
+
+        [TestMethod]
+        [TestCategory("MessageSet")]
+        public void Constructors()
+        {
+            var set = new MessageSet();
+            Assert.AreEqual("", set.ToString());
+            set = new MessageSet(1);
+            Assert.AreEqual("1", set.ToString());
+            set = new MessageSet(new uint[]{1,2,3});
+            Assert.AreEqual("1:3", set.ToString());
         }
     }
 }

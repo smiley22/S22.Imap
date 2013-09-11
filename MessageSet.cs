@@ -4,8 +4,13 @@ using System.Linq;
 
 namespace S22.Imap
 {
+    /// <summary>
+    /// A class to assist in the creation of IMAP-compatible message sets.
+    /// </summary>
     public class MessageSet
     {
+        private HashSet<uint> _ids = new HashSet<uint>();
+
         /// <summary>
         /// Initializes a new instance of the MessageSet class.
         /// </summary>
@@ -42,8 +47,6 @@ namespace S22.Imap
             AddRange(fromId, toId);
         }
 
-        private SortedSet<uint> _ids = new SortedSet<uint>();
-
         /// <summary>
         /// Adds a message id to the set, if it does not already exist.
         /// </summary>
@@ -72,10 +75,40 @@ namespace S22.Imap
         {
             if (fromId > toId)
                 throw new ArgumentException("The second range value must be greater than or equal to the first.");
-            //Just add them to the list for now. It makes it easier to convert to ranges later
-            //if we are just starting from an int list.
             for (uint i = fromId; i <= toId; i++)
                 _ids.Add(i);
+        }
+
+        /// <summary>
+        /// Removes a message id from the set.
+        /// </summary>
+        /// <param name="id"></param>
+        public void Remove(uint id)
+        {
+            _ids.Remove(id);
+        }
+
+        /// <summary>
+        /// Removes a list of ids from the set.
+        /// </summary>
+        /// <param name="ids"></param>
+        public void Remove(IEnumerable<uint> ids)
+        {
+            foreach (uint id in ids)
+                Remove(id);
+        }
+
+        /// <summary>
+        /// Removes a range of ids from the set.
+        /// </summary>
+        /// <param name="fromId"></param>
+        /// <param name="toId"></param>
+        public void RemoveRange(uint fromId, uint toId)
+        {
+            if (fromId > toId)
+                throw new ArgumentException("The second range value must be greater than or equal to the first.");
+            for (uint i = fromId; i <= toId; i++)
+                _ids.Remove(i);
         }
 
         /// <summary>
@@ -84,76 +117,43 @@ namespace S22.Imap
         /// <returns></returns>
         public override string ToString()
         {
-            IList<Tuple<uint, uint>> ranges = convertIDsToRanges();
-            IEnumerable<uint> ids = removeIDsInRanges(ranges);
-            IList<string> values = ids.Select(i => i.ToString()).ToList();
-            foreach (Tuple<uint, uint> t in ranges)
-                values.Add(string.Concat(t.Item1 + ":" + t.Item2));
-            return string.Join(",", values);
+            return string.Join(",", getImapMessageSetRanges(_ids));
         }
 
         /// <summary>
-        /// Converts contiguous ids to ranges and removes them from the id list.
+        /// Converts a list of integers into a string array of message sets
+        /// suitable for use with IMAP commands.
+        /// E.g., input {1,3,4,5,7} returns {"1", "3:5", "7"}
         /// </summary>
-        private IList<Tuple<uint, uint>> convertIDsToRanges()
-        {
-            IList<Tuple<uint, uint>> ranges = new List<Tuple<uint, uint>>();
-
-            int? startIndex = null;
-            bool inRange = false;
-            for (int i = 0; i < _ids.Count; i++)
-            {
-                if (startIndex == null)
-                {
-                    startIndex = i;
-                    continue;
-                }
-                if ((_ids.ElementAt(i) - _ids.ElementAt(startIndex.Value) == i - startIndex) && i != _ids.Count - 1)
-                {
-                    inRange = true;
-                    continue; //contiguous
-                }
-                else if (_ids.ElementAt(i) - _ids.ElementAt(startIndex.Value) != i - startIndex)
-                {
-                    ranges.Add(new Tuple<uint, uint>(_ids.ElementAt(startIndex.Value), _ids.ElementAt(i - 1)));
-                    inRange = false;
-                    startIndex = i;
-                }
-                else if (i == _ids.Count - 1 && inRange)
-                {
-                    ranges.Add(new Tuple<uint, uint>(_ids.ElementAt(startIndex.Value), _ids.ElementAt(i)));
-                }
-
-            }
-
-
-            return ranges;
-            
-        }
-
-        /// <summary>
-        /// Removes any ids from the list that are already covered by ranges
-        /// </summary>
-        private IEnumerable<uint> removeIDsInRanges(IList<Tuple<uint, uint>> ranges)
-        {
-            IList<uint> ids = new List<uint>();
-            for (int i = _ids.Count - 1; i > -1; i--)
-                if (!rangeContains(ranges, _ids.ElementAt(i)))
-                    ids.Add(_ids.ElementAt(i));
-            return ids;
-        }
-
-        /// <summary>
-        /// Returns true if a range already covers a given id.
-        /// </summary>
-        /// <param name="id"></param>
+        /// <param name="ints"></param>
         /// <returns></returns>
-        private bool rangeContains(IList<Tuple<uint, uint>> ranges, uint id)
+        private string[] getImapMessageSetRanges(HashSet<uint> ints)
         {
-            foreach (var r in ranges)
-                if (id >= r.Item1 && id <= r.Item2)
-                    return true;
-            return false;
+            if (ints.Count < 1)
+                return new string[]{};
+            List<uint> list = ints.ToList<uint>();
+            if (list.Count == 1)
+                return new string[] { list[0].ToString() };
+            list.Sort();
+            var lng = ints.Count;
+            var fromNums = new List<uint>();
+            var toNums = new List<uint>();
+            for (var i = 0; i < lng - 1; i++)
+            {
+                if(i == 0)
+                    fromNums.Add(list[i]);
+                if (list[i + 1] > list[i] + 1)
+                {
+                    toNums.Add(list[i]);
+                    fromNums.Add(list[i + 1]);
+                }
+            }
+            toNums.Add(list[lng - 1]);
+            return Enumerable.Range(0, toNums.Count).Select(
+                i => fromNums[i].ToString() +
+                    (toNums[i] == fromNums[i] ? "" : ":" + toNums[i].ToString())
+            ).ToArray();
+            
         }
     }
 }

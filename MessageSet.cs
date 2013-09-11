@@ -48,6 +48,18 @@ namespace S22.Imap
         }
 
         /// <summary>
+        /// Returns the number of unique message IDs in the set.
+        /// </summary>
+        /// <returns></returns>
+        public int Count
+        {
+            get
+            {
+                return _ids.Count;
+            }
+        }
+
+        /// <summary>
         /// Adds a message id to the set, if it does not already exist.
         /// </summary>
         /// <param name="id"></param>

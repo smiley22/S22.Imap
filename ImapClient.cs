@@ -1557,6 +1557,8 @@ namespace S22.Imap {
         {
             if (!Authed)
                 throw new NotAuthenticatedException();
+            if (set.Count == 0)
+                return;
             lock (sequenceLock)
             {
                 PauseIdling();
@@ -1634,6 +1636,8 @@ namespace S22.Imap {
         {
             if (!Authed)
                 throw new NotAuthenticatedException();
+            if (set.Count == 0)
+                return;
             lock (sequenceLock)
             {
                 PauseIdling();

@@ -487,37 +487,83 @@ namespace S22.Imap {
 			}
 		}
 
-		/// <summary>
-		/// Waits for a response from the server. This method blocks
-		/// until a response has been received.
-		/// </summary>
-		/// <param name="resolveLiterals">Set to true to resolve possible literals
-		/// returned by the server (Refer to RFC 3501 Section 4.3 for details).</param>
-		/// <returns>A response string from the server</returns>
-		private string GetResponse(bool resolveLiterals = true) {
-			const int Newline = 10, CarriageReturn = 13;
-			using (var mem = new MemoryStream()) {
-				lock (readLock) {
-					while (true) {
-						byte b = (byte)stream.ReadByte();
-						if (b == CarriageReturn)
-							continue;
-						if (b == Newline) {
-							string s = Encoding.ASCII.GetString(mem.ToArray());
-							if (resolveLiterals) {
-								s = Regex.Replace(s, @"{(\d+)}$", m => {
-									return "\"" + GetData(Convert.ToInt32(m.Groups[1].Value)) +
-										"\"" + GetResponse(false);
-								});
-							}
-							ts.TraceInformation("S -> " + s);
-							return s;
-						} else
-							mem.WriteByte(b);
-					}
-				}
-			}
-		}
+        /// <summary>
+        /// Waits for a response from the server. This method blocks
+        /// until a response has been received.
+        /// </summary>
+        /// <param name="resolveLiterals">Set to true to resolve possible literals
+        /// returned by the server (Refer to RFC 3501 Section 4.3 for details).</param>
+        /// <returns>A response string from the server</returns>
+        private string GetResponse(bool resolveLiterals = true)
+        {
+            const int Newline = 10, CarriageReturn = 13;
+            const int ConnectionCheckThreshold = 100000;
+            try
+            {
+                using (var mem = new MemoryStream())
+                {
+                    var bytesRemainingUntilNextConnectionCheck = ConnectionCheckThreshold;
+
+                    lock (readLock)
+                    {
+                        while (true)
+                        {
+                            bytesRemainingUntilNextConnectionCheck--;
+
+                            if (bytesRemainingUntilNextConnectionCheck == 0)
+                            {
+                                CheckConnection();
+                                bytesRemainingUntilNextConnectionCheck = ConnectionCheckThreshold;
+                            }
+
+                            byte b = (byte)stream.ReadByte();
+                            if (b == CarriageReturn)
+                                continue;
+                            if (b == Newline)
+                            {
+                                string s = Encoding.ASCII.GetString(mem.ToArray());
+                                if (resolveLiterals)
+                                {
+                                    s = Regex.Replace(s, @"{(\d+)}$", m =>
+                                    {
+                                        return "\"" + GetData(Convert.ToInt32(m.Groups[1].Value)) +
+                                               "\"" + GetResponse(false);
+                                    });
+                                }
+                                ts.TraceInformation("S -> " + s);
+                                return s;
+                            }
+                            else
+                                mem.WriteByte(b);
+                        }
+                    }
+                }
+            }
+            catch (BadServerResponseException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new BadServerResponseException("Error encountered during read; see inner exception for details", ex);
+            }
+        }
+
+        /// <summary>
+        /// In the event that the SslStream is disconnected unceremoniously, it will continue to
+        /// return data from ReadByte() indefinitely. The below method should be called periodically
+        /// to check the health of the connection
+        /// </summary>
+        private void CheckConnection()
+        {
+            if (client.Client.Poll(0, SelectMode.SelectRead))
+            {
+                var buffer = new byte[1];
+                if (client.Client.Receive(buffer, SocketFlags.Peek) == 0)
+                    throw new BadServerResponseException("Error encountered during read: not connected");
+            }
+        }
+
 
 		/// <summary>
 		/// Reads the specified amount of bytes from the server. This

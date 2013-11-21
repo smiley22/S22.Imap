@@ -274,7 +274,10 @@ namespace S22.Imap {
 				// just leave the data as is
 				bytes = Encoding.ASCII.GetBytes(content);
 			}
-	
+
+			// Always a attachment if we have name? Because Inline != AlternateView ?
+			bool haveName = part.Parameters.ContainsKey("name");
+
 			// If the MailMessage's Body fields haven't been initialized yet, put it there.
 			// Some weird (i.e. spam) mails like to omit content-types so we don't check for
 			// that here and just assume it's text.
@@ -285,8 +288,14 @@ namespace S22.Imap {
 				message.IsBodyHtml = part.Subtype.ToLower() == "html";
 				return;
 			}
+			string ContentType = ParseMIMEField(message.Headers["Content-Type"])["value"];
+			bool preferAlternative = string.Compare(ContentType, "multipart/alternative", true) == 0;
+			// handle "multipart/mixed" ?
 
-			if (part.Disposition.Type == ContentDispositionType.Attachment)
+			// Many attachments are missing Type, If we have a filename and not multipart/alternative then use attachment.
+			if (part.Disposition.Type == ContentDispositionType.Attachment ||
+				(part.Disposition.Type == ContentDispositionType.Unknown &&
+				!preferAlternative && haveName))
 				message.Attachments.Add(CreateAttachment(part, bytes));
 			else
 				message.AlternateViews.Add(CreateAlternateView(part, bytes));

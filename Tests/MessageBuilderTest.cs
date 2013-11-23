@@ -87,18 +87,19 @@ namespace S22.Imap.Test {
 			// image/gif and audio/mid MIME parts.
 			// AlternateViews only if multipart/alternative ?
 			Assert.IsFalse(m.IsBodyHtml);
-			Assert.AreEqual<int>(3, m.AlternateViews.Count);
+			Assert.AreEqual<int>(1, m.AlternateViews.Count);
+			Assert.AreEqual<int>(2, m.Attachments.Count);
 
 			Assert.AreEqual<string>("text/html",
 				m.AlternateViews[0].ContentType.MediaType);
 			Assert.AreEqual<string>("image/gif",
-				m.AlternateViews[1].ContentType.MediaType);
+				m.Attachments[0].ContentType.MediaType);
 			Assert.AreEqual<string>("audio/mid",
-				m.AlternateViews[2].ContentType.MediaType);
+				m.Attachments[1].ContentType.MediaType);
 
 			// Verify constructed image/gif and audio/mid content is identical to
 			// our resource files.
-			using (var sr = new BinaryReader(m.AlternateViews[1].ContentStream)) {
+			using (var sr = new BinaryReader(m.Attachments[0].ContentStream)) {
 				byte[] gif = sr.ReadBytes((int) sr.BaseStream.Length);
 				Assert.AreEqual<int>(
 					Properties.Resources.GifContent.Length,
@@ -107,7 +108,7 @@ namespace S22.Imap.Test {
 					.SequenceEqual(gif));
 			}
 
-			using (var sr = new BinaryReader(m.AlternateViews[2].ContentStream)) {
+			using (var sr = new BinaryReader(m.Attachments[1].ContentStream)) {
 				byte[] midi = sr.ReadBytes((int) sr.BaseStream.Length);
 				Assert.AreEqual<int>(
 					Properties.Resources.MidiContent.Length,

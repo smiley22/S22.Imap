@@ -20,16 +20,16 @@ namespace S22.Imap.Test {
 				to = new MailAddress("rctp@foobar.com", "山田太郎");
 			MailAddress[] addr;
 
-            // Test that a valid format is generated for the mailadress,
-            // as well as the parsing works.
+			// Test that a valid format is generated for the mailadress,
+			// as well as the parsing works.
 			addr = MessageBuilder.ParseAddressList(
-                MailMessageExtension.To822Address(from));
-            Assert.AreEqual(from.Address, addr[0].Address);
+				MailMessageExtension.To822Address(from));
+			Assert.AreEqual(from.Address, addr[0].Address);
 			Assert.AreEqual(from.DisplayName, addr[0].DisplayName);
 
 			addr = MessageBuilder.ParseAddressList(
-                MailMessageExtension.To822Address(to));
-            Assert.AreEqual(to.Address, addr[0].Address);
+				MailMessageExtension.To822Address(to));
+			Assert.AreEqual(to.Address, addr[0].Address);
 			Assert.AreEqual(to.DisplayName, addr[0].DisplayName);
 		}
 		/// <summary>

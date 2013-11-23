@@ -29,8 +29,8 @@ namespace S22.Imap {
 					list.AddRange(s.ParseList());
 				else
 					list.Add(s.ParseBodypart("1", false));
-			} catch (Exception) {
-				throw new FormatException(text);
+			} catch (Exception e) {
+				throw new FormatException(text, e);
 			}
 			return list.ToArray();
 		}

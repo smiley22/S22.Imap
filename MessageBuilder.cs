@@ -146,19 +146,39 @@ namespace S22.Imap {
 		/// mail addresses.</returns>
 		internal static MailAddress[] ParseAddressList(string list) {
 			List<MailAddress> mails = new List<MailAddress>();
+
+			// Preliminary tests and cleanup of possible invalid data
+			// If no data, return emedietly.
+			if (String.IsNullOrEmpty(list))
+				return mails.ToArray();
+
+			// It is not valid to end address header with ; (.NET limitation)
+			if (list[list.Length - 1] == ';')
+				list = list.Substring(0, list.Length - 1);
+
+			// Check for minimal lengt.
+			int minValidLength = 3;
+			if (list[0] == '<')
+				minValidLength++;
+			if (list[list.Length - 1] == '>')
+				minValidLength++;
+			if (list.Length < minValidLength)
+				return mails.ToArray();
+
 			try {
 				MailAddressCollection mcol = new MailAddressCollection();
 				// Use .NET internal MailAddressParser.ParseMultipleAddresses
 				// to parse the address list.
+				// Add anything that fails to DecodeEncodedAddressLists test.
 				mcol.Add(list);
 				foreach (MailAddress m in mcol) {
 					// We might still need to decode the display name if it is
 					// q-encoded.
-					string displayName = Util.DecodeWord(m.DisplayName);
+					string displayName = Util.DecodeWords(m.DisplayName);
 					mails.Add(new MailAddress(m.Address, displayName));
 				}
 			} catch {
-				// We don't want this to throw any exceptions even if the
+				// Some don't want this to throw any exceptions even if the
 				// address list is malformed.
 			}
 			return mails.ToArray();

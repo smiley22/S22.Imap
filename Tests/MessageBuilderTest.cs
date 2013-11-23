@@ -62,10 +62,14 @@ namespace S22.Imap.Test {
 		[TestMethod]
 		[TestCategory("BuildMessageFromMIME822")]
 		public void MessageWithQuotedPrintables() {
+			// Lineending \r\n fixes making sure resource data have CrLf in case
+			// of inconsistensy in resource from git checkout. Noted in Issue #37
 			MailMessage m = MessageBuilder.FromMIME822(
-				Properties.Resources.MailWithQuotedPrintables);
+				Properties.Resources.MailWithQuotedPrintables.
+				Replace("\r\n", "\n").Replace("\n", "\r\n"));
 			// Ensure the constructed body is identical to our resource string.
-			Assert.AreEqual<string>(Properties.Resources.QuotedPrintableText,
+			Assert.AreEqual<string>(Properties.Resources.QuotedPrintableText.
+				Replace("\r\n", "\n").Replace("\n", "\r\n"),
 				m.Body);
 		}
 

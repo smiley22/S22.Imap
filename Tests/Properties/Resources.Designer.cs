@@ -96,7 +96,7 @@ namespace S22.Imap.Test.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to MLAXXXXX@nifty.com.
+        ///   Looks up a localized string similar to MLAXXX_XX.Mu-lti+sub@s_u-b.nifty.com.
         /// </summary>
         internal static string MailFromAddress {
             get {
@@ -114,7 +114,7 @@ namespace S22.Imap.Test.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to From: &quot;Hiroyuki Tanaka, Japan&quot; &lt;MLAXXXXX@nifty.com&gt;
+        ///   Looks up a localized string similar to From: &quot;Hiroyuki Tanaka, Japan&quot; &lt;MLAXXX_XX.Mu-lti+sub@s_u-b.nifty.com&gt;
         ///Subject: =?iso-2022-jp?B?GyRCIVpFbEZ8S1xCZz9MOlIhWxsoQg==?=
         ///	=?iso-2022-jp?B?GyRCRWw1fklwQiJMbkI/S2AlLyVpJVYkTjxoQUgkXyFWJF8bKEI=?=
         ///	=?iso-2022-jp?B?GyRCJHMkSiRHJEQkSiQsJG0kJiEhMjszWiROGyhCV0E=?=

@@ -128,13 +128,13 @@
     <value>..\Resources\ImapListResponse.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="MailFromAddress" xml:space="preserve">
-    <value>MLAXXXXX@nifty.com</value>
+    <value>MLAXXX_XX.Mu-lti+sub@s_u-b.nifty.com</value>
   </data>
   <data name="MailFromName" xml:space="preserve">
     <value>Hiroyuki Tanaka, Japan</value>
   </data>
   <data name="MailHeader" xml:space="preserve">
-    <value>From: "Hiroyuki Tanaka, Japan" &lt;MLAXXXXX@nifty.com&gt;
+    <value>From: "Hiroyuki Tanaka, Japan" &lt;MLAXXX_XX.Mu-lti+sub@s_u-b.nifty.com&gt;
 Subject: =?iso-2022-jp?B?GyRCIVpFbEZ8S1xCZz9MOlIhWxsoQg==?=
 	=?iso-2022-jp?B?GyRCRWw1fklwQiJMbkI/S2AlLyVpJVYkTjxoQUgkXyFWJF8bKEI=?=
 	=?iso-2022-jp?B?GyRCJHMkSiRHJEQkSiQsJG0kJiEhMjszWiROGyhCV0E=?=

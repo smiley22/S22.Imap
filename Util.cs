@@ -148,22 +148,21 @@ namespace S22.Imap {
 			MatchCollection matches = rxDecodeWord.Matches(words);
 			if (matches.Count == 0)
 				return words;
-
-			// http://tools.ietf.org/html/rfc2047#page-10 :
-			/* When displaying a particular header field that contains multiple
-			   'encoded-word's, any 'linear-white-space' that separates a pair of
-			   adjacent 'encoded-word's is ignored.  (This is to allow the use of
-			   multiple 'encoded-word's to represent long strings of unencoded text,
-			   without having to separate 'encoded-word's where spaces occur in the
-			   unencoded text.) */
+			// http://tools.ietf.org/html/rfc2047#page-10:
+			// When displaying a particular header field that contains multiple
+			// 'encoded-word's, any 'linear-white-space' that separates a pair of
+			// adjacent 'encoded-word's is ignored.  (This is to allow the use of
+			// multiple 'encoded-word's to represent long strings of unencoded text,
+			// without having to separate 'encoded-word's where spaces occur in the
+			// unencoded text.) */
 			// line-white-space ref: http://tools.ietf.org/html/rfc2616#page-16
-
 			StringBuilder decoded = new StringBuilder();
-			// Keep track of and use separation data between 'encoded-word's
+			// Keep track of and use separation data between 'encoded-word's.
 			int LastKnownMatchPos = 0;
 			foreach (Match m in matches) {
 				if (m.Index > LastKnownMatchPos)
-					HandleFillData(decoded, words.Substring(LastKnownMatchPos, m.Index - LastKnownMatchPos));
+					HandleFillData(decoded, words.Substring(LastKnownMatchPos, m.Index -
+						LastKnownMatchPos));
 				decoded.Append(DecodeWord(m.Groups[0].Value));
 				LastKnownMatchPos = m.Index + m.Length;
 			}
@@ -172,15 +171,16 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Internal function reuse to add separation between multiple 'encoded-word's correctly.
+		/// Internal function reuse to add separation between multiple 'encoded-word's
+		/// correctly.
 		/// </summary>
 		private static void HandleFillData(StringBuilder decoded, string data) {
 			if (String.IsNullOrEmpty(data))
 				return;
-
 			// Cr or Lf is never in the result.
 			string FillData = data.Replace("\r", "").Replace("\n", "");
-			// any 'linear-white-space' that separates a pair of adjacent 'encoded-word's is ignored.
+			// Any 'linear-white-space' that separates a pair of adjacent 'encoded-word's
+			// is ignored.
 			if (FillData.Trim().Length != 0)
 				decoded.Append(FillData);
 			}

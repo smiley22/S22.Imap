@@ -26,7 +26,7 @@ namespace S22.Imap {
 			foreach (string key in header) {
 				string value = header.GetValues(key)[0];
 				try {
-						m.Headers.Add(key, value);
+					m.Headers.Add(key, value);
 				} catch {
 					// HeaderCollection throws an exception if adding an empty string as
 					// value, which can happen, if reading a mail message with an empty
@@ -70,7 +70,7 @@ namespace S22.Imap {
 			StringReader reader = new StringReader(text);
 			StringBuilder header = new StringBuilder();
 			string line;
-			while(!String.IsNullOrEmpty(line = reader.ReadLine()))
+			while (!String.IsNullOrEmpty(line = reader.ReadLine()))
 				header.AppendLine(line);
 			MailMessage m = FromHeader(header.ToString());
 			MIMEPart[] parts = ParseMailBody(reader.ReadToEnd(), m.Headers);
@@ -95,7 +95,7 @@ namespace S22.Imap {
 					continue;
 				// Values may stretch over several lines.
 				if (line[0] == ' ' || line[0] == '\t') {
-					if(fieldname != null)
+					if (fieldname != null)
 						coll[fieldname] = coll[fieldname] + line.TrimEnd();
 					continue;
 				}
@@ -145,31 +145,20 @@ namespace S22.Imap {
 		/// <returns>An array of MailAddress objects representing the parsed
 		/// mail addresses.</returns>
 		internal static MailAddress[] ParseAddressList(string list) {
+			const int minValidLength = 3;
 			List<MailAddress> mails = new List<MailAddress>();
-
-			// Preliminary tests and cleanup of possible invalid data
-			// If no data, return emedietly.
 			if (String.IsNullOrEmpty(list))
 				return mails.ToArray();
-
-			// It is not valid to end address header with ; (.NET limitation)
-			if (list[list.Length - 1] == ';')
-				list = list.Substring(0, list.Length - 1);
-
-			// Check for minimal lengt.
-			int minValidLength = 3;
-			if (list[0] == '<')
-				minValidLength++;
-			if (list[list.Length - 1] == '>')
-				minValidLength++;
-			if (list.Length < minValidLength)
-				return mails.ToArray();
-
 			try {
+				// .NET won't accept address-lists ending with a ';' character.
+				list = list.TrimEnd(';');
+				// Check for minimal length requirement.
+				if (list.TrimStart('<').TrimEnd('>').Length < minValidLength)
+					return mails.ToArray();
 				MailAddressCollection mcol = new MailAddressCollection();
 				// Use .NET internal MailAddressParser.ParseMultipleAddresses
 				// to parse the address list.
-				// Add anything that fails to DecodeEncodedAddressLists test.
+				// Note: Add anything that fails to DecodeEncodedAddressLists test.
 				mcol.Add(list);
 				foreach (MailAddress m in mcol) {
 					// We might still need to decode the display name if it is
@@ -178,7 +167,7 @@ namespace S22.Imap {
 					mails.Add(new MailAddress(m.Address, displayName));
 				}
 			} catch {
-				// Some don't want this to throw any exceptions even if the
+				// We don't want this to throw any exceptions even if the
 				// address list is malformed.
 			}
 			return mails.ToArray();
@@ -251,12 +240,12 @@ namespace S22.Imap {
 			}
 			if (header["From"] != null) {
 				addr = ParseAddressList(header["From"]);
-				if(addr.Length > 0)
+				if (addr.Length > 0)
 					m.From = addr[0];
 			}
 			if (header["Sender"] != null) {
 				addr = ParseAddressList(header["Sender"]);
-				if(addr.Length > 0)
+				if (addr.Length > 0)
 					m.Sender = addr[0];
 			}
 			if (header["Reply-to"] != null) {
@@ -346,7 +335,7 @@ namespace S22.Imap {
 			Attachment attachment = new Attachment(stream, name);
 			try {
 				attachment.ContentId = ParseMessageId(part.Id);
-			} catch {}
+			} catch { }
 			try {
 				attachment.ContentType = new System.Net.Mime.ContentType(
 					part.Type.ToString().ToLower() + "/" + part.Subtype.ToLower());
@@ -379,7 +368,7 @@ namespace S22.Imap {
 			AlternateView view = new AlternateView(stream, contentType);
 			try {
 				view.ContentId = ParseMessageId(part.Id);
-			} catch {}
+			} catch { }
 			return view;
 		}
 
@@ -466,7 +455,7 @@ namespace S22.Imap {
 		/// <returns>An initialized instance of the Bodypart class.</returns>
 		private static Bodypart BodypartFromMIME(MIMEPart mimePart) {
 			NameValueCollection contentType = ParseMIMEField(
-				mimePart.header["Content-Type"]); 
+				mimePart.header["Content-Type"]);
 			Bodypart p = new Bodypart(null);
 			Match m = Regex.Match(contentType["value"], "(.+)/(.+)");
 			if (m.Success) {

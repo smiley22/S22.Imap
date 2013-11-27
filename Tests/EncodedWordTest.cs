@@ -54,23 +54,25 @@ namespace S22.Imap.Test {
 		/// Tests for decoding AddressLists "encoded-words" strings.
 		/// </summary>
 		[TestMethod]
-		public void DecodeEncodedAddressLists()
-		{
+		public void DecodeEncodedAddressLists() {
 			Dictionary<string, string> dict = new Dictionary<string, string>() {
 				{ "", "" },
 				{ "=?gb2312?B?Y21uZHkua2FuZyi/uvb09s4p?= <cindy.kang@xxxcorp.com>",
 					"\"cmndy.kang(亢鲷鑫)\" <cindy.kang@xxxcorp.com>" },
-				{ "undisclosed recipients: ;", "" }, /* can we get display: "undisclosed recipients: ;" ? */
-				{ "undisclosed-recipients:;", "" }, /* can we get display: "undisclosed-recipients:;" ? */
+				{ "undisclosed recipients: ;", "" }, // can we get display: "undisclosed recipients: ;"?
+				{ "undisclosed-recipients:;", "" }, // can we get display: "undisclosed-recipients:;"?
 				{ "\"Hiroyuki Tanaka, Japan\" <MLAXXX_XX.Mu-lti+sub@s_u-b.nifty.com>",
 					"\"Hiroyuki Tanaka, Japan\" <MLAXXX_XX.Mu-lti+sub@s_u-b.nifty.com>" },
 				{ "test1 <test1@domain>, \"test2\" <test2@domain>, \"test, nr3\" <test3@domain>",
 					"\"test1\" <test1@domain>, \"test2\" <test2@domain>, \"test, nr3\" <test3@domain>" },
-				{ "only.local", "" }, /* this is not supported by the MailAddress Class, but valid RFC. */
+				// This is not supported by the MailAddress Class, but valid RFC.
+				{ "only.local", "" },
 				{ "@;", "" },
-				{ "<@>", "" }, /* minimum lengt of mailaddress is atleast 3 chars */
+				// Minimum length of a mail address is at least 3 characters.
+				{ "<@>", "" },
 				{ "<a@b>", "a@b" },
-				/* This should be decoded to opqkuv@m.linaaken.com@yahoo.com, but not valid in .NET - From Issue #48 */
+				// This should be decoded to opqkuv@m.linaaken.com@yahoo.com, but not valid in .NET
+				// From Issue #48.
 				{ "opqkuv@m.linaaken.com<=?UTF-8?B?b3Bxa3V2QG0ubGluYWFrZW4uY29t?=@yahoo.com>;",
 					"\"opqkuv@m.linaaken.com\" <=?UTF-8?B?b3Bxa3V2QG0ubGluYWFrZW4uY29t?=@yahoo.com>" },
 			};

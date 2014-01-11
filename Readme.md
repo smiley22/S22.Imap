@@ -51,7 +51,7 @@ further details on using the classes and methods exposed by the S22.Imap namespa
 
 ### Credits
 
-This library is copyright © 2012-2013 Torben Könke.
+This library is copyright © 2012-2014 Torben Könke.
 
 Parts of this library are based on the AE.Net.Mail project (copyright © 2012 Andy Edinborough).
 

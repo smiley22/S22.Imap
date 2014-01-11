@@ -62,9 +62,11 @@ namespace S22.Imap {
 				"Content-Type", "Content-Transfer-Encoding", "Priority",
 				"Reply-To", "X-Priority", "Importance", "Sender", "Message-Id"
 			};
+			var date = String.IsNullOrEmpty(m.Headers["Date"]) ? DateTime.Now.ToString("R") :
+				m.Headers["Date"];
 			NameValueCollection header = new NameValueCollection() {
 				{ "MIME-Version", "1.0" },
-				{ "Date", DateTime.Now.ToString("R") },
+				{ "Date", date },
 				{ "Priority", PriorityMap[m.Priority] },
 				{ "Importance", ImportanceMap[m.Priority] }
 			};

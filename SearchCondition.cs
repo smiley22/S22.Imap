@@ -83,7 +83,7 @@ namespace S22.Imap {
 		/// contents.
 		/// </remarks>
 		public static SearchCondition Header(string name, string text) {
-			return new SearchCondition { Field = Fields.Header,
+			return new SearchCondition { Field = Fields.Header, Quote = false,
 				Value = name + " " + text.QuoteString() };
 		}
 		/// <summary>

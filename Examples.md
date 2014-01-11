@@ -20,7 +20,7 @@
 			static void Main(string[] args)
 			{
 				using (ImapClient Client = new ImapClient("imap.gmail.com", 993,
-				 "username", "password", Authmethod.Login, true))
+				 "username", "password", AuthMethod.Login, true))
 				{
 					Console.WriteLine("We are connected!");
 				}
@@ -38,7 +38,7 @@
 			static void Main(string[] args)
 			{
 				using (ImapClient Client = new ImapClient("imap.gmail.com", 993,
-				 "username", "password", Authmethod.Login, true))
+				 "username", "password", AuthMethod.Login, true))
 				{
 					uint[] uids = Client.Search( SearchCondition.Unseen() );
 					MailMessage[] messages = Client.GetMessages(uids);
@@ -57,7 +57,7 @@
 			static void Main(string[] args)
 			{
 				using (ImapClient Client = new ImapClient("imap.gmail.com", 993,
-				 "username", "password", Authmethod.Login, true))
+				 "username", "password", AuthMethod.Login, true))
 				{
 					// Find messages that were sent from abc@def.com and have
 					// the string "Hello World" in their subject line
@@ -82,7 +82,7 @@
 			static void Main(string[] args)
 			{
 				using (ImapClient Client = new ImapClient("imap.gmail.com", 993,
-				 "username", "password", Authmethod.Login, true))
+				 "username", "password", AuthMethod.Login, true))
 				{
 					MailboxStatus status = Client.GetStatus();
 
@@ -103,7 +103,7 @@
 			static void Main(string[] args)
 			{
 				using (ImapClient Client = new ImapClient("imap.gmail.com", 993,
-				 "username", "password", Authmethod.Login, true))
+				 "username", "password", AuthMethod.Login, true))
 				{
 					// Should ensure IDLE is actually supported by the server
 					if(Client.Supports("IDLE") == false) {
@@ -143,7 +143,7 @@
 			static void Main(string[] args)
 			{
 				using (ImapClient Client = new ImapClient("imap.gmail.com", 993,
-				 "username", "password", Authmethod.Login, true))
+				 "username", "password", AuthMethod.Login, true))
 				{
 					// This returns *ALL* messages in the inbox
 					uint[] uids = Client.Search( SearchCondition.All() );
@@ -167,7 +167,7 @@
 			static void Main(string[] args)
 			{
 				using (ImapClient Client = new ImapClient("imap.gmail.com", 993,
-				 "username", "password", Authmethod.Login, true))
+				 "username", "password", AuthMethod.Login, true))
 				{
 					// This returns all messages sent since August 23rd 2012
 					uint[] uids = Client.Search(
@@ -208,7 +208,7 @@
 			static void Main(string[] args)
 			{
 				using (ImapClient Client = new ImapClient("imap.gmail.com", 993,
-				 "username", "password", Authmethod.Login, true))
+				 "username", "password", AuthMethod.Login, true))
 				{
 					// This returns all messages sent since August 23rd 2012
 					uint[] uids = Client.Search(
@@ -255,7 +255,7 @@
 			static void Main(string[] args)
 			{
 				using (ImapClient Client = new ImapClient("imap.gmail.com", 993,
-				 "username", "password", Authmethod.Login, true))
+				 "username", "password", AuthMethod.Login, true))
 				{
 					MailMessage m = CreateSimpleMailMessage();
 

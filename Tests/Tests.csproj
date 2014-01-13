@@ -75,6 +75,7 @@
     <Compile Include="PlainTest.cs" />
     <Compile Include="OAuth2Test.cs" />
     <Compile Include="SrpTest.cs" />
+    <Compile Include="MessageSetTest.cs" />
     <Compile Include="UTF7Test.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -40,8 +40,8 @@
 				using (ImapClient Client = new ImapClient("imap.gmail.com", 993,
 				 "username", "password", AuthMethod.Login, true))
 				{
-					IEnumerable&lt;uint&gt; uids = Client.Search( SearchCondition.Unseen() );
-					IEnumerable&lt;MailMessage&gt; messages = Client.GetMessages(uids);
+					IEnumerable<uint> uids = Client.Search( SearchCondition.Unseen() );
+					IEnumerable<MailMessage> messages = Client.GetMessages(uids);
 				}
 			}
 		}
@@ -61,7 +61,7 @@
 				{
 					// Find messages that were sent from abc@def.com and have
 					// the string "Hello World" in their subject line.
-					IEnumerable&lt;uint&gt; uids = Client.Search(
+					IEnumerable<uint> uids = Client.Search(
 						SearchCondition.From("abc@def.com").And(
 						SearchCondition.Subject("Hello World"))
 					);
@@ -146,12 +146,12 @@
 				 "username", "password", AuthMethod.Login, true))
 				{
 					// This returns *ALL* messages in the inbox.
-					IEnumerable&lt;uint&gt; uids = Client.Search( SearchCondition.All() );
+					IEnumerable<uint> uids = Client.Search( SearchCondition.All() );
 
 					// If we're only interested in the subject line or envelope
 					// information, just downloading the mail headers is alot
 					// cheaper and alot faster.
-					IEnumerable&lt;MailMessage&gt; messages = Client.GetMessages(uids. FetchOptions.HeadersOnly);
+					IEnumerable<MailMessage> messages = Client.GetMessages(uids. FetchOptions.HeadersOnly);
 				}
 			}
 		}
@@ -170,13 +170,13 @@
 				 "username", "password", AuthMethod.Login, true))
 				{
 					// This returns all messages sent since August 23rd 2012.
-					IEnumerable&lt;uint&gt; uids = Client.Search(
+					IEnumerable<uint> uids = Client.Search(
 						SearchCondition.SentSince( new DateTime(2012, 8, 23) )
 					);
 
 					// The expression will be evaluated for every MIME part
 					// of every mail message in the uids collection.
-					IEnumerable&lt;MailMessage&gt; messages = Client.GetMessages(uids,
+					IEnumerable<MailMessage> messages = Client.GetMessages(uids,
 						(Bodypart part) => {
 						 // We're only interested in attachments.
 						 if(part.Disposition.Type == ContentDispositionType.Attachment)
@@ -211,13 +211,13 @@
 				 "username", "password", AuthMethod.Login, true))
 				{
 					// This returns all messages sent since August 23rd 2012.
-					IEnumerable&lt;uint&gt; uids = Client.Search(
+					IEnumerable<uint> uids = Client.Search(
 						SearchCondition.SentSince( new DateTime(2012, 8, 23) )
 					);
 
 					// The expression will be evaluated for every MIME part
 					// of every mail message in the uids collection.
-					IEnumerable&lt;MailMessage&gt; messages = Client.GetMessages(uids,
+					IEnumerable<MailMessage> messages = Client.GetMessages(uids,
 						(Bodypart part) => {
 							// We're only interested in attachments.
 							if(part.Disposition.Type == ContentDispositionType.Attachment)

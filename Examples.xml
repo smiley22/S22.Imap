@@ -58,7 +58,7 @@
 						Client.Login("My_Username", "My_Password", AuthMethod.Auto);
 					}
 					catch(InvalidCredentialsException) {
-						Console.WriteLine("The server rejected the supplied credentials");
+						Console.WriteLine("The server rejected the supplied credentials.");
 					}
 					
 					Client.Dispose();
@@ -75,7 +75,7 @@
 						"My_Password", true, AuthMethod.Login);
 
 					// Get a list of unique identifiers (UIDs) of all unread messages in the mailbox.
-					uint[] uids = Client.Search( SearchCondition.Unseen() );
+					IEnumerable&lt;uint&gt; uids = Client.Search( SearchCondition.Unseen() );
 					
 					// Fetch the messages and print out their subject lines.
 					foreach(uint uid in uids) {
@@ -89,17 +89,17 @@
 				</code>
 			</example>
 			<example>
-				This example demonstrates how to perform a search using multiple search criteria
+				This example demonstrates how to perform a search using multiple search criteria.
 				<code>
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_Username",
 						"My_Password", true, AuthMethod.Login);
 
 					// Get a list of unique identifiers (UIDs) of all messages sent before the 01.04.2012
 					// and that are larger than 1 Kilobyte.
-					uint[] uids = Client.Search( SearchCondition.SentBefore(new DateTime(2012, 4, 1))
+					IEnumerable&lt;uint&gt; uids = Client.Search( SearchCondition.SentBefore(new DateTime(2012, 4, 1))
 						.And( SearchCondition.Larger(1024) ));
 
-					Console.WriteLine("Found " + uids.Length + " messages");
+					Console.WriteLine("Found " + uids.Count() + " messages");
 					
 					// Free up any resources associated with this instance.
 					Client.Dispose();
@@ -115,13 +115,13 @@
 					// Get a list of unique identifiers (UIDs) of all messages that have
 					// the Japanese expression "フーリエ変換" in their subject lines.
 					try {
-						uint[] uids = Client.Search(SearchCondition.Subject("フーリエ変換"));
+						IEnumerable&lt;uint&gt; uids = Client.Search(SearchCondition.Subject("フーリエ変換"));
 
-						Console.WriteLine("Found " + uids.Length + " messages");
+						Console.WriteLine("Found " + uids.Count() + " messages");
 					} catch(NotSupportedException e) {
 						// If this exception is thrown, the server does not support searching for characters
 						// outside the ASCII range.
-						Console.WriteLine("The server does not support searching for non-ASCII values");
+						Console.WriteLine("The server does not support searching for non-ASCII values.");
 					}
 					
 					// Free up any resources associated with this instance.
@@ -137,11 +137,11 @@
 						"My_Password", true, AuthMethod.Login);
 					
 					// Find all messages in the mailbox that were sent from "John.Doe@gmail.com".
-					uint uids = Client.Search( SearchCondition.From("John.Doe@gmail.com") );
+					IEnumerable&lt;uint&gt; uids = Client.Search( SearchCondition.From("John.Doe@gmail.com") );
 					
 					// Fetch the first message and print it's subject and body.
-					if(uids.Length > 0) {
-						MailMessage msg = Client.GetMessage(uids[0]);
+					if(uids.Count() > 0) {
+						MailMessage msg = Client.GetMessage(uids.First());
 						
 						Console.WriteLine("Subject: " + msg.Subject);
 						Console.WriteLine("Body: " + msg.Body);
@@ -161,11 +161,11 @@
 					"My_Password", true, AuthMethod.Login);
 
 					// Find all messages in the mailbox that have "Hello" in the subject.
-					uint uids = Client.Search( SearchCondition.Subject("Hello") );
+					IEnumerable&lt;uint&gt; uids = Client.Search( SearchCondition.Subject("Hello") );
 
 					// Fetch the mail headers of the first message and print it's subject line.
-					if(uids.Length > 0) {
-						MailMessage msg = Client.GetMessage(uids[0], FetchOptions.HeadersOnly);
+					if(uids.Count() > 0) {
+						MailMessage msg = Client.GetMessage(uids.First(), FetchOptions.HeadersOnly);
 
 						Console.WriteLine("Subject: " + msg.Subject);
 					}
@@ -184,11 +184,11 @@
 					"My_Password", true, AuthMethod.Login);
 
 					// Find all messages in the inbox.
-					uint uids = Client.Search( SearchCondition.All() );
+					IEnumerable&lt;uint&gt; uids = Client.Search( SearchCondition.All() );
 
 					// Download each message but skip message parts that are larger than 1 Megabyte.
 					foreach(uint uid in uids) {
-						MailMessage msg = Client.GetMessage(uids[0], (Bodypart part) => {
+						MailMessage msg = Client.GetMessage(uid, (Bodypart part) => {
 								if(part.Size > (1024 * 1024))
 									return false;
 								else
@@ -209,10 +209,10 @@
 						"My_Password", true, AuthMethod.Login);
 
 					// Find all messages that have been sent since June the 1st.
-					uint uids = Client.Search( SearchCondition.SentSince( new DateTime(2012, 6, 1) ) );
+					IEnumerable&lt;uint&gt; uids = Client.Search( SearchCondition.SentSince( new DateTime(2012, 6, 1) ) );
 
 					// Fetch the messages and print out their subject lines.
-					MailMessage[] messages = Client.GetMessages( uids );
+					IEnumerable&lt;MailMessage&gt; messages = Client.GetMessages( uids );
 
 					foreach(MailMessage m in messages)
 						Console.WriteLine("Subject: " + m.Subject);
@@ -229,11 +229,11 @@
 					"My_Password", true, AuthMethod.Login);
 
 					// Find all messages that have been sent since June the 1st.
-					uint uids = Client.Search( SearchCondition.SentSince( new DateTime(2012, 6, 1) ) );
+					IEnumerable&lt;uint&gt; uids = Client.Search( SearchCondition.SentSince( new DateTime(2012, 6, 1) ) );
 
 					// Retrieve the messages and print out their subject lines. If any of the messages are multipart
 					// messages, only those parts, that have a content-type of text will be fetched.
-					MailMessage[] messages = Client.GetMessages( uids, FetchOptions.TextOnly );
+					IEnumerable&lt;MailMessage&gt; messages = Client.GetMessages( uids, FetchOptions.TextOnly );
 
 					foreach(MailMessage m in messages)
 						Console.WriteLine("Subject: " + m.Subject);
@@ -333,8 +333,7 @@
 
 		<ImapClient name="StoreMessage">
 			<example>
-				This example demonstrates how to store a mail message on an
-				IMAP server.
+				This example demonstrates how to store a mail message on an IMAP server.
 				<code>
 					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
 					"My_Password", true, AuthMethod.Login);

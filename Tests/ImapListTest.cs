@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace S22.Imap.Test {
@@ -26,7 +27,7 @@ namespace S22.Imap.Test {
 
 			using(ImapClient client = new ImapClient(
 				new MockStream(Properties.Resources.ImapListResponse))) {
-				string[] list = client.ListMailboxes();
+				IEnumerable<string> list = client.ListMailboxes();
 				Assert.IsTrue(expected.SequenceEqual(list));
 			}
 		}

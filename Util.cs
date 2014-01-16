@@ -46,6 +46,7 @@ namespace S22.Imap {
 		/// <param name="characters">The length of a chunk, measured in
 		/// characters.</param>
 		/// <returns>An array of string chunks</returns>
+		[Obsolete]
 		internal static string[] ToChunks(this string str, int characters) {
 			List<string> list = new List<string>();
 			while (str.Length > 0) {
@@ -112,6 +113,32 @@ namespace S22.Imap {
 			where T : class {
 			if (data == null)
 				throw new ArgumentNullException();
+		}
+
+		/// <summary>
+		/// Throws an ArgumentNullException if the given string is null and
+		/// throws an ArgumentException if the given string is empty.
+		/// </summary>
+		/// <param name="s">The string to check for nullity and emptiness.</param>
+		internal static void ThrowIfNullOrEmpty(this string s) {
+			if (s == null)
+				throw new ArgumentNullException();
+			if (s == String.Empty)
+				throw new ArgumentException();
+		}
+
+		/// <summary>
+		/// Throws an ArgumentNullException if the given string is null and
+		/// throws an ArgumentException if the given string is empty.
+		/// </summary>
+		/// <param name="s">The string to check for nullity and emptiness.</param>
+		/// <param name="name">The name to use when throwing an
+		/// exception, if necessary.</param>
+		internal static void ThrowIfNullOrEmpty(this string s, string name) {
+			if (s == null)
+				throw new ArgumentNullException(name);
+			if (s == String.Empty)
+				throw new ArgumentException(name + " must not be empty.");
 		}
 
 		/// <summary>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace S22.Imap {
 	/// <summary>
@@ -16,14 +17,14 @@ namespace S22.Imap {
 		/// Initializes a new instance of the MailboxInfo class with the specified
 		/// values.
 		/// </summary>
-		/// <param name="Name">The IMAP name of the mailbox</param>
-		/// <param name="Flags">The IMAP flags set on this mailbox</param>
-		/// <param name="Messages">The number of messages in the mailbox</param>
-		/// <param name="Unread">The number of unread messages in the mailbox</param>
-		/// <param name="NextUID">The next unique identifier (UID) of the mailbox</param>
-		/// <param name="UsedStorage">The amount of used storage of the mailbox, in bytes</param>
-		/// <param name="FreeStorage">The amount of free storage of the mailbox, in bytes</param>
-		internal MailboxInfo(string Name, MailboxFlag[] Flags, int Messages, int Unread,
+		/// <param name="Name">The IMAP name of the mailbox.</param>
+		/// <param name="Flags">The IMAP flags set on this mailbox.</param>
+		/// <param name="Messages">The number of messages in the mailbox.</param>
+		/// <param name="Unread">The number of unread messages in the mailbox.</param>
+		/// <param name="NextUID">The next unique identifier (UID) of the mailbox.</param>
+		/// <param name="UsedStorage">The amount of used storage of the mailbox, in bytes.</param>
+		/// <param name="FreeStorage">The amount of free storage of the mailbox, in bytes.</param>
+		internal MailboxInfo(string Name, IEnumerable<MailboxFlag> Flags, int Messages, int Unread,
 			uint NextUID, UInt64 UsedStorage, UInt64 FreeStorage) {
 				this.Name = Name;
 				this.Flags = Flags;
@@ -47,15 +48,15 @@ namespace S22.Imap {
 		/// </summary>
 		public string Name {
 			get;
-			set;
+			private set;
 		}
 
 		/// <summary>
-		/// An array of flags set on this mailbox.
+		/// An enumerable collection of flags set on this mailbox.
 		/// </summary>
-		public MailboxFlag[] Flags {
+		public IEnumerable<MailboxFlag> Flags {
 			get;
-			set;
+			private set;
 		}
 
 		/// <summary>
@@ -63,7 +64,7 @@ namespace S22.Imap {
 		/// </summary>
 		public int Messages {
 			get;
-			set;
+			private set;
 		}
 
 		/// <summary>
@@ -71,7 +72,7 @@ namespace S22.Imap {
 		/// </summary>
 		public int Unread {
 			get;
-			set;
+			private set;
 		}
 
 		/// <summary>
@@ -79,7 +80,7 @@ namespace S22.Imap {
 		/// </summary>
 		public uint NextUID {
 			get;
-			set;
+			private set;
 		}
 
 		/// <summary>
@@ -91,7 +92,7 @@ namespace S22.Imap {
 		/// </remarks>
 		public UInt64 UsedStorage {
 			get;
-			set;
+			private set;
 		}
 
 		/// <summary>
@@ -103,7 +104,7 @@ namespace S22.Imap {
 		/// </remarks>
 		public UInt64 FreeStorage {
 			get;
-			set;
+			private set;
 		}
 	}
 }

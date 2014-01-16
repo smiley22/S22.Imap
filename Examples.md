@@ -40,8 +40,8 @@
 				using (ImapClient Client = new ImapClient("imap.gmail.com", 993,
 				 "username", "password", AuthMethod.Login, true))
 				{
-					uint[] uids = Client.Search( SearchCondition.Unseen() );
-					MailMessage[] messages = Client.GetMessages(uids);
+					IEnumerable&lt;uint&gt; uids = Client.Search( SearchCondition.Unseen() );
+					IEnumerable&lt;MailMessage&gt; messages = Client.GetMessages(uids);
 				}
 			}
 		}
@@ -60,8 +60,8 @@
 				 "username", "password", AuthMethod.Login, true))
 				{
 					// Find messages that were sent from abc@def.com and have
-					// the string "Hello World" in their subject line
-					uint[] uids = Client.Search(
+					// the string "Hello World" in their subject line.
+					IEnumerable&lt;uint&gt; uids = Client.Search(
 						SearchCondition.From("abc@def.com").And(
 						SearchCondition.Subject("Hello World"))
 					);
@@ -145,13 +145,13 @@
 				using (ImapClient Client = new ImapClient("imap.gmail.com", 993,
 				 "username", "password", AuthMethod.Login, true))
 				{
-					// This returns *ALL* messages in the inbox
-					uint[] uids = Client.Search( SearchCondition.All() );
+					// This returns *ALL* messages in the inbox.
+					IEnumerable&lt;uint&gt; uids = Client.Search( SearchCondition.All() );
 
 					// If we're only interested in the subject line or envelope
 					// information, just downloading the mail headers is alot
 					// cheaper and alot faster.
-					MailMessage[] messages = Client.GetMessages(uids. FetchOptions.HeadersOnly);
+					IEnumerable&lt;MailMessage&gt; messages = Client.GetMessages(uids. FetchOptions.HeadersOnly);
 				}
 			}
 		}
@@ -169,16 +169,16 @@
 				using (ImapClient Client = new ImapClient("imap.gmail.com", 993,
 				 "username", "password", AuthMethod.Login, true))
 				{
-					// This returns all messages sent since August 23rd 2012
-					uint[] uids = Client.Search(
+					// This returns all messages sent since August 23rd 2012.
+					IEnumerable&lt;uint&gt; uids = Client.Search(
 						SearchCondition.SentSince( new DateTime(2012, 8, 23) )
 					);
 
-					// Our lambda expression will be evaluated for every MIME part
-					// of every mail message in the uids array
-					MailMessage[] messages = Client.GetMessages(uids,
+					// The expression will be evaluated for every MIME part
+					// of every mail message in the uids collection.
+					IEnumerable&lt;MailMessage&gt; messages = Client.GetMessages(uids,
 						(Bodypart part) => {
-						 // We're only interested in attachments
+						 // We're only interested in attachments.
 						 if(part.Disposition.Type == ContentDispositionType.Attachment)
 						 {
 							Int64 TwoMegabytes = (1024 * 1024 * 2);
@@ -189,7 +189,7 @@
 							}
 						 }
 						
-						 // fetch MIME part and include it in the returned MailMessage instance
+						 // Fetch MIME part and include it in the returned MailMessage instance.
 						 return true;
 						}
 					);
@@ -210,19 +210,19 @@
 				using (ImapClient Client = new ImapClient("imap.gmail.com", 993,
 				 "username", "password", AuthMethod.Login, true))
 				{
-					// This returns all messages sent since August 23rd 2012
-					uint[] uids = Client.Search(
+					// This returns all messages sent since August 23rd 2012.
+					IEnumerable&lt;uint&gt; uids = Client.Search(
 						SearchCondition.SentSince( new DateTime(2012, 8, 23) )
 					);
 
-					// Our lambda expression will be evaluated for every MIME part
-					// of every mail message in the uids array
-					MailMessage[] messages = Client.GetMessages(uids,
+					// The expression will be evaluated for every MIME part
+					// of every mail message in the uids collection.
+					IEnumerable&lt;MailMessage&gt; messages = Client.GetMessages(uids,
 						(Bodypart part) => {
-							// We're only interested in attachments
+							// We're only interested in attachments.
 							if(part.Disposition.Type == ContentDispositionType.Attachment)
 							{
-								// Zip files have a content-type of application/zip
+								// Zip files have a content-type of application/zip.
 								if(part.Type == ContentType.Application &&
 								   part.Subtype.toLower() == "zip")
 								{
@@ -230,12 +230,12 @@
 								}
 								else
 								{
-									// Skip this attachment, it's not a zip archive
+									// Skip this attachment, it's not a zip archive.
 									return false;
 								}
 							}
 							
-							// fetch MIME part and include it in the returned MailMessage instance
+							// Fetch MIME part and include it in the returned MailMessage instance.
 							return true;
 						}
 					);

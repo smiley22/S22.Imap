@@ -3,9 +3,9 @@ using System.Runtime.Serialization;
 
 namespace S22.Imap {
 	/// <summary>
-	/// The exception is thrown when an unexpected response is received from the server.
+	/// The exception that is thrown when an unexpected response is received from the server.
 	/// </summary>
-	[Serializable()]
+	[Serializable]
 	public class BadServerResponseException : Exception {
 		/// <summary>
 		/// Initializes a new instance of the BadServerResponseException class
@@ -40,10 +40,9 @@ namespace S22.Imap {
 	}
 
 	/// <summary>
-	/// This exception is thrown when the supplied credentials in a login attempt were rejected
-	/// by the server.
+	/// The exception that is thrown when the supplied credentials were rejected by the server.
 	/// </summary>
-	[Serializable()]
+	[Serializable]
 	public class InvalidCredentialsException : Exception {
 		/// <summary>
 		/// Initializes a new instance of the InvalidCredentialsException class
@@ -78,10 +77,10 @@ namespace S22.Imap {
 	}
 
 	/// <summary>
-	/// This exception is thrown when a client has not authenticated with the server and
-	/// attempts to call a method which can only be called in an authenticated context.
+	/// The exception that is thrown when a client has not authenticated with the server and
+	/// attempts to call a method which can only be called when authenticated.
 	/// </summary>
-	[Serializable()]
+	[Serializable]
 	public class NotAuthenticatedException : Exception {
 		/// <summary>
 		/// Initializes a new instance of the NotAuthenticatedException class

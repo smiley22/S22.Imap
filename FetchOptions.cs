@@ -2,8 +2,7 @@
 
 namespace S22.Imap {
 	/// <summary>
-	/// Fetch options that can be used with the GetMessage and GetMessages methods
-	/// to selectively retrieve parts of a mail message while skipping others.
+	/// Defines the different means by which mail messages may be fetched from the server.
 	/// </summary>
 	public enum FetchOptions {
 		/// <summary>
@@ -11,20 +10,19 @@ namespace S22.Imap {
 		/// </summary>
 		Normal,
 		/// <summary>
-		/// Only the mail message headers will be retrieved, while the actual content will
-		/// not be downloaded. If this option is specified, only the header fields of the
-		/// returned MailMessage object will be initialized.
+		/// Only the mail message headers will be retrieved, while the actual content will not be
+		/// downloaded. If this option is specified, only the header fields of the returned MailMessage
+		/// object will be initialized.
 		/// </summary>
 		HeadersOnly,
 		/// <summary>
-		/// Retrieves the mail message, but will only download content that has a
-		/// content-type of text. This will retrieve text as well as html representations,
-		/// but no inline content or attachments.
+		/// Retrieves the mail message, but will only download content that has a content-type of text.
+		/// This will retrieve text as well as HTML representation, while skipping inline content and
+		/// attachments.
 		/// </summary>
 		TextOnly,
 		/// <summary>
-		/// Retrieves the mail message, but skips any content that has been marked as
-		/// attachment.
+		/// Retrieves the mail message, but skips any content that is an attachment.
 		/// </summary>
 		NoAttachments
 	}

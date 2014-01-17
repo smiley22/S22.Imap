@@ -8,18 +8,16 @@ using System.Text.RegularExpressions;
 
 namespace S22.Imap {
 	/// <summary>
-	/// A helper class for reading mail message data and building a MailMessage
-	/// instance out of it.
+	/// A helper class for reading mail message data and building a MailMessage instance out of it.
 	/// </summary>
 	internal static class MessageBuilder {
 		/// <summary>
-		/// Creates a new empty instance of the MailMessage class from a string
-		/// containing a raw mail message header.
+		/// Creates a new empty instance of the MailMessage class from a string containing a raw mail
+		/// message header.
 		/// </summary>
-		/// <param name="text">A string containing the mail header to create
-		/// the MailMessage instance from.</param>
-		/// <returns>A MailMessage instance with initialized Header fields but
-		/// no content</returns>
+		/// <param name="text">The mail header to create the MailMessage instance from.</param>
+		/// <returns>A MailMessage instance with initialized Header fields but without any
+		/// content.</returns>
 		internal static MailMessage FromHeader(string text) {
 			NameValueCollection header = ParseMailHeader(text);
 			MailMessage m = new MailMessage();
@@ -57,15 +55,13 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Creates a new instance of the MailMessage class from a string
-		/// containing raw RFC822/MIME mail message data.
+		/// Creates a new instance of the MailMessage class from a string containing raw RFC822/MIME
+		/// mail message data.
 		/// </summary>
-		/// <param name="text">A string containing the mail message data to
-		/// create the MailMessage instance from.</param>
+		/// <param name="text">The mail message data to create the MailMessage instance from.</param>
 		/// <returns>An initialized instance of the MailMessage class.</returns>
-		/// <remarks>This is used when fetching entire messages instead
-		/// of the partial-fetch mechanism because it saves redundant
-		/// round-trips to the server.</remarks>
+		/// <remarks>This is used when fetching entire messages instead of the partial-fetch mechanism
+		/// because it saves redundant round-trips to the server.</remarks>
 		internal static MailMessage FromMIME822(string text) {
 			StringReader reader = new StringReader(text);
 			StringBuilder header = new StringBuilder();
@@ -80,12 +76,11 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Parses the mail header of a mail message and returns it as a
-		/// NameValueCollection.
+		/// Parses the mail header of a mail message and returns it as a NameValueCollection.
 		/// </summary>
 		/// <param name="header">The mail header to parse.</param>
-		/// <returns>A NameValueCollection containing the header fields as keys
-		/// with their respective values as values.</returns>
+		/// <returns>A NameValueCollection containing the header fields as keys with their respective
+		/// values as values.</returns>
 		internal static NameValueCollection ParseMailHeader(string header) {
 			StringReader reader = new StringReader(header);
 			NameValueCollection coll = new NameValueCollection();
@@ -114,13 +109,13 @@ namespace S22.Imap {
 		/// Parses a MIME header field which can contain multiple 'parameter = value'
 		/// pairs (such as Content-Type: text/html; charset=iso-8859-1).
 		/// </summary>
-		/// <param name="field">The header field to parse</param>
-		/// <returns>A NameValueCollection containing the parameter names as keys
-		/// with the respective parameter values as values.</returns>
-		/// <remarks>The value of the actual field disregarding the 'parameter = value'
-		/// pairs is stored in the collection under the key "value" (in the above example
-		/// of Content-Type, this would be "text/html").</remarks>
-		private static NameValueCollection ParseMIMEField(string field) {
+		/// <param name="field">The header field to parse.</param>
+		/// <returns>A NameValueCollection containing the parameter names as keys with the respective
+		/// parameter values as values.</returns>
+		/// <remarks>The value of the actual field disregarding the 'parameter = value' pairs is stored
+		/// in the collection under the key "value" (in the above example of Content-Type, this would
+		/// be "text/html").</remarks>
+		static NameValueCollection ParseMIMEField(string field) {
 			NameValueCollection coll = new NameValueCollection();
 			try {
 				MatchCollection matches = Regex.Matches(field,
@@ -138,12 +133,11 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Parses a mail header address-list field such as To, Cc and Bcc which
-		/// can contain multiple email addresses.
+		/// Parses a mail header address-list field such as To, Cc and Bcc which can contain multiple
+		/// email addresses.
 		/// </summary>
 		/// <param name="list">The address-list field to parse</param>
-		/// <returns>An array of MailAddress objects representing the parsed
-		/// mail addresses.</returns>
+		/// <returns>An array of MailAddress objects representing the parsed mail addresses.</returns>
 		internal static MailAddress[] ParseAddressList(string list) {
 			const int minValidLength = 3;
 			List<MailAddress> mails = new List<MailAddress>();
@@ -156,19 +150,15 @@ namespace S22.Imap {
 				if (list.TrimStart('<').TrimEnd('>').Length < minValidLength)
 					return mails.ToArray();
 				MailAddressCollection mcol = new MailAddressCollection();
-				// Use .NET internal MailAddressParser.ParseMultipleAddresses
-				// to parse the address list.
-				// Note: Add anything that fails to DecodeEncodedAddressLists test.
+				// Use .NET internal MailAddressParser.ParseMultipleAddresses to parse the address list.
 				mcol.Add(list);
 				foreach (MailAddress m in mcol) {
-					// We might still need to decode the display name if it is
-					// q-encoded.
+					// We might still need to decode the display name if it is Q-encoded.
 					string displayName = Util.DecodeWords(m.DisplayName);
 					mails.Add(new MailAddress(m.Address, displayName));
 				}
 			} catch {
-				// We don't want this to throw any exceptions even if the
-				// address list is malformed.
+				// We don't want this to throw any exceptions even if the address list is malformed.
 			}
 			return mails.ToArray();
 		}
@@ -177,12 +167,12 @@ namespace S22.Imap {
 		/// Parses a mail message identifier from a string.
 		/// </summary>
 		/// <param name="field">The field to parse the message id from</param>
-		/// <exception cref="ArgumentException">Thrown when the field
-		/// argument does not contain a valid message identifier.</exception>
-		/// <returns>The parsed message id</returns>
-		/// <remarks>A message identifier (msg-id) is a globally unique
-		/// identifier for a message.</remarks>
-		private static string ParseMessageId(string field) {
+		/// <exception cref="ArgumentException">The field argument does not contain a valid message
+		/// identifier.</exception>
+		/// <returns>The parsed message id.</returns>
+		/// <remarks>A message identifier (msg-id) is a globally unique identifier for a
+		/// message.</remarks>
+		static string ParseMessageId(string field) {
 			// A msg-id is enclosed in < > brackets.
 			Match m = Regex.Match(field, @"<(.+)>");
 			if (m.Success)
@@ -192,16 +182,15 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Parses the priority of a mail message which can be specified
-		/// as part of the header information.
+		/// Parses the priority of a mail message which can be specified as part of the header
+		/// information.
 		/// </summary>
-		/// <param name="priority">The mail header priority value. The value
-		/// can be null in which case a "normal priority" is returned.</param>
-		/// <returns>A value from the MailPriority enumeration corresponding to
-		/// the specified mail priority. If the passed priority value is null
-		/// or invalid, a normal priority is assumed and MailPriority.Normal
-		/// is returned.</returns>
-		private static MailPriority ParsePriority(string priority) {
+		/// <param name="priority">The mail header priority value. The value can be null in which case
+		/// a "normal priority" is returned.</param>
+		/// <returns>A value from the MailPriority enumeration corresponding to the specified mail
+		/// priority. If the passed priority value is null or invalid, a normal priority is assumed and
+		/// MailPriority.Normal is returned.</returns>
+		static MailPriority ParsePriority(string priority) {
 			Dictionary<string, MailPriority> Map =
 				new Dictionary<string, MailPriority>(StringComparer.OrdinalIgnoreCase) {
 						{ "non-urgent", MailPriority.Low },
@@ -216,12 +205,12 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Sets the address fields (From, To, CC, etc.) of a MailMessage
-		/// object using the specified mail message header information.
+		/// Sets the address fields (From, To, CC, etc.) of a MailMessage object using the specified
+		/// mail message header information.
 		/// </summary>
-		/// <param name="m">The MailMessage instance to operate on</param>
-		/// <param name="header">A collection of mail and MIME headers</param>
-		private static void SetAddressFields(MailMessage m, NameValueCollection header) {
+		/// <param name="m">The MailMessage instance to operate on.</param>
+		/// <param name="header">A collection of mail and MIME headers.</param>
+		static void SetAddressFields(MailMessage m, NameValueCollection header) {
 			MailAddress[] addr;
 			if (header["To"] != null) {
 				addr = ParseAddressList(header["To"]);
@@ -279,18 +268,17 @@ namespace S22.Imap {
 						break;
 				}
 			} catch {
-				// If it's not a valid Base64 or quoted-printable encoded string
-				// just leave the data as is
+				// If it's not a valid Base64 or quoted-printable encoded string just leave the data as is.
 				bytes = Encoding.ASCII.GetBytes(content);
 			}
 
-			// If we have name it most likely is an attachment. And not a body.
-			// Inline parts are better accessed as attachment instead of AlternateView.
-			bool haveName = part.Parameters.ContainsKey("name");
+			// If the part has a name it most likely is an attachment and it should go into the
+			// Attachments collection.
+			bool hasName = part.Parameters.ContainsKey("name");
 
-			// If the MailMessage's Body fields haven't been initialized yet, put it there.
-			// Some weird (i.e. spam) mails like to omit content-types so we don't check for
-			// that here and just assume it's text.
+			// If the MailMessage's Body fields haven't been initialized yet, put it there. Some weird
+			// (i.e. spam) mails like to omit content-types so we don't check for that here and just
+			// assume it's text.
 			if (String.IsNullOrEmpty(message.Body) &&
 				part.Disposition.Type != ContentDispositionType.Attachment) {
 				message.Body = encoding.GetString(bytes);
@@ -299,35 +287,32 @@ namespace S22.Imap {
 				return;
 			}
 
-			// Check for a alternative view.
+			// Check for alternative view.
 			string ContentType = ParseMIMEField(message.Headers["Content-Type"])["value"];
 			bool preferAlternative = string.Compare(ContentType, "multipart/alternative", true) == 0;
-			// can "multipart/mixed" be handled ?
 
-			// Many attachments are missing Disposition Type, If not defined as alternative
-			// And name is available assume it is Attachment and not AlternateView.
+			// Many attachments are missing the disposition-type. If it's not defined as alternative
+			// and it has a name attribute, assume it is Attachment rather than an AlternateView.
 			if (part.Disposition.Type == ContentDispositionType.Attachment ||
 				(part.Disposition.Type == ContentDispositionType.Unknown &&
-				preferAlternative == false && haveName))
+				preferAlternative == false && hasName))
 				message.Attachments.Add(CreateAttachment(part, bytes));
 			else
 				message.AlternateViews.Add(CreateAlternateView(part, bytes));
 		}
 
 		/// <summary>
-		/// Creates an instance of the Attachment class used by the MailMessage class
-		/// to store mail message attachments.
+		/// Creates an instance of the Attachment class used by the MailMessage class to store mail
+		/// message attachments.
 		/// </summary>
 		/// <param name="part">The MIME body part to create the attachment from.</param>
-		/// <param name="bytes">An array of bytes composing the content of the
-		/// attachment</param>
-		/// <returns>An initialized instance of the Attachment class</returns>
-		private static Attachment CreateAttachment(Bodypart part, byte[] bytes) {
+		/// <param name="bytes">An array of bytes composing the content of the attachment.</param>
+		/// <returns>An initialized instance of the Attachment class.</returns>
+		static Attachment CreateAttachment(Bodypart part, byte[] bytes) {
 			MemoryStream stream = new MemoryStream(bytes);
 			string name = part.Disposition.Filename;
-			// Many MUAs put the file name in the name parameter of the content-type
-			// header instead of the filename parameter of the content-disposition
-			// header.
+			// Many MUAs put the file name in the name parameter of the content-type header instead of
+			// the filename parameter of the content-disposition header.
 			if (String.IsNullOrEmpty(name) && part.Parameters.ContainsKey("name"))
 				name = part.Parameters["name"];
 			if (String.IsNullOrEmpty(name))
@@ -349,14 +334,13 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Creates an instance of the AlternateView class used by the MailMessage class
-		/// to store alternate views of the mail message's content.
+		/// Creates an instance of the AlternateView class used by the MailMessage class to store
+		/// alternate views of the mail message's content.
 		/// </summary>
 		/// <param name="part">The MIME body part to create the alternate view from.</param>
-		/// <param name="bytes">An array of bytes composing the content of the
-		/// alternate view</param>
-		/// <returns>An initialized instance of the AlternateView class</returns>
-		private static AlternateView CreateAlternateView(Bodypart part, byte[] bytes) {
+		/// <param name="bytes">An array of bytes composing the content of the alternate view.</param>
+		/// <returns>An initialized instance of the AlternateView class.</returns>
+		static AlternateView CreateAlternateView(Bodypart part, byte[] bytes) {
 			MemoryStream stream = new MemoryStream(bytes);
 			System.Net.Mime.ContentType contentType;
 			try {
@@ -376,11 +360,10 @@ namespace S22.Imap {
 		/// Parses the body part of a MIME/RFC822 mail message.
 		/// </summary>
 		/// <param name="body">The body of the mail message.</param>
-		/// <param name="header">The header of the mail message whose body
-		/// will be parsed.</param>
-		/// <returns>An array of initialized MIMEPart instances representing
-		/// the body parts of the mail message.</returns>
-		private static MIMEPart[] ParseMailBody(string body,
+		/// <param name="header">The header of the mail message whose body will be parsed.</param>
+		/// <returns>An array of initialized MIMEPart instances representing the body parts of the mail
+		/// message.</returns>
+		static MIMEPart[] ParseMailBody(string body,
 			NameValueCollection header) {
 			NameValueCollection contentType = ParseMIMEField(header["Content-Type"]);
 			if (contentType["Boundary"] != null) {
@@ -402,13 +385,13 @@ namespace S22.Imap {
 		/// <summary>
 		/// Parses the body of a multipart MIME mail message.
 		/// </summary>
-		/// <param name="reader">An instance of the StringReader class initialized
-		/// with a string containing the body of the mail message.</param>
-		/// <param name="boundary">The boundary value as is present as part of
-		/// the Content-Type header field in multipart mail messages.</param>
-		/// <returns>An array of initialized MIMEPart instances representing
-		/// the various parts of the MIME mail message.</returns>
-		private static MIMEPart[] ParseMIMEParts(StringReader reader, string boundary) {
+		/// <param name="reader">An instance of the StringReader class initialized with a string
+		/// containing the body of the mail message.</param>
+		/// <param name="boundary">The boundary value as is present as part of the Content-Type header
+		/// field in multipart mail messages.</param>
+		/// <returns>An array of initialized MIMEPart instances representing the various parts of the
+		/// MIME mail message.</returns>
+		static MIMEPart[] ParseMIMEParts(StringReader reader, string boundary) {
 			List<MIMEPart> list = new List<MIMEPart>();
 			string start = "--" + boundary, end = "--" + boundary + "--", line;
 			// Skip everything up to the first boundary.
@@ -436,11 +419,11 @@ namespace S22.Imap {
 					body.AppendLine(line);
 				}
 				p.body = body.ToString();
-				// Add the MIME part to the list unless body is null or empty which means
-				// the body contained nested multipart content.
+				// Add the MIME part to the list unless body is null or empty which means the body
+				// contained nested multipart content.
 				if (!String.IsNullOrWhiteSpace(p.body))
 					list.Add(p);
-				// If this boundary is actually the end boundary, we're done.
+				// If this boundary is the end boundary, we're done.
 				if (line == null || line.StartsWith(end))
 					break;
 			}
@@ -450,10 +433,9 @@ namespace S22.Imap {
 		/// <summary>
 		/// Glue method to create a bodypart from a MIMEPart instance.
 		/// </summary>
-		/// <param name="mimePart">The MIMEPart instance to create the
-		/// bodypart instance from.</param>
+		/// <param name="mimePart">The MIMEPart instance to create the bodypart instance from.</param>
 		/// <returns>An initialized instance of the Bodypart class.</returns>
-		private static Bodypart BodypartFromMIME(MIMEPart mimePart) {
+		static Bodypart BodypartFromMIME(MIMEPart mimePart) {
 			NameValueCollection contentType = ParseMIMEField(
 				mimePart.header["Content-Type"]);
 			Bodypart p = new Bodypart(null);

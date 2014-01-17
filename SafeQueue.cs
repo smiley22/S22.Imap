@@ -6,7 +6,7 @@ namespace S22.Imap {
 	/// A thread-safe Queue.
 	/// </summary>
 	internal class SafeQueue<T> {
-		private readonly Queue<T> _queue = new Queue<T>();
+		readonly Queue<T> _queue = new Queue<T>();
 
 		/// <summary>
 		/// Adds an object to the end of the queue.
@@ -21,12 +21,10 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Removes and returns the object at the beginning of the queue. If
-		/// the queue is empty, the method blocks the calling thread until an
-		/// object is put into the queue by another thread.
+		/// Removes and returns the object at the beginning of the queue. If the queue is empty, the
+		/// method blocks the calling thread until an object is put into the queue by another thread.
 		/// </summary>
-		/// <returns>The object that is removed from the beginning
-		/// of the queue.</returns>
+		/// <returns>The object that was removed from the beginning of the queue.</returns>
 		public T Dequeue() {
 			lock (_queue) {
 				while (_queue.Count == 0)

@@ -7,19 +7,17 @@ using System.Text.RegularExpressions;
 
 namespace S22.Imap {
 	/// <summary>
-	/// A static utility class containing methods for decoding encoded
-	/// non-ASCII data as is often used in mail messages as well as
+	/// A static utility class containing methods for decoding encoded non-ASCII data as well as
 	/// extension methods for some classes of the base class library.
 	/// </summary>
 	internal static class Util {
 		/// <summary>
-		/// Returns a copy of the string enclosed in double-quotes and with escaped
-		/// CRLF, back-slash and double-quote characters (as is expected by some
-		/// commands of the IMAP protocol).
+		/// Returns a copy of the string enclosed in double-quotes and with escaped CRLF, back-slash
+		/// and double-quote characters (as is expected by some commands of the IMAP protocol).
 		/// </summary>
 		/// <param name="value">Extends the System.String class</param>
-		/// <returns>A copy of the string enclosed in double-quotes and properly
-		/// escaped as is required by the IMAP protocol.</returns>
+		/// <returns>A copy of the string enclosed in double-quotes and properly escaped as is required
+		/// by the IMAP protocol.</returns>
 		internal static string QuoteString(this string value) {
 			return "\"" + value
 				.Replace("\\", "\\\\")
@@ -32,20 +30,17 @@ namespace S22.Imap {
 		/// Returns true if the string contains only ASCII characters.
 		/// </summary>
 		/// <param name="s">Extension method for the String class.</param>
-		/// <returns>Returns true if the string contains only ASCII characters,
-		/// otherwise false is returned.</returns>
+		/// <returns>true if the string contains only ASCII characters; Otherwise false.</returns>
 		internal static bool IsASCII(this string s) {
 			return s.All(c => c < 127);
 		}
 
 		/// <summary>
-		/// Splits a string into chunks of the specified number of
-		/// characters.
+		/// Splits a string into chunks of the specified number of characters.
 		/// </summary>
 		/// <param name="str">Extension method for the String class.</param>
-		/// <param name="characters">The length of a chunk, measured in
-		/// characters.</param>
-		/// <returns>An array of string chunks</returns>
+		/// <param name="characters">The length of a chunk, measured in characters.</param>
+		/// <returns>An array of string chunks.</returns>
 		[Obsolete]
 		internal static string[] ToChunks(this string str, int characters) {
 			List<string> list = new List<string>();
@@ -60,18 +55,15 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Returns a value indicating whether the specified string occurs within
-		/// this string. A parameter specifies the type of search to use for the
-		/// specified string.
+		/// Determines whether the specified string occurs within this string.
 		/// </summary>
 		/// <param name="str">Extension method for the String class.</param>
 		/// <param name="value">The string to seek.</param>
-		/// <param name="comparer">One of the enumeration values that specifies
-		/// the rules for the search.</param>
-		/// <returns>true if the value parameter occurs within this string, or
-		/// if value is the empty string (""); otherwise, false.</returns>
-		/// <exception cref="ArgumentNullException">Thrown if the value
-		/// parameter is null.</exception>
+		/// <param name="comparer">One of the enumeration values that specifies the rules for the
+		/// search.</param>
+		/// <returns>true if the value parameter occurs within this string, or if value is the empty
+		/// string (""); otherwise, false.</returns>
+		/// <exception cref="ArgumentNullException">The value parameter is null.</exception>
 		internal static bool Contains(this string str, string value,
 			StringComparison comparer) {
 			return str.IndexOf(value, comparer) >= 0;
@@ -80,26 +72,24 @@ namespace S22.Imap {
 		/// <summary>
 		/// Raises the event. Ensures the event is only raised, if it is not null.
 		/// </summary>
-		/// <typeparam name="T">Extends System.EventHandler class</typeparam>
-		/// <param name="event">Extends System.EventHandler class</param>
-		/// <param name="sender">The sender of the event</param>
-		/// <param name="args">The event arguments associated with this event</param>
+		/// <typeparam name="T">Extends System.EventHandler class.</typeparam>
+		/// <param name="event">Extends System.EventHandler class.</param>
+		/// <param name="sender">The sender of the event.</param>
+		/// <param name="args">The event arguments associated with this event.</param>
 		internal static void Raise<T>(this EventHandler<T> @event, object sender, T args)
 			where T : EventArgs {
-			if (@event == null)
-				return;
-			@event(sender, args);
+			EventHandler<T> handler = @event;
+			if (handler != null)
+				handler(sender, args);
 		}
 
 		/// <summary>
 		/// Throws an ArgumentNullException if the given data item is null.
 		/// </summary>
 		/// <param name="data">The item to check for nullity.</param>
-		/// <param name="name">The name to use when throwing an
-		/// exception, if necessary</param>
+		/// <param name="name">The name to use when throwing an exception, if necessary.</param>
 		/// <remarks>Courtesy of Jon Skeet.</remarks>
-		internal static void ThrowIfNull<T>(this T data, string name)
-			where T : class {
+		internal static void ThrowIfNull<T>(this T data, string name) where T : class {
 			if (data == null)
 				throw new ArgumentNullException(name);
 		}
@@ -109,15 +99,14 @@ namespace S22.Imap {
 		/// </summary>
 		/// <param name="data">The item to check for nullity.</param>
 		/// <remarks>Courtesy of Jon Skeet.</remarks>
-		internal static void ThrowIfNull<T>(this T data)
-			where T : class {
+		internal static void ThrowIfNull<T>(this T data) where T : class {
 			if (data == null)
 				throw new ArgumentNullException();
 		}
 
 		/// <summary>
-		/// Throws an ArgumentNullException if the given string is null and
-		/// throws an ArgumentException if the given string is empty.
+		/// Throws an ArgumentNullException if the given string is null or throws an ArgumentException
+		/// if the given string is empty.
 		/// </summary>
 		/// <param name="s">The string to check for nullity and emptiness.</param>
 		internal static void ThrowIfNullOrEmpty(this string s) {
@@ -128,12 +117,11 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Throws an ArgumentNullException if the given string is null and
-		/// throws an ArgumentException if the given string is empty.
+		/// Throws an ArgumentNullException if the given string is null or throws an ArgumentException
+		/// if the given string is empty.
 		/// </summary>
 		/// <param name="s">The string to check for nullity and emptiness.</param>
-		/// <param name="name">The name to use when throwing an
-		/// exception, if necessary.</param>
+		/// <param name="name">The name to use when throwing an exception, if necessary.</param>
 		internal static void ThrowIfNullOrEmpty(this string s, string name) {
 			if (s == null)
 				throw new ArgumentNullException(name);
@@ -142,14 +130,12 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Reads an unsigned short value from the underlying stream, optionally
-		/// using big endian byte ordering.
+		/// Reads an unsigned short value from the underlying stream, optionally using big-endian byte
+		/// ordering.
 		/// </summary>
 		/// <param name="reader">Extension method for BinaryReader.</param>
-		/// <param name="bigEndian">Set to true to interpret the short value
-		/// as big endian value.</param>
-		/// <returns>The 16-byte unsigned short value read from the underlying
-		/// stream.</returns>
+		/// <param name="bigEndian">Set to true to interpret the short value as big endian value.</param>
+		/// <returns>The 16-byte unsigned short value read from the underlying stream.</returns>
 		internal static ushort ReadUInt16(this BinaryReader reader,
 			bool bigEndian) {
 			if (!bigEndian)
@@ -163,12 +149,10 @@ namespace S22.Imap {
 		/// <summary>
 		/// Decodes a string composed of one or several MIME 'encoded-words'.
 		/// </summary>
-		/// <param name="words">A string to composed of one or several MIME
-		/// 'encoded-words'</param>
-		/// <exception cref="FormatException">Thrown when an unknown encoding
-		/// (other than Q-Encoding or Base64) is encountered.</exception>
-		/// <returns>A concatenation of all enconded-words in the passed
-		/// string</returns>
+		/// <param name="words">A string to composed of one or several MIME 'encoded-words'.</param>
+		/// <exception cref="FormatException">An unknown encoding (other than Q-Encoding or Base64) is
+		/// encountered.</exception>
+		/// <returns>A concatenation of all enconded-words in the passed string</returns>
 		public static string DecodeWords(string words) {
 			if (String.IsNullOrEmpty(words))
 				return String.Empty;
@@ -176,12 +160,10 @@ namespace S22.Imap {
 			if (matches.Count == 0)
 				return words;
 			// http://tools.ietf.org/html/rfc2047#page-10:
-			// When displaying a particular header field that contains multiple
-			// 'encoded-word's, any 'linear-white-space' that separates a pair of
-			// adjacent 'encoded-word's is ignored.  (This is to allow the use of
-			// multiple 'encoded-word's to represent long strings of unencoded text,
-			// without having to separate 'encoded-word's where spaces occur in the
-			// unencoded text.) */
+			// When displaying a particular header field that contains multiple 'encoded-word's, any
+			// 'linear-white-space' that separates a pair of adjacent 'encoded-word's is ignored. (This is
+			// to allow the use of multiple 'encoded-word's to represent long strings of unencoded text,
+			// without having to separate 'encoded-word's where spaces occur in the unencoded text.)
 			// line-white-space ref: http://tools.ietf.org/html/rfc2616#page-16
 			StringBuilder decoded = new StringBuilder();
 			// Keep track of and use separation data between 'encoded-word's.
@@ -198,33 +180,30 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Internal function reuse to add separation between multiple 'encoded-word's
-		/// correctly.
+		/// Internal function reuse to add separation between multiple 'encoded-word's correctly.
 		/// </summary>
-		private static void HandleFillData(StringBuilder decoded, string data) {
+		static void HandleFillData(StringBuilder decoded, string data) {
 			if (String.IsNullOrEmpty(data))
 				return;
 			// Cr or Lf is never in the result.
 			string FillData = data.Replace("\r", "").Replace("\n", "");
-			// Any 'linear-white-space' that separates a pair of adjacent 'encoded-word's
-			// is ignored.
+			// Any 'linear-white-space' that separates a pair of adjacent 'encoded-word's is ignored.
 			if (FillData.Trim().Length != 0)
 				decoded.Append(FillData);
 			}
 
-		private static readonly Regex rxDecodeWord =
+		static readonly Regex rxDecodeWord =
 			new Regex(@"=\?([A-Za-z0-9\-_]+)\?([BbQq])\?([^\?]+)\?=", RegexOptions.Compiled);
 		/// <summary>
 		/// Decodes a MIME 'encoded-word' string.
 		/// </summary>
 		/// <param name="word">The encoded word to decode</param>
-		/// <exception cref="FormatException">Thrown when an unknown encoding
-		/// (other than Q-Encoding or Base64) is encountered.</exception>
+		/// <exception cref="FormatException">An unknown encoding (other than Q-Encoding or Base64) is
+		/// encountered.</exception>
 		/// <returns>A decoded string</returns>
-		/// <remarks>MIME encoded-word syntax is a way to encode strings that
-		/// contain non-ASCII data. Commonly used encodings for the encoded-word
-		/// sytax are Q-Encoding and Base64. For an in-depth description, refer
-		/// to RFC 2047</remarks>
+		/// <remarks>MIME encoded-word syntax is a way to encode strings that contain non-ASCII data.
+		/// Commonly used encodings for the encoded-word sytax are Q-Encoding and Base64. For an
+		/// in-depth description, refer to RFC 2047.</remarks>
 		internal static string DecodeWord(string word) {
 			if (String.IsNullOrEmpty(word))
 				return String.Empty;
@@ -246,15 +225,12 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Takes a Q-encoded string and decodes it using the specified
-		/// encoding.
+		/// Takes a Q-encoded string and decodes it using the specified encoding.
 		/// </summary>
-		/// <param name="value">The Q-encoded string to decode</param>
-		/// <param name="encoding">The encoding to use for encoding the
-		/// returned string</param>
-		/// <exception cref="FormatException">Thrown if the string is
-		/// not a valid Q-encoded string.</exception>
-		/// <returns>A Q-decoded string</returns>
+		/// <param name="value">The Q-encoded string to decode.</param>
+		/// <param name="encoding">The encoding to use for encoding the returned string.</param>
+		/// <exception cref="FormatException">The string is not a valid Q-encoded string.</exception>
+		/// <returns>The Q-decoded string.</returns>
 		internal static string QDecode(string value, Encoding encoding) {
 			try {
 				using (MemoryStream m = new MemoryStream()) {
@@ -272,22 +248,18 @@ namespace S22.Imap {
 					return encoding.GetString(m.ToArray());
 				}
 			} catch {
-				throw new FormatException("value is not a valid Q-encoded " +
-					"string");
+				throw new FormatException("value is not a valid Q-encoded string.");
 			}
 		}
 
 		/// <summary>
-		/// Takes a quoted-printable encoded string and decodes it using
-		/// the specified encoding.
+		/// Takes a quoted-printable encoded string and decodes it using the specified encoding.
 		/// </summary>
-		/// <param name="value">The quoted-printable-encoded string to
-		/// decode</param>
-		/// <param name="encoding">The encoding to use for encoding the
-		/// returned string</param>
-		/// <exception cref="FormatException">Thrown if the string is
-		/// not a valid quoted-printable encoded string.</exception>
-		/// <returns>A quoted-printable decoded string</returns>
+		/// <param name="value">The quoted-printable-encoded string to decode.</param>
+		/// <param name="encoding">The encoding to use for encoding the returned string.</param>
+		/// <exception cref="FormatException">The string is not a valid quoted-printable encoded
+		/// string.</exception>
+		/// <returns>A quoted-printable decoded string.</returns>
 		internal static string QPDecode(string value, Encoding encoding) {
 			try {
 				using (MemoryStream m = new MemoryStream()) {
@@ -305,38 +277,31 @@ namespace S22.Imap {
 					return encoding.GetString(m.ToArray());
 				}
 			} catch {
-				throw new FormatException("value is not a valid quoted-printable " +
-					"encoded string");
+				throw new FormatException("The value is not a valid quoted-printable encoded string.");
 			}
 		}
 
 		/// <summary>
 		/// Takes a Base64-encoded string and decodes it.
 		/// </summary>
-		/// <param name="value">The Base64-encoded string to decode</param>
-		/// <returns>A byte array containing the Base64-decoded bytes
-		/// of the input string.</returns>
-		/// <exception cref="System.ArgumentNullException">Thrown if the
-		/// input value is null.</exception>
-		/// <exception cref="System.FormatException">The length of value,
-		/// ignoring white-space characters, is not zero or a multiple of 4,
-		/// or the format of value is invalid. value contains a non-base-64
-		/// character, more than two padding characters, or a non-white
+		/// <param name="value">The Base64-encoded string to decode.</param>
+		/// <returns>A byte array containing the Base64-decoded bytes of the input string.</returns>
+		/// <exception cref="System.ArgumentNullException">The value parameter is null.</exception>
+		/// <exception cref="System.FormatException">The length of value, ignoring white-space
+		/// characters, is not zero or a multiple of 4, or the format of value is invalid, or the value
+		/// contains a non-base-64 character, more than two padding characters, or a non-white
 		/// space-character among the padding characters.</exception>
 		internal static byte[] Base64Decode(string value) {
 			return Convert.FromBase64String(value);
 		}
 
 		/// <summary>
-		/// Takes a UTF-16 encoded string and encodes it as modified
-		/// UTF-7.
+		/// Takes a UTF-16 encoded string and encodes it as modified UTF-7.
 		/// </summary>
 		/// <param name="s">The string to encode.</param>
 		/// <returns>A UTF-7 encoded string</returns>
-		/// <remarks>IMAP uses a modified version of UTF-7 for encoding
-		/// international mailbox names. For details, refer to RFC 3501
-		/// section 5.1.3 (Mailbox International Naming
-		/// Convention).</remarks>
+		/// <remarks>IMAP uses a modified version of UTF-7 for encoding international mailbox names. For
+		/// details, refer to RFC 3501 section 5.1.3 (Mailbox International Naming Convention).</remarks>
 		internal static string UTF7Encode(string s) {
 			StringReader reader = new StringReader(s);
 			StringBuilder builder = new StringBuilder();
@@ -370,12 +335,10 @@ namespace S22.Imap {
 		/// </summary>
 		/// <param name="s">The UTF-7 encoded string to decode.</param>
 		/// <returns>A UTF-16 encoded "standard" C# string</returns>
-		/// <exception cref="FormatException">Thrown if the input string is
-		/// not a proper UTF-7 encoded string.</exception>
-		/// <remarks>IMAP uses a modified version of UTF-7 for encoding
-		/// international mailbox names. For details, refer to RFC 3501
-		/// section 5.1.3 (Mailbox International Naming
-		/// Convention).</remarks>
+		/// <exception cref="FormatException">Thrown if the input string is not a proper UTF-7 encoded
+		/// string.</exception>
+		/// <remarks>IMAP uses a modified version of UTF-7 for encoding international mailbox names. For
+		/// details, refer to RFC 3501 section 5.1.3 (Mailbox International Naming Convention).</remarks>
 		internal static string UTF7Decode(string s) {
 			StringReader reader = new StringReader(s);
 			StringBuilder builder = new StringBuilder();
@@ -410,16 +373,13 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// This just wraps Encoding.GetEncoding in a try-catch block to
-		/// ensure it never fails. If the encoding can not be determined
-		/// ASCII is returned as a default.
+		/// This just wraps Encoding.GetEncoding in a try-catch block to ensure it never fails. If the
+		/// encoding can not be determined ASCII is returned as a default.
 		/// </summary>
-		/// <param name="name">The code page name of the preferred encoding.
-		/// Any value returned by System.Text.Encoding.WebName is a valid
-		/// input.</param>
-		/// <returns>The System.Text.Encoding associated with the specified
-		/// code page or Encoding.ASCII if the specified code page could not
-		/// be resolved.</returns>
+		/// <param name="name">The code page name of the preferred encoding. Any value returned by
+		/// System.Text.Encoding.WebName is a valid input.</param>
+		/// <returns>The System.Text.Encoding associated with the specified code page or Encoding.ASCII
+		/// if the specified code page could not be resolved.</returns>
 		internal static Encoding GetEncoding(string name) {
 			Encoding encoding;
 			try {

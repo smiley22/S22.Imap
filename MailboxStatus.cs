@@ -2,14 +2,14 @@
 
 namespace S22.Imap {
 	/// <summary>
-	/// Represents the status information of a mailbox which can be
-	/// constructed from the server response to a STATUS command.
+	/// Represents the status information of a mailbox which can be constructed from the server
+	/// response to a STATUS command.
 	/// </summary>
 	[Serializable]
 	internal class MailboxStatus {
 		/// <summary>
-		/// Initializes a new MailboxStatus instance with the specified number
-		/// of total and unread messages.
+		/// Initializes a new MailboxStatus instance with the specified number of total and unread
+		/// messages.
 		/// </summary>
 		/// <param name="Messages">The total number of messages in the mailbox.</param>
 		/// <param name="Unread">The number of unread (unseen) messages in the mailbox.</param>

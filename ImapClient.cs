@@ -46,13 +46,12 @@ namespace S22.Imap {
 		static readonly TraceSource ts = new TraceSource("S22.Imap");
 
 		/// <summary>
-		/// The default mailbox to operate on, when no specific mailbox name is indicated
-		/// to methods that operate on mailboxes. The default value for this property is "INBOX".
+		/// The default mailbox to operate on.
 		/// </summary>
-		/// <exception cref="ArgumentNullException">The value specified for a set operation is
+		/// <exception cref="ArgumentNullException">The property is being set and the value is
 		/// null.</exception>
-		/// <exception cref="ArgumentException">The value specified for a set operation is equal
-		/// to the empty string.</exception>
+		/// <exception cref="ArgumentException">The property is being set and the value is the empty
+		/// string.</exception>
 		/// <remarks>The default value for this property is "INBOX" which is a special name reserved
 		/// to mean "the primary mailbox for this user on this server".</remarks>
 		public string DefaultMailbox {
@@ -218,7 +217,7 @@ namespace S22.Imap {
 				sslStream.AuthenticateAsClient(hostname);
 				stream = sslStream;
 			}
-			// Server issues an untagged OK greeting upon connect.
+			// The server issues an untagged OK greeting upon connect.
 			string greeting = GetResponse();
 			if (!IsResponseOK(greeting))
 				throw new BadServerResponseException(greeting);
@@ -840,7 +839,6 @@ namespace S22.Imap {
 				if (mailbox == null)
 					mailbox = defaultMailbox;
 				MailboxStatus status = GetMailboxStatus(mailbox);
-
 				// Collect quota information if the server supports it.
 				UInt64 used = 0, free = 0;
 				if (Supports("QUOTA")) {
@@ -854,10 +852,9 @@ namespace S22.Imap {
 				}
 				// Try to collect special-use flags.
 				IEnumerable<MailboxFlag> flags = GetMailboxFlags(mailbox);
-
 				ResumeIdling();
-				return new MailboxInfo(mailbox, flags, status.Messages,
-					status.Unread, status.NextUID, used, free);
+				return new MailboxInfo(mailbox, flags, status.Messages, status.Unread, status.NextUID,
+					used, free);
 			}
 		}
 
@@ -901,8 +898,7 @@ namespace S22.Imap {
 				string response = SendCommandGetResponse(tag + command + " \"\" " +
 					Util.UTF7Encode(mailbox).QuoteString());
 				while (response.StartsWith("*")) {
-					Match m = Regex.Match(response,
-						"\\* X?LIST \\((.*)\\)\\s+\"([^\"]+)\"\\s+(.+)");
+					Match m = Regex.Match(response, "\\* X?LIST \\((.*)\\)\\s+\"([^\"]+)\"\\s+(.+)");
 					if (m.Success) {
 						string[] flags = m.Groups[1].Value.Split(' ');
 						foreach (string f in flags) {
@@ -1301,8 +1297,8 @@ namespace S22.Imap {
 				string response = SendCommandGetResponse(tag + "APPEND " +
 					Util.UTF7Encode(mailbox).QuoteString() + (seen ? @" (\Seen)" : "") +
 					" {" + mime822.Length + "}");
-				// The server is required to send a continuation response before we can go ahead with the
-				// actual message data.
+				// The server must send a continuation response before we can go ahead with the actual
+				// message data.
 				if (!response.StartsWith("+"))
 					throw new BadServerResponseException(response);
 				response = SendCommandGetResponse(mime822);
@@ -1420,8 +1416,7 @@ namespace S22.Imap {
 				PauseIdling();
 				SelectMailbox(mailbox);
 				string tag = GetTag();
-				string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
-					" (BODYSTRUCTURE)");
+				string response = SendCommandGetResponse(tag + "UID FETCH " + uid + " (BODYSTRUCTURE)");
 				string structure = String.Empty;
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response,

@@ -9,21 +9,21 @@ using System.Text.RegularExpressions;
 
 namespace S22.Imap {
 	/// <summary>
-	/// Adds extension methods to the MailMessage class of the .Net Framework.
-	/// These are only used internally and are not visible outside of the
-	/// S22.Imap assembly.
+	/// Adds extension methods to the MailMessage class of the .NET Framework.
 	/// </summary>
+	/// <remarks>
+	/// These are only used internally and are not visible outside of the S22.Imap assembly.
+	/// </remarks>
 	internal static class MailMessageExtension {
 		/// <summary>
-		/// Constructs a textual representation of a mail message from the specified
-		/// MailMessage instance compliant with the RFC822 and MIME standards.
+		/// Constructs a textual representation of a mail message from the specified MailMessage
+		/// instance compliant with the RFC822 and MIME standards.
 		/// </summary>
-		/// <param name="message">The MailMessage instance to construct the
-		/// textual representation from.</param>
-		/// <returns>An RFC822/MIME-compliant string describing a mail
-		/// message.</returns>
-		/// <exception cref="InvalidOperationException">Thrown if the From
-		/// property is null or is not properly initialized.</exception>
+		/// <param name="message">The MailMessage instance to construct the textual representation
+		/// from.</param>
+		/// <returns>An RFC822/MIME-compliant string representing the specified mail message.</returns>
+		/// <exception cref="InvalidOperationException">The From property is null or has not been
+		/// properly initialized.</exception>
 		internal static string ToMIME822(this MailMessage message) {
 			NameValueCollection header = BuildHeader(message);
 			StringBuilder builder = new StringBuilder();
@@ -49,13 +49,11 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Builds a RFC822/MIME-compliant mail header from the specified
-		/// MailMessage instance and returns it as a NameValueCollection.
+		/// Builds a RFC822/MIME-compliant mail header from the specified MailMessage instance and
+		/// returns it as a NameValueCollection.
 		/// </summary>
-		/// <param name="m">The MailMessage instance to build the header
-		/// from.</param>
-		/// <returns>A NameValueCollection representing the RFC822/MIME
-		/// mail header fields.</returns>
+		/// <param name="m">The MailMessage instance to build the header from.</param>
+		/// <returns>A NameValueCollection representing the RFC822/MIME mail header fields.</returns>
 		static NameValueCollection BuildHeader(MailMessage m) {
 			string[] ignore = new string[] {
 				"MIME-Version", "Date", "Subject", "From", "To", "Cc", "Bcc",
@@ -71,7 +69,7 @@ namespace S22.Imap {
 				{ "Importance", ImportanceMap[m.Priority] }
 			};
 			if (m.From == null)
-				throw new InvalidOperationException("The From property must not be null");
+				throw new InvalidOperationException("The From property must not be null.");
 			header.Add("From", m.From.To822Address());
 			if (m.Subject != null)
 				header.Add("Subject", m.Subject.IsASCII() ? m.Subject : Base64Encode(m.Subject));
@@ -105,9 +103,8 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// A map for mapping the values of the MailPriority enumeration to
-		/// their corresponding MIME priority values as defined in
-		/// RFC2156.
+		/// A map for mapping the values of the MailPriority enumeration to their corresponding MIME
+		/// priority values as defined in RFC2156.
 		/// </summary>
 		static Dictionary<MailPriority, string> PriorityMap =
 			new Dictionary<MailPriority, string>() {
@@ -117,9 +114,8 @@ namespace S22.Imap {
 			};
 
 		/// <summary>
-		/// A map for mapping the values of the MailPriority enumeration to
-		/// their corresponding MIME importance values as defined in
-		/// RFC2156.
+		/// A map for mapping the values of the MailPriority enumeration to their corresponding MIME
+		/// importance values as defined in RFC2156.
 		/// </summary>
 		static Dictionary<MailPriority, string> ImportanceMap =
 			new Dictionary<MailPriority, string>() {
@@ -131,9 +127,9 @@ namespace S22.Imap {
 		/// <summary>
 		/// Takes a unicode string and encodes it using Q-encoding.
 		/// </summary>
-		/// <param name="s">The string to encode</param>
-		/// <returns>The input string encoded as Q-encoded string containing
-		/// only ASCII characters.</returns>
+		/// <param name="s">The string to encode.</param>
+		/// <returns>The input string encoded as Q-encoded string containing only ASCII
+		/// characters.</returns>
 		static string QEncode(string s) {
 			StringBuilder builder = new StringBuilder("=?UTF-8?Q?");
 			char[] chars = Encoding.Unicode.GetChars(Encoding.Unicode.GetBytes(s));
@@ -152,8 +148,8 @@ namespace S22.Imap {
 		/// Takes a unicode string and encodes it using Base64-encoding.
 		/// </summary>
 		/// <param name="s">The string to encode.</param>
-		/// <returns>The input string encoded as Base64-encoded string
-		/// containing only ASCII characters.</returns>
+		/// <returns>The input string encoded as Base64-encoded string containing only ASCII
+		/// characters.</returns>
 		static string Base64Encode(string s) {
 			StringBuilder builder = new StringBuilder("=?UTF-8?B?");
 			string b64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(s));
@@ -161,13 +157,11 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Creates an address string from the specified MailAddress instance in
-		/// compliance with the address specification as outlined in RFC2822 under
-		/// section 3.4
+		/// Creates an address string from the specified MailAddress instance in compliance with the
+		/// address specification as outlined in RFC2822 under section 3.4
 		/// </summary>
-		/// <param name="address">The MailAddress instance to create the address
-		/// string from.</param>
-		/// <returns>An address string as is used in RFC822 mail headers</returns>
+		/// <param name="address">The MailAddress instance to create the address string from.</param>
+		/// <returns>An address string as is used in RFC822 mail headers.</returns>
 		internal static string To822Address(this MailAddress address) {
 			if (!String.IsNullOrEmpty(address.DisplayName)) {
 				string name = address.DisplayName.IsASCII() ?
@@ -179,28 +173,25 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Generates a unique sequence of characters for indicating a boundary
-		/// between parts in a multipart message.
+		/// Generates a unique sequence of characters for indicating a boundary between parts in a
+		/// multipart message.
 		/// </summary>
-		/// <returns>A unique content boundary string</returns>
+		/// <returns>A unique content boundary string.</returns>
 		static string GenerateContentBoundary() {
 			return Guid.NewGuid().ToString("N");
 		}
 
 		/// <summary>
-		/// Builds an RFC822/MIME-compliant mail body from the specified
-		/// MailMessage instance and returns it as a formatted string.
+		/// Builds an RFC822/MIME-compliant mail body from the specified MailMessage instance and
+		/// returns it as a formatted string.
 		/// </summary>
-		/// <param name="m">The MailMessage instance to build the mail body
-		/// from.</param>
-		/// <param name="header">The RFC822/MIME mail header to use for
-		/// constructing the mail body.</param>
-		/// <returns>An RFC822/MIME-compliant mail body as a string.
-		/// </returns>
-		/// <remarks>According to RFC2822 each line of a mail message should
-		/// at max be 78 characters in length excluding carriage return and
-		/// newline characters. This method accounts for that and ensures
-		/// line breaks are inserted to meet this requirement.</remarks>
+		/// <param name="m">The MailMessage instance to build the mail body from.</param>
+		/// <param name="header">The RFC822/MIME mail header to use for constructing the mail
+		/// body.</param>
+		/// <returns>An RFC822/MIME-compliant mail body as a string.</returns>
+		/// <remarks>According to RFC2822 each line of a mail message should at max be 78 characters in
+		/// length excluding carriage return and newline characters. This method accounts for that and
+		/// ensures line breaks are inserted to meet this requirement.</remarks>
 		static string BuildBody(MailMessage m, NameValueCollection header) {
 			StringBuilder builder = new StringBuilder();
 			bool multipart = header["Content-Type"].Contains("boundary");
@@ -235,15 +226,14 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Adds a body part to the specified Stringbuilder object composed from
-		/// the Body and BodyEncoding properties of the MailMessage class.
+		/// Adds a body part to the specified Stringbuilder object composed from the Body and
+		/// BodyEncoding properties of the MailMessage class.
 		/// </summary>
 		/// <param name="builder">The Stringbuilder to append the body part to.</param>
 		/// <param name="m">The MailMessage instance to build the body part from.</param>
-		/// <param name="header">The RFC822/MIME mail header to use for
-		/// constructing the mail body.</param>
-		/// <param name="addHeaders">Set to true to append body headers before
-		/// adding the actual body part content.</param>
+		/// <param name="header">The RFC822/MIME mail header to use for constructing the mail body.</param>
+		/// <param name="addHeaders">Set to true to append body headers before adding the actual body
+		/// part content.</param>
 		static void AddBody(StringBuilder builder, MailMessage m,
 			NameValueCollection header, bool addHeaders = false) {
 			bool base64 = header["Content-Transfer-Encoding"] == "base64";
@@ -271,16 +261,14 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Creates a MIME body part from an entry of the AlternateView or
-		/// Attachments collection of a MailMessage instance and appends it
-		/// to the specified Stringbuilder instance.
+		/// Creates a MIME body part from an entry of the AlternateView or Attachments collection of a
+		/// MailMessage instance and appends it to the specified Stringbuilder instance.
 		/// </summary>
-		/// <param name="builder">The Stringbuilder instance to append the
-		/// body part to.</param>
-		/// <param name="view">An entry from either the AlternateView or the
-		/// Attachments collection of a MailMessage instance.</param>
+		/// <param name="builder">The Stringbuilder instance to append the body part to.</param>
+		/// <param name="view">An entry from either the AlternateView or the Attachments collection of
+		/// a MailMessage instance.</param>
 		static void AddAttachment(StringBuilder builder, AttachmentBase view) {
-			// Append the MIME headers for this body part
+			// Append the MIME headers for this body part.
 			string contentType = "Content-Type: " + view.ContentType.MediaType;
 			foreach (string key in view.ContentType.Parameters.Keys) {
 				contentType = contentType + "; " + key + "=" +
@@ -314,19 +302,17 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Creates a nested multipart/alternative part which contains all entries
-		/// from the AlternateViews collection of the specified MailMessage instance
-		/// as well as the body part for the Body and BodyEncoding properties of the
-		/// specified MailMessage instance.
+		/// Creates a nested multipart/alternative part which contains all entries from the
+		/// AlternateViews collection of the specified MailMessage instance as well as the body part
+		/// for the Body and BodyEncoding properties of the specified MailMessage instance.
 		/// </summary>
 		/// <param name="builder">The StringBuilder instance to append to.</param>
-		/// <param name="m">The MailMessage instance whose AlternateView collection
-		/// will be added to the nested multipart/alternative part.</param>
-		/// <param name="header">The RFC822/MIME mail header to use for
-		/// constructing the mail body.</param>
-		/// <remarks>This is used if the MailMessage instance contains both alternative
-		/// views and attachments. In this case the created RFC822/MIME mail message will
-		/// contain nested body parts.</remarks>
+		/// <param name="m">The MailMessage instance whose AlternateView collection will be added to the
+		/// nested multipart/alternative part.</param>
+		/// <param name="header">The RFC822/MIME mail header to use for constructing the mail body.</param>
+		/// <remarks>This is used if the MailMessage instance contains both alternative views and
+		/// attachments. In this case the created RFC822/MIME mail message will contain nested body
+		/// parts.</remarks>
 		static void AddNestedAlternative(StringBuilder builder, MailMessage m,
 			NameValueCollection header) {
 			string boundary = GenerateContentBoundary();
@@ -343,15 +329,15 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// Creates a nested multipart/mixed part which contains all entries
-		/// from the Attachments collection of the specified MailMessage instance.
+		/// Creates a nested multipart/mixed part which contains all entries from the Attachments
+		/// collection of the specified MailMessage instance.
 		/// </summary>
 		/// <param name="builder">The StringBuilder instance to append to.</param>
-		/// <param name="m">The MailMessage instance whose Attachments collection
-		/// will be added to the nested multipart/mixed part.</param>
-		/// <remarks>This is used if the MailMessage instance contains both alternative
-		/// views and attachments. In this case the created RFC822/MIME mail message will
-		/// contain nested body parts.</remarks>
+		/// <param name="m">The MailMessage instance whose Attachments collection will be added to the
+		/// nested multipart/mixed part.</param>
+		/// <remarks>This is used if the MailMessage instance contains both alternative views and
+		/// attachments. In this case the created RFC822/MIME mail message will contain nested body
+		/// parts.</remarks>
 		static void AddNestedMixed(StringBuilder builder, MailMessage m) {
 			string boundary = GenerateContentBoundary();
 			builder.AppendLine("Content-Type: multipart/mixed; boundary=" + boundary);

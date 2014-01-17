@@ -9,13 +9,12 @@ namespace S22.Imap {
 	/// </summary>
 	public interface IImapClient : IDisposable {
 		/// <summary>
-		/// The default mailbox to operate on, when no specific mailbox name is indicated
-		/// to methods that operate on mailboxes. The default value for this property is "INBOX".
+		/// The default mailbox to operate on.
 		/// </summary>
-		/// <exception cref="ArgumentNullException">The value specified for a set operation is
+		/// <exception cref="ArgumentNullException">The property is being set and the value is
 		/// null.</exception>
-		/// <exception cref="ArgumentException">The value specified for a set operation is equal
-		/// to the empty string.</exception>
+		/// <exception cref="ArgumentException">The property is being set and the value is the empty
+		/// string.</exception>
 		/// <remarks>The default value for this property is "INBOX" which is a special name reserved
 		/// to mean "the primary mailbox for this user on this server".</remarks>
 		string DefaultMailbox { get; set; }

@@ -3,19 +3,18 @@ using System.Collections.Generic;
 
 namespace S22.Imap {
 	/// <summary>
-	/// Contains status information for an IMAP mailbox such as the total
-	/// number of messages in the mailbox, various attributes as well as
-	/// quota information.
+	/// Provides access to status information such as the total number of messages and quota
+	/// information for a mailbox.
 	/// </summary>
-	/// <remarks>The terms "mailbox" and "folder" can be used interchangeably
-	/// and refer to the IMAP concept of multiple server-side directories into
-	/// which messages can be stored (such as "Inbox", "Sent Items", "Trash",
-	/// etc.).</remarks>
+	/// <remarks>
+	/// The terms "mailbox" and "folder" can be used interchangeably and refer to the IMAP concept of
+	/// multiple server-side directories into which messages can be stored (such as "Inbox",
+	/// "Sent Items", "Trash", etc.).
+	/// </remarks>
 	[Serializable]
 	public class MailboxInfo {
 		/// <summary>
-		/// Initializes a new instance of the MailboxInfo class with the specified
-		/// values.
+		/// Initializes a new instance of the MailboxInfo class with the specified values.
 		/// </summary>
 		/// <param name="Name">The IMAP name of the mailbox.</param>
 		/// <param name="Flags">The IMAP flags set on this mailbox.</param>
@@ -44,7 +43,7 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// The name of the mailbox
+		/// The name of the mailbox.
 		/// </summary>
 		public string Name {
 			get;
@@ -52,7 +51,7 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
-		/// An enumerable collection of flags set on this mailbox.
+		/// An enumerable collection of flags set on the mailbox.
 		/// </summary>
 		public IEnumerable<MailboxFlag> Flags {
 			get;
@@ -86,9 +85,8 @@ namespace S22.Imap {
 		/// <summary>
 		/// The amount of used storage in the mailbox, measured in bytes.
 		/// </summary>
-		/// <remarks>Not all IMAP servers support the retrieval of quota
-		/// information. If it is not possible to retrieve the amount of
-		/// used storage, this property will be set to 0.
+		/// <remarks>Not all IMAP servers support the retrieval of quota information. If it is not
+		/// possible to retrieve the amount of used storage, this property will be 0.
 		/// </remarks>
 		public UInt64 UsedStorage {
 			get;
@@ -98,9 +96,8 @@ namespace S22.Imap {
 		/// <summary>
 		/// The amount of free storage in the mailbox, measured in bytes.
 		/// </summary>
-		/// <remarks>Not all IMAP servers support the retrieval of quota
-		/// information. If it is not possible to retrieve the amount of
-		/// free storage, this property will be set to 0.
+		/// <remarks>Not all IMAP servers support the retrieval of quota information. If it is not
+		/// possible to retrieve the amount of free storage, this property will be 0.
 		/// </remarks>
 		public UInt64 FreeStorage {
 			get;

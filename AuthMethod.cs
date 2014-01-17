@@ -6,13 +6,11 @@ namespace S22.Imap {
 	/// </summary>
 	public enum AuthMethod {
 		/// <summary>
-		/// Automatically selects the most-secure authentication mechanism
-		/// supported by the server.
+		/// Automatically selects the most-secure authentication mechanism supported by the server.
 		/// </summary>
 		Auto,
 		/// <summary>
-		/// Login using plaintext password authentication. This is
-		/// the default supported by most servers.
+		/// Login using plaintext password authentication; This is supported by most servers.
 		/// </summary>
 		Login,
 		/// <summary>
@@ -44,8 +42,8 @@ namespace S22.Imap {
 		/// </summary>
 		Ntlmv2,
 		/// <summary>
-		/// Login using the NTLM/NTLMv2 authentication mechanism via
-		/// Microsoft's Security Support Provider Interface (SSPI).
+		/// Login using the NTLM/NTLMv2 authentication mechanism via Microsoft's Security Support
+		/// Provider Interface (SSPI).
 		/// </summary>
 		NtlmOverSspi,
 		/// <summary>

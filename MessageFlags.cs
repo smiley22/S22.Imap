@@ -2,8 +2,7 @@
 
 namespace S22.Imap {
 	/// <summary>
-	/// Flag message attributes that can be associated with a mail message on an IMAP
-	/// server.
+	/// Defines possible attributes for mail messages on an IMAP server.
 	/// </summary>
 	public enum MessageFlag {
 		/// <summary>
@@ -19,17 +18,16 @@ namespace S22.Imap {
 		/// </summary>
 		Flagged,
 		/// <summary>
-		/// Indicates that the message has been marked as "deleted" and will be
-		/// removed upon the next call to the Expunge method.
+		/// Indicates that the message has been marked as "deleted" and will be removed upon the next
+		/// call to the Expunge method.
 		/// </summary>
 		Deleted,
 		/// <summary>
-		/// Indicates that the message has not completed composition and is
-		/// marked as a draft.
+		/// Indicates that the message has not completed composition and is marked as a draft.
 		/// </summary>
 		Draft,
 		/// <summary>
-		/// Indicates that the message has recently arrived in this mailbox.
+		/// Indicates that the message has recently arrived in the mailbox.
 		/// </summary>
 		Recent
 	}

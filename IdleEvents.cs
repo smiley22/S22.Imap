@@ -2,8 +2,7 @@
 
 namespace S22.Imap {
 	/// <summary>
-	/// Provides data for IMAP idle notification events, such as the NewMessage and
-	/// MessageDelete events.
+	/// Provides data for IMAP idle notification events.
 	/// </summary>
 	public class IdleMessageEventArgs : EventArgs {
 		/// <summary>
@@ -11,12 +10,10 @@ namespace S22.Imap {
 		/// MessageCount attribute to the value of the <paramref name="MessageCount"/>
 		/// parameter.
 		/// </summary>
-		/// <param name="MessageCount">The number of messages in the selected
+		/// <param name="MessageCount">The number of messages in the selected mailbox.</param>
+		/// <param name="MessageUID"> The unique identifier (UID) of the newest message in the
 		/// mailbox.</param>
-		/// <param name="MessageUID"> The unique identifier (UID) of the newest
-		/// message in the mailbox.</param>
-		/// <param name="Client">The instance of the ImapClient class that raised
-		/// the event.</param>
+		/// <param name="Client">The instance of the ImapClient class that raised the event.</param>
 		internal IdleMessageEventArgs(uint MessageCount, uint MessageUID,
 			ImapClient Client) {
 			this.MessageCount = MessageCount;
@@ -35,8 +32,8 @@ namespace S22.Imap {
 		/// <summary>
 		/// The unique identifier (UID) of the newest message in the mailbox. 
 		/// </summary>
-		/// <remarks>The UID can be passed to the GetMessage method in order to retrieve
-		/// the mail message from the server.</remarks>
+		/// <remarks>The UID can be passed to the GetMessage method in order to retrieve the mail
+		/// message from the server.</remarks>
 		public uint MessageUID {
 			get;
 			private set;

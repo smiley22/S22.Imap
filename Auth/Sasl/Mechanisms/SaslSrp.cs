@@ -11,6 +11,9 @@ namespace S22.Imap.Auth.Sasl.Mechanisms {
 	/// mechanism as is described in the IETF SRP 08 draft.
 	/// </summary>
 	/// <remarks>
+	/// This requires .NET Framework 4 because it makes use of the System.Numeric namespace
+	/// which has only been part of .NET since version 4.
+	/// 
 	/// Some notes:
 	///  - Don't bother with the example given in the IETF 08 draft
 	///   document (7.5 Example); It is broken.

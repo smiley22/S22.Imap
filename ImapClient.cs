@@ -1336,8 +1336,8 @@ namespace S22.Imap {
 		/// identifies the message within the respective mailbox. No two messages in a mailbox share
 		/// the same UID.</remarks>
 		/// <seealso cref="StoreMessage"/>
-		public IEnumerable<uint> StoreMessages(IEnumerable<MailMessage> messages,
-			bool seen = false, string mailbox = null) {
+		public IEnumerable<uint> StoreMessages(IEnumerable<MailMessage> messages, bool seen = false,
+			string mailbox = null) {
 			messages.ThrowIfNull("messages");
 			List<uint> list = new List<uint>();
 			foreach (MailMessage m in messages)
@@ -1587,14 +1587,40 @@ namespace S22.Imap {
 		/// state, i.e. before logging in.</exception>
 		/// <seealso cref="MoveMessage"/>
 		public void CopyMessage(uint uid, string destination, string mailbox = null) {
+			CopyMessages(new HashSet<uint>() { uid }, destination, mailbox);
+		}
+
+		/// <summary>
+		/// Copies the mail messages with the specified UIDs to the specified destination mailbox.
+		/// </summary>
+		/// <param name="uids">An enumerable collection of UIDs of the mail messages to copy.</param>
+		/// <param name="destination">The name of the mailbox to copy the messages to.</param>
+		/// <param name="mailbox">The mailbox the message will be copied from. If this parameter is
+		/// omitted, the value of the DefaultMailbox property is used to determine the mailbox to
+		/// operate on.</param>
+		/// <remarks>When copying many messages, this method is more efficient than calling
+		/// <see cref="CopyMessage"/> for each individual message.</remarks>
+		/// <exception cref="ArgumentNullException">The destination parameter is null.</exception>
+		/// <exception cref="BadServerResponseException">The mail messages could not be copied to the
+		/// specified destination. The message property of the exception contains the error message
+		/// returned by the server.</exception>
+		/// <exception cref="ObjectDisposedException">The ImapClient object has been disposed.</exception>
+		/// <exception cref="IOException">There was a failure writing to or reading from the
+		/// network.</exception>
+		/// <exception cref="NotAuthenticatedException">The method was called in non-authenticated
+		/// state, i.e. before logging in.</exception>
+		/// <seealso cref="MoveMessages"/>
+		public void CopyMessages(IEnumerable<uint> uids, string destination, string mailbox = null) {
 			AssertValid();
+			uids.ThrowIfNull("uids");
 			destination.ThrowIfNull("destination");
+			string set = Util.BuildSequenceSet(uids);
 			lock (sequenceLock) {
 				PauseIdling();
 				SelectMailbox(mailbox);
 				string tag = GetTag();
-				string response = SendCommandGetResponse(tag + "UID COPY " + uid + " "
-					+ destination.QuoteString());
+				string response = SendCommandGetResponse(tag + "UID COPY " + set + " " +
+					destination.QuoteString());
 				while (response.StartsWith("*"))
 					response = GetResponse();
 				ResumeIdling();
@@ -1628,6 +1654,32 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
+		/// Moves the mail messages with the specified UIDs to the specified destination mailbox.
+		/// </summary>
+		/// <param name="uids">An enumerable collection of UIDs of the mail messages to move.</param>
+		/// <param name="destination">The name of the mailbox to move the messages into.</param>
+		/// <param name="mailbox">The mailbox the messages will be moved from. If this parameter is
+		/// omitted, the value of the DefaultMailbox property is used to determine the mailbox to
+		/// operate on.</param>
+		/// <remarks>When moving many messages, this method is more efficient than calling
+		/// <see cref="MoveMessage"/> for each individual message.</remarks>
+		/// <exception cref="ArgumentNullException">The destination parameter is null.</exception>
+		/// <exception cref="BadServerResponseException">The mail messages could not be moved to the
+		/// specified destination. The message property of the exception contains the error message
+		/// returned by the server.</exception>
+		/// <exception cref="ObjectDisposedException">The ImapClient object has been disposed.</exception>
+		/// <exception cref="IOException">There was a failure writing to or reading from the
+		/// network.</exception>
+		/// <exception cref="NotAuthenticatedException">The method was called in non-authenticated
+		/// state, i.e. before logging in.</exception>
+		/// <seealso cref="CopyMessages"/>
+		/// <seealso cref="DeleteMessages"/>
+		public void MoveMessages(IEnumerable<uint> uids, string destination, string mailbox = null) {
+			CopyMessages(uids, destination, mailbox);
+			DeleteMessages(uids, mailbox);
+		}
+
+		/// <summary>
 		/// Deletes the mail message with the specified UID.
 		/// </summary>
 		/// <param name="uid">The UID of the mail message to delete.</param>
@@ -1644,12 +1696,36 @@ namespace S22.Imap {
 		/// state, i.e. before logging in.</exception>
 		/// <seealso cref="MoveMessage"/>
 		public void DeleteMessage(uint uid, string mailbox = null) {
+			DeleteMessages(new HashSet<uint>() { uid }, mailbox);
+		}
+
+		/// <summary>
+		/// Deletes the mail messages with the specified UIDs.
+		/// </summary>
+		/// <param name="uids">An enumerable collection of UIDs of the mail messages to delete.</param>
+		/// <param name="mailbox">The mailbox the messages will be deleted from. If this parameter is
+		/// omitted, the value of the DefaultMailbox property is used to determine the mailbox to
+		/// operate on.</param>
+		/// <remarks>When deleting many messages, this method is more efficient than calling
+		/// <see cref="DeleteMessage"/> for each individual message.</remarks>
+		/// <exception cref="BadServerResponseException">The mail messages could not be deleted. The
+		/// message property of the exception contains the error message returned by the
+		/// server.</exception>
+		/// <exception cref="ObjectDisposedException">The ImapClient object has been disposed.</exception>
+		/// <exception cref="IOException">There was a failure writing to or reading from the
+		/// network.</exception>
+		/// <exception cref="NotAuthenticatedException">The method was called in non-authenticated
+		/// state, i.e. before logging in.</exception>
+		/// <seealso cref="MoveMessages"/>
+		public void DeleteMessages(IEnumerable<uint> uids, string mailbox = null) {
 			AssertValid();
+			uids.ThrowIfNull("uids");
+			string set = Util.BuildSequenceSet(uids);
 			lock (sequenceLock) {
 				PauseIdling();
 				SelectMailbox(mailbox);
 				string tag = GetTag();
-				string response = SendCommandGetResponse(tag + "UID STORE " + uid +
+				string response = SendCommandGetResponse(tag + "UID STORE " + set +
 					@" +FLAGS.SILENT (\Deleted \Seen)");
 				while (response.StartsWith("*")) {
 					response = GetResponse();

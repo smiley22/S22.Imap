@@ -489,6 +489,28 @@ namespace S22.Imap {
 		void CopyMessage(uint uid, string destination, string mailbox = null);
 
 		/// <summary>
+		/// Copies the mail messages with the specified UIDs to the specified destination mailbox.
+		/// </summary>
+		/// <param name="uids">An enumerable collection of UIDs of the mail messages to copy.</param>
+		/// <param name="destination">The name of the mailbox to copy the messages to.</param>
+		/// <param name="mailbox">The mailbox the message will be copied from. If this parameter is
+		/// omitted, the value of the DefaultMailbox property is used to determine the mailbox to
+		/// operate on.</param>
+		/// <remarks>When copying many messages, this method is more efficient than calling
+		/// <see cref="CopyMessage"/> for each individual message.</remarks>
+		/// <exception cref="ArgumentNullException">The destination parameter is null.</exception>
+		/// <exception cref="BadServerResponseException">The mail messages could not be copied to the
+		/// specified destination. The message property of the exception contains the error message
+		/// returned by the server.</exception>
+		/// <exception cref="ObjectDisposedException">The ImapClient object has been disposed.</exception>
+		/// <exception cref="IOException">There was a failure writing to or reading from the
+		/// network.</exception>
+		/// <exception cref="NotAuthenticatedException">The method was called in non-authenticated
+		/// state, i.e. before logging in.</exception>
+		/// <seealso cref="MoveMessages"/>
+		void CopyMessages(IEnumerable<uint> uids, string destination, string mailbox = null);
+
+		/// <summary>
 		/// Moves the mail message with the specified UID to the specified destination mailbox.
 		/// </summary>
 		/// <param name="uid">The UID of the mail message to move.</param>
@@ -510,6 +532,29 @@ namespace S22.Imap {
 		void MoveMessage(uint uid, string destination, string mailbox = null);
 
 		/// <summary>
+		/// Moves the mail messages with the specified UIDs to the specified destination mailbox.
+		/// </summary>
+		/// <param name="uids">An enumerable collection of UIDs of the mail messages to move.</param>
+		/// <param name="destination">The name of the mailbox to move the messages into.</param>
+		/// <param name="mailbox">The mailbox the messages will be moved from. If this parameter is
+		/// omitted, the value of the DefaultMailbox property is used to determine the mailbox to
+		/// operate on.</param>
+		/// <remarks>When moving many messages, this method is more efficient than calling
+		/// <see cref="MoveMessage"/> for each individual message.</remarks>
+		/// <exception cref="ArgumentNullException">The destination parameter is null.</exception>
+		/// <exception cref="BadServerResponseException">The mail messages could not be moved to the
+		/// specified destination. The message property of the exception contains the error message
+		/// returned by the server.</exception>
+		/// <exception cref="ObjectDisposedException">The ImapClient object has been disposed.</exception>
+		/// <exception cref="IOException">There was a failure writing to or reading from the
+		/// network.</exception>
+		/// <exception cref="NotAuthenticatedException">The method was called in non-authenticated
+		/// state, i.e. before logging in.</exception>
+		/// <seealso cref="CopyMessages"/>
+		/// <seealso cref="DeleteMessages"/>
+		void MoveMessages(IEnumerable<uint> uids, string destination, string mailbox = null);
+
+		/// <summary>
 		/// Deletes the mail message with the specified UID.
 		/// </summary>
 		/// <param name="uid">The UID of the mail message to delete.</param>
@@ -526,6 +571,26 @@ namespace S22.Imap {
 		/// state, i.e. before logging in.</exception>
 		/// <seealso cref="MoveMessage"/>
 		void DeleteMessage(uint uid, string mailbox = null);
+
+		/// <summary>
+		/// Deletes the mail messages with the specified UIDs.
+		/// </summary>
+		/// <param name="uids">An enumerable collection of UIDs of the mail messages to delete.</param>
+		/// <param name="mailbox">The mailbox the messages will be deleted from. If this parameter is
+		/// omitted, the value of the DefaultMailbox property is used to determine the mailbox to
+		/// operate on.</param>
+		/// <remarks>When deleting many messages, this method is more efficient than calling
+		/// <see cref="DeleteMessage"/> for each individual message.</remarks>
+		/// <exception cref="BadServerResponseException">The mail messages could not be deleted. The
+		/// message property of the exception contains the error message returned by the
+		/// server.</exception>
+		/// <exception cref="ObjectDisposedException">The ImapClient object has been disposed.</exception>
+		/// <exception cref="IOException">There was a failure writing to or reading from the
+		/// network.</exception>
+		/// <exception cref="NotAuthenticatedException">The method was called in non-authenticated
+		/// state, i.e. before logging in.</exception>
+		/// <seealso cref="MoveMessages"/>
+		void DeleteMessages(IEnumerable<uint> uids, string mailbox = null);
 
 		/// <summary>
 		/// Retrieves the IMAP message flag attributes for the mail message with the specified unique

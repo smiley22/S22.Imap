@@ -389,5 +389,38 @@ namespace S22.Imap {
 			}
 			return encoding;
 		}
+
+		/// <summary>
+		/// Converts the specified enumerable collection of UIDs into an IMAP sequence-set.
+		/// </summary>
+		/// <param name="uids">An enumerable collection of UIDs.</param>
+		/// <returns>An IMAP sequence-set suitable for use with IMAP commands.</returns>
+		/// <exception cref="ArgumentNullException">The uids parameter is null.</exception>
+		/// <exception cref="ArgumentException">The specified collection of UIDs is empty.</exception>
+		/// <remarks> Refer to RFC3501, 9.Formal Syntax "sequence-set" for a description of IMAP
+		/// sequence-sets.</remarks>
+		internal static string BuildSequenceSet(IEnumerable<uint> uids) {
+			uids.ThrowIfNull("uids");
+			if (uids.Count() == 0)
+				throw new ArgumentException("The specified collection is empty.");
+			List<uint> list = uids.ToList<uint>();
+			if (list.Count == 1)
+				return list[0].ToString();
+			list.Sort();
+			int count = uids.Count();
+			IList<uint> fromNums = new List<uint>(), toNums = new List<uint>();
+			for (int i = 0; i < count - 1; i++) {
+				if (i == 0)
+					fromNums.Add(list[i]);
+				if (list[i + 1] > list[i] + 1) {
+					toNums.Add(list[i]);
+					fromNums.Add(list[i + 1]);
+				}
+			}
+			toNums.Add(list[count - 1]);
+			var ranges = Enumerable.Range(0, toNums.Count).Select(
+				i => fromNums[i] + (toNums[i] == fromNums[i] ? "" : ":" + toNums[i])).ToArray();
+			return string.Join(",", ranges);
+		}
 	}
 }

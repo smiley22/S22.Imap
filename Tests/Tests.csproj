@@ -16,6 +16,7 @@
     <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -34,12 +35,17 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <!-- http://stackoverflow.com/questions/2923210/c-sharp-conditional-compilation-and-framework-targets -->
+    <DefineConstants Condition=" !$(DefineConstants.Contains(';NET')) ">$(DefineConstants);$(TargetFrameworkVersion.Replace("v", "NET").Replace(".", ""))</DefineConstants>
+    <DefineConstants Condition=" $(DefineConstants.Contains(';NET')) ">$(DefineConstants.Remove($(DefineConstants.LastIndexOf(";NET"))));$(TargetFrameworkVersion.Replace("v", "NET").Replace(".", ""))</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="S22.Imap">
       <HintPath>..\bin\Debug\S22.Imap.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics" Condition=" '$(TargetFrameworkVersion)' != 'v3.5' " />
   </ItemGroup>
   <Choose>
     <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
@@ -75,7 +81,7 @@
     <Compile Include="PlainTest.cs" />
     <Compile Include="OAuth2Test.cs" />
     <Compile Include="SequenceSetTest.cs" />
-    <Compile Include="SrpTest.cs" />
+    <Compile Include="SrpTest.cs" Condition=" '$(TargetFrameworkVersion)' != 'v3.5' " />
     <Compile Include="UTF7Test.cs" />
   </ItemGroup>
   <ItemGroup>

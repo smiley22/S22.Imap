@@ -81,7 +81,11 @@ namespace S22.Imap.Auth.Sasl {
 				{ "Ntlm", typeof(Sasl.Mechanisms.SaslNtlm) },
 				{ "Ntlmv2", typeof(Sasl.Mechanisms.SaslNtlmv2) },
 				{ "ScramSha1", typeof(Sasl.Mechanisms.SaslScramSha1) },
+				// SRP is not supported in the .NET 3.5 configuration of the library because it requires
+				// the System.Numerics namespace which has only been part of .NET since version 4.
+#if !NET35
 				{ "Srp", typeof(Sasl.Mechanisms.SaslSrp) }
+#endif
 			};
 			foreach (string key in list.Keys)
 				Mechanisms.Add(key, list[key]);

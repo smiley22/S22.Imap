@@ -57,6 +57,7 @@ namespace S22.Imap {
 		/// <summary>
 		/// Login using the Secure Remote Password (SRP) authentication mechanism.
 		/// </summary>
+		/// <remarks>The SRP mechanism is only available when targetting .NET 4.0 or newer.</remarks>
 		Srp
 	}
 }

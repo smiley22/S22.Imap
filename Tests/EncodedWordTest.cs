@@ -59,13 +59,13 @@ namespace S22.Imap.Test {
 				{ "", "" },
 				{ "=?gb2312?B?Y21uZHkua2FuZyi/uvb09s4p?= <cindy.kang@xxxcorp.com>",
 					"\"cmndy.kang(亢鲷鑫)\" <cindy.kang@xxxcorp.com>" },
-				{ "undisclosed recipients: ;", "" }, // can we get display: "undisclosed recipients: ;"?
-				{ "undisclosed-recipients:;", "" }, // can we get display: "undisclosed-recipients:;"?
+				{ "undisclosed recipients: ;", "" },
+				{ "undisclosed-recipients:;", "" },
 				{ "\"Hiroyuki Tanaka, Japan\" <MLAXXX_XX.Mu-lti+sub@s_u-b.nifty.com>",
 					"\"Hiroyuki Tanaka, Japan\" <MLAXXX_XX.Mu-lti+sub@s_u-b.nifty.com>" },
 				{ "test1 <test1@domain>, \"test2\" <test2@domain>, \"test, nr3\" <test3@domain>",
 					"\"test1\" <test1@domain>, \"test2\" <test2@domain>, \"test, nr3\" <test3@domain>" },
-				// This is not supported by the MailAddress Class, but valid RFC.
+				// This is not supported by the MailAddress class, but valid RFC.
 				{ "only.local", "" },
 				{ "@;", "" },
 				// Minimum length of a mail address is at least 3 characters.
@@ -73,6 +73,8 @@ namespace S22.Imap.Test {
 				{ "<a@b>", "a@b" },
 				// This should be decoded to opqkuv@m.linaaken.com@yahoo.com, but not valid in .NET
 				// From Issue #48.
+				// This test fails when compiling for .NET 3.5, because the .NET 3.5
+				// MailAddressCollection implementation differs from .NET 4.0 and upwards.
 				{ "opqkuv@m.linaaken.com<=?UTF-8?B?b3Bxa3V2QG0ubGluYWFrZW4uY29t?=@yahoo.com>;",
 					"\"opqkuv@m.linaaken.com\" <=?UTF-8?B?b3Bxa3V2QG0ubGluYWFrZW4uY29t?=@yahoo.com>" },
 			};

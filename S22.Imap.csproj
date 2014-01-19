@@ -18,27 +18,31 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\$(Configuration) $(TargetFrameworkVersion)\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\S22.Imap.XML</DocumentationFile>
+    <DocumentationFile>bin\$(Configuration) $(TargetFrameworkVersion)\S22.Imap.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>bin\$(Configuration) $(TargetFrameworkVersion)\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <!-- http://stackoverflow.com/questions/2923210/c-sharp-conditional-compilation-and-framework-targets -->
+    <DefineConstants Condition=" !$(DefineConstants.Contains(';NET')) ">$(DefineConstants);$(TargetFrameworkVersion.Replace("v", "NET").Replace(".", ""))</DefineConstants>
+    <DefineConstants Condition=" $(DefineConstants.Contains(';NET')) ">$(DefineConstants.Remove($(DefineConstants.LastIndexOf(";NET"))));$(TargetFrameworkVersion.Replace("v", "NET").Replace(".", ""))</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics" Condition=" '$(TargetFrameworkVersion)' != 'v3.5' " />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -48,16 +52,16 @@
     <Compile Include="Auth\FilterStream.cs" />
     <Compile Include="Auth\Handshake.cs" />
     <Compile Include="Auth\Sasl\Mechanisms\SaslScramSha1.cs" />
-    <Compile Include="Auth\Sasl\Mechanisms\SaslSrp.cs" />
-    <Compile Include="Auth\Sasl\Mechanisms\Srp\ClientMessage1.cs" />
-    <Compile Include="Auth\Sasl\Mechanisms\Srp\ClientMessage2.cs" />
-    <Compile Include="Auth\Sasl\Mechanisms\Srp\Extensions.cs" />
-    <Compile Include="Auth\Sasl\Mechanisms\Srp\Helper.cs" />
-    <Compile Include="Auth\Sasl\Mechanisms\Srp\Mpi.cs" />
-    <Compile Include="Auth\Sasl\Mechanisms\Srp\OctetSequence.cs" />
-    <Compile Include="Auth\Sasl\Mechanisms\Srp\ServerMessage1.cs" />
-    <Compile Include="Auth\Sasl\Mechanisms\Srp\ServerMessage2.cs" />
-    <Compile Include="Auth\Sasl\Mechanisms\Srp\Utf8String.cs" />
+    <Compile Include="Auth\Sasl\Mechanisms\SaslSrp.cs" Condition=" '$(TargetFrameworkVersion)' != 'v3.5' " />
+    <Compile Include="Auth\Sasl\Mechanisms\Srp\ClientMessage1.cs" Condition=" '$(TargetFrameworkVersion)' != 'v3.5' " />
+    <Compile Include="Auth\Sasl\Mechanisms\Srp\ClientMessage2.cs" Condition=" '$(TargetFrameworkVersion)' != 'v3.5' " />
+    <Compile Include="Auth\Sasl\Mechanisms\Srp\Extensions.cs" Condition=" '$(TargetFrameworkVersion)' != 'v3.5' " />
+    <Compile Include="Auth\Sasl\Mechanisms\Srp\Helper.cs" Condition=" '$(TargetFrameworkVersion)' != 'v3.5' " />
+    <Compile Include="Auth\Sasl\Mechanisms\Srp\Mpi.cs" Condition=" '$(TargetFrameworkVersion)' != 'v3.5' " />
+    <Compile Include="Auth\Sasl\Mechanisms\Srp\OctetSequence.cs" Condition=" '$(TargetFrameworkVersion)' != 'v3.5' " />
+    <Compile Include="Auth\Sasl\Mechanisms\Srp\ServerMessage1.cs" Condition=" '$(TargetFrameworkVersion)' != 'v3.5' " />
+    <Compile Include="Auth\Sasl\Mechanisms\Srp\ServerMessage2.cs" Condition=" '$(TargetFrameworkVersion)' != 'v3.5' " />
+    <Compile Include="Auth\Sasl\Mechanisms\Srp\Utf8String.cs" Condition=" '$(TargetFrameworkVersion)' != 'v3.5' " />
     <Compile Include="Bodystructure\Bodypart.cs" />
     <Compile Include="Bodystructure\Bodystructure.cs" />
     <Compile Include="Bodystructure\ContentDisposition.cs" />
@@ -120,4 +124,10 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <Target Name="AfterBuild">
+    <MSBuild Condition=" '$(TargetFrameworkVersion)' == 'v4.0'"
+      Projects="$(MSBuildProjectFile)"
+      Properties="TargetFrameworkVersion=v3.5"
+      RunEachTargetSeparately="true"  />
+  </Target>
 </Project>

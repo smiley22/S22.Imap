@@ -259,17 +259,25 @@ namespace S22.Imap.Auth.Sasl.Mechanisms {
 		/// <param name="password">The supplied password to use.</param>
 		/// <param name="salt">The salt received from the server.</param>
 		/// <param name="count">The iteration count.</param>
-		/// <returns>An array of bytes containing the result of the
-		/// computation of the "Hi()"-formula.</returns>
-		/// <remarks>Hi is, essentially, PBKDF2 with HMAC as the
-		/// pseudorandom function (PRF) and with dkLen == output length of
-		/// HMAC() == output length of H(). (Refer to RFC 5802, p.6)</remarks>
+		/// <returns>An array of bytes containing the result of the computation of the
+		/// "Hi()"-formula.</returns>
+		/// <remarks>
+		/// Hi is, essentially, PBKDF2 with HMAC as the pseudorandom function (PRF) and with
+		/// dkLen == output length of HMAC() == output length of H(). (Refer to RFC 5802, p.6)
+		/// </remarks>
 		private byte[] Hi(string password, string salt, int count) {
 			// The salt is sent by the server as a base64-encoded string.
 			byte[] saltBytes = Convert.FromBase64String(salt);
-			using (var db = new Rfc2898DeriveBytes(password, saltBytes, count)) {
+			// Annoyingly, Rfc2898DeriveBytes only implements IDisposable in .NET 4 and upwards.
+			var db = new Rfc2898DeriveBytes(password, saltBytes, count);
+			try {
 				// Generate 20 key bytes, which is the size of the hash result of SHA-1.
 				return db.GetBytes(20);
+			} finally {
+#if !NET35
+				if(db != null)
+					db.Dispose();
+#endif
 			}
 		}
 

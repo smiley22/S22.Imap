@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using System.Linq;
 
 namespace S22.Imap {
 	/// <summary>
@@ -378,16 +379,34 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
+		/// Concatenates the members of a collection, using the specified separator between each
+		/// member.
+		/// </summary>
+		/// <typeparam name="T">The type of the members of values.</typeparam>
+		/// <param name="seperator">The string to use as a separator.</param>
+		/// <param name="values">A collection that contains the objects to concatenate.</param>
+		/// <returns>A string that consists of the members of values delimited by the separator
+		/// string. If values has no members, the method returns System.String.Empty.</returns>
+		/// <exception cref="ArgumentNullException">The values parameter is null.</exception>
+		/// <remarks>This is already part of the String class in .NET 4.0 and newer but is needed
+		/// for backwards compatibility with .NET 3.5.</remarks>
+		static string Join<T>(string seperator, IEnumerable<T> values) {
+			values.ThrowIfNull("values");
+			IList<string> list = new List<string>();
+			foreach (T v in values)
+				list.Add(v.ToString());
+			return string.Join(seperator, list.ToArray());
+		}
+
+		/// <summary>
 		/// Constructs a string from the SearchCondition object using the proper syntax as is required
 		/// for the IMAP SEARCH command.
 		/// </summary>
 		/// <returns>A string representing this SearchCondition instance that can be used with the IMAP
 		/// SEARCH command.</returns>
 		public override string ToString() {
-			if (Conditions != null && Conditions.Count > 0 && Operator != null) {
-				return (Operator.ToUpper() + " (" +
-					string.Join(") (", Conditions) + ")").Trim();
-			}
+			if (Conditions != null && Conditions.Count > 0 && Operator != null)
+				return (Operator.ToUpper() + " (" + Join(") (", Conditions) + ")").Trim();
 			StringBuilder builder = new StringBuilder();
 			if (Field != null)
 				builder.Append(Field.ToString().ToUpper());
@@ -409,7 +428,7 @@ namespace S22.Imap {
 					Val = ((DateTime)Val).ToString("dd-MMM-yyyy",
 						CultureInfo.InvariantCulture).QuoteString();
 				} else if (Val is uint[]) {
-					Val = string.Join<uint>(",", (uint[])Val);
+					Val = Join<uint>(",", (uint[])Val);
 				}
 				builder.Append(Val);
 			}

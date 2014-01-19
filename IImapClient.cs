@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Net.Mail;
 
@@ -498,7 +499,9 @@ namespace S22.Imap {
 		/// operate on.</param>
 		/// <remarks>When copying many messages, this method is more efficient than calling
 		/// <see cref="CopyMessage"/> for each individual message.</remarks>
-		/// <exception cref="ArgumentNullException">The destination parameter is null.</exception>
+		/// <exception cref="ArgumentNullException">The uids parameter or the destination parameter is
+		/// null.</exception>
+		/// <exception cref="ArgumentException">The specified collection of UIDs is empty.</exception>
 		/// <exception cref="BadServerResponseException">The mail messages could not be copied to the
 		/// specified destination. The message property of the exception contains the error message
 		/// returned by the server.</exception>
@@ -541,7 +544,8 @@ namespace S22.Imap {
 		/// operate on.</param>
 		/// <remarks>When moving many messages, this method is more efficient than calling
 		/// <see cref="MoveMessage"/> for each individual message.</remarks>
-		/// <exception cref="ArgumentNullException">The destination parameter is null.</exception>
+		/// <exception cref="ArgumentNullException">The uids parameter or the destination parameter is
+		/// null.</exception>
 		/// <exception cref="BadServerResponseException">The mail messages could not be moved to the
 		/// specified destination. The message property of the exception contains the error message
 		/// returned by the server.</exception>
@@ -581,6 +585,8 @@ namespace S22.Imap {
 		/// operate on.</param>
 		/// <remarks>When deleting many messages, this method is more efficient than calling
 		/// <see cref="DeleteMessage"/> for each individual message.</remarks>
+		/// <exception cref="ArgumentNullException">The uids parameter is null.</exception>
+		/// <exception cref="ArgumentException">The specified collection of UIDs is empty.</exception>
 		/// <exception cref="BadServerResponseException">The mail messages could not be deleted. The
 		/// message property of the exception contains the error message returned by the
 		/// server.</exception>

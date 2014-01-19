@@ -5,8 +5,9 @@ receiving electronic mail from an Internet Message Access Protocol (IMAP) server
 
 ### Downloads
 
-You can always get the latest package on [Nuget](http://nuget.org/packages/S22.Imap/) or download the
-binaries as a .zip archive from [here](http://smiley22.github.com/Downloads/S22.Imap.zip). The
+You can always get the latest package on [Nuget](http://nuget.org/packages/S22.Imap/) (includes 
+.NET 4.0 and 3.5 binaries) or download the binaries (targetting .NET 4.0) as a .zip archive from 
+[here](http://smiley22.github.com/Downloads/S22.Imap.zip). The
 [documentation](http://smiley22.github.com/S22.Imap/Documentation/) is also available for offline
 viewing as HTML or CHM and can be downloaded from 
 [here](http://smiley22.github.com/Downloads/S22.Imap.Html.Documentation.zip) and 
@@ -47,6 +48,7 @@ further details on using the classes and methods exposed by the S22.Imap namespa
 + Well documented with lots of example code
 + Robust MIME parser, tested with 100.000+ mails
 + Supports various SASL authentication mechanisms
++ Still supports .NET 3.5
 + Free to use in commercial and personal projects ([MIT license](https://github.com/smiley22/S22.Imap/blob/master/License.md))
 
 ### Credits
@@ -63,5 +65,5 @@ This library is released under the [MIT license](https://github.com/smiley22/S22
 
 ### Bug reports
 
-Please send your bug reports and questions to [smileytwentytwo@gmail.com](mailto:smileytwentytwo@gmail.com) or create a new
+Please send your bug reports to [smileytwentytwo@gmail.com](mailto:smileytwentytwo@gmail.com) or create a new
 issue on the GitHub project homepage.

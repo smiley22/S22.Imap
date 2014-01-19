@@ -239,8 +239,14 @@ namespace S22.Imap {
 			}
 			if (header["Reply-to"] != null) {
 				addr = ParseAddressList(header["Reply-to"]);
+				// The ReplayToList property has only been part of the MailMessage class since .NET 4.0.
+#if !NET35
 				foreach (MailAddress a in addr)
 					m.ReplyToList.Add(a);
+#else
+				if (addr.Length > 0)
+					m.ReplyTo = addr[0];
+#endif
 			}
 		}
 
@@ -421,7 +427,7 @@ namespace S22.Imap {
 				p.body = body.ToString();
 				// Add the MIME part to the list unless body is null or empty which means the body
 				// contained nested multipart content.
-				if (!String.IsNullOrWhiteSpace(p.body))
+				if(p.body != null && p.body.Trim() != String.Empty)
 					list.Add(p);
 				// If this boundary is the end boundary, we're done.
 				if (line == null || line.StartsWith(end))

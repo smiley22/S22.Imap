@@ -130,7 +130,7 @@ namespace S22.Imap.Auth.Sasl.Mechanisms.Ntlm {
 								t2.OSVersion = ReadOSVersion(r);
 						}
 						t2.TargetName = GetTargetName(r.ReadBytes(targetLength),
-							t2.Flags.HasFlag(Flags.NegotiateUnicode));
+							(t2.Flags & Flags.NegotiateUnicode) == Flags.NegotiateUnicode);
 						if (t2.Version > Type2Version.Version1) {
 							t2.TargetInformation = ReadTargetInformation(r);
 						}

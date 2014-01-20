@@ -2091,8 +2091,7 @@ namespace S22.Imap {
 				try {
 					string response = GetResponse();
 					// A request was made to stop idling so quit the thread.
-					if (response.Contains("OK IDLE",
-						StringComparison.InvariantCultureIgnoreCase))
+					if (response.Contains("OK IDLE", StringComparison.InvariantCultureIgnoreCase))
 						return;
 					// Let the dispatcher thread take care of the IDLE notification so we can go back to
 					// receiving responses.
@@ -2110,11 +2109,8 @@ namespace S22.Imap {
 					// ignore it.
 					if (e.InnerException is ThreadAbortException)
 						return;
-					// Otherwise we should let it bubble up.
-					// FIXME: Raise an error event?
-					// Shutdown idleThread.
-					// Stop Timer.
-					// Set idling to false.
+					// Otherwise shutdown and raise the IdleError event to let the user know something
+					// went wrong.
 					idleThread = null;
 					idling = false;
 					noopTimer.Stop();
@@ -2122,9 +2118,7 @@ namespace S22.Imap {
 						IdleError.Raise(this, new IdleErrorEventArgs(e, this));
 					} catch {
 					}
-					Console.WriteLine("Shutting down IdleLoop");
 					return;
-
 				}
 			}
 		}

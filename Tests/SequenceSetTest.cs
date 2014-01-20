@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using S22.Imap;
 
 namespace S22.Imap.Test {
 	/// <summary>
@@ -66,6 +67,16 @@ namespace S22.Imap.Test {
 		public void RangesAndUIDs() {
 			var list = new List<uint>() { 1, 3, 4, 5, 7 };
 			Assert.AreEqual("1,3:5,7", Util.BuildSequenceSet(list));
+		}
+
+		/// <summary>
+		/// Ensures a single UID is properly converted.
+		/// </summary>
+		[TestMethod]
+		[TestCategory("BuildSequenceSet")]
+		public void SingleUID() {
+			var list = new List<uint>() { 4 };
+			Assert.AreEqual("4", Util.BuildSequenceSet(list));
 		}
 
 		/// <summary>

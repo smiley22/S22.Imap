@@ -16,8 +16,8 @@ using System.Timers;
 
 namespace S22.Imap {
 	/// <summary>
-	/// Enables applications to communicate with a mail server using the
-	/// Internet Message Access Protocol (IMAP).
+	/// Enables applications to communicate with a mail server using the Internet Message Access
+	/// Protocol (IMAP).
 	/// </summary>
 	public class ImapClient : IImapClient
 	{
@@ -115,10 +115,18 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
+		/// The event that is raised when an I/O exception occurs in the idle-thread.
+		/// </summary>
+		/// <remarks>
+		/// An I/O exception can occur if the underlying network connection has been reset or the
+		/// server unexpectedly closed the connection.
+		/// </remarks>
+		public event EventHandler<IdleErrorEventArgs> IdleError;
+
+		/// <summary>
 		/// This constructor is solely used for unit testing.
 		/// </summary>
-		/// <param name="stream">A stream to initialize the ImapClient instance
-		/// with.</param>
+		/// <param name="stream">A stream to initialize the ImapClient instance with.</param>
 		internal ImapClient(Stream stream) {
 			this.stream = stream;
 			Authed = true;
@@ -402,9 +410,8 @@ namespace S22.Imap {
 					"mechanism is not supported by the server.");
 			}
 			while (!m.IsCompleted) {
-				// Annoyingly, Gmail OAUTH2 issues an untagged capability response during
-				// the SASL authentication process. As per spec this is illegal, but we
-				// should still deal with it.
+				// Annoyingly, Gmail OAUTH2 issues an untagged capability response during the SASL
+				// authentication process. As per spec this is illegal, but we should still deal with it.
 				while (response.StartsWith("*"))
 					response = GetResponse();
 				// Stop if the server response starts with our tag.
@@ -463,8 +470,8 @@ namespace S22.Imap {
 		/// prior to sending.</param>
 		void SendCommand(string command) {
 			ts.TraceInformation("C -> " + command);
-			// We can safely use UTF-8 here since it's backwards compatible with ASCII
-			// and comes in handy when sending strings in literal form (see RFC 3501, 4.3).
+			// We can safely use UTF-8 here since it's backwards compatible with ASCII and comes in handy
+			// when sending strings in literal form (see RFC 3501, 4.3).
 			byte[] bytes = Encoding.UTF8.GetBytes(command + "\r\n");
 			lock (writeLock) {
 				stream.Write(bytes, 0, bytes.Length);
@@ -502,7 +509,10 @@ namespace S22.Imap {
 			using (var mem = new MemoryStream()) {
 				lock (readLock) {
 					while (true) {
-						byte b = (byte)stream.ReadByte();
+						int i = stream.ReadByte();
+						if (i == -1)
+							throw new IOException("The stream could not be read.");
+						byte b = (byte)i;
 						if (b == CarriageReturn)
 							continue;
 						if (b == Newline) {
@@ -716,7 +726,6 @@ namespace S22.Imap {
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "SELECT " +
 					Util.UTF7Encode(mailbox).QuoteString());
-				// Fixme: evaluate untagged data?
 				while (response.StartsWith("*"))
 					response = GetResponse();
 				if (!IsResponseOK(response, tag))
@@ -748,8 +757,7 @@ namespace S22.Imap {
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "LIST \"\" \"*\"");
 				while (response.StartsWith("*")) {
-					Match m = Regex.Match(response,
-						"\\* LIST \\((.*)\\)\\s+\"([^\"]+)\"\\s+(.+)");
+					Match m = Regex.Match(response, "\\* LIST \\((.*)\\)\\s+\"([^\"]+)\"\\s+(.+)");
 					if (m.Success) {
 						string[] attr = m.Groups[1].Value.Split(' ');
 						bool add = true;
@@ -758,14 +766,13 @@ namespace S22.Imap {
 							if (a.ToLower() == @"\noselect")
 								add = false;
 						}
-						// Names _should_ be enclosed in double-quotes but not all servers
-						// follow through with this, so we don't enforce it in the above regex.
+						// Names _should_ be enclosed in double-quotes but not all servers follow through with
+						// this, so we don't enforce it in the above regex.
 						string name = Regex.Replace(m.Groups[3].Value, "^\"(.+)\"$", "$1");
 						try {
 							name = Util.UTF7Decode(name);
 						} catch {
-							// Include the unaltered string in the result if UTF-7 decoding
-							// failed for any reason.
+							// Include the unaltered string in the result if UTF-7 decoding failed for any reason.
 						}
 						if (add)
 							mailboxes.Add(name);
@@ -832,8 +839,7 @@ namespace S22.Imap {
 		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMailboxInfo"]/*'/>
 		public MailboxInfo GetMailboxInfo(string mailbox = null) {
 			AssertValid();
-			// This is not a cheap method to call, it involves a couple of round-trips
-			// to the server.
+			// This is not a cheap method to call, it involves a couple of round-trips to the server.
 			lock (sequenceLock) {
 				PauseIdling();
 				if (mailbox == null)
@@ -1001,7 +1007,7 @@ namespace S22.Imap {
 					if (!response.StartsWith("+")) {
 						ResumeIdling();
 						throw new NotSupportedException("Please restrict your search " +
-							"to ASCII-only characters", new BadServerResponseException(response));
+							"to ASCII-only characters.", new BadServerResponseException(response));
 					}
 					response = SendCommandGetResponse(line);
 				}
@@ -1732,9 +1738,8 @@ namespace S22.Imap {
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "UID STORE " + set +
 					@" +FLAGS.SILENT (\Deleted \Seen)");
-				while (response.StartsWith("*")) {
+				while (response.StartsWith("*"))
 					response = GetResponse();
-				}
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
@@ -1777,8 +1782,7 @@ namespace S22.Imap {
 				PauseIdling();
 				SelectMailbox(mailbox);
 				string tag = GetTag();
-				string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
-					" (FLAGS)");
+				string response = SendCommandGetResponse(tag + "UID FETCH " + uid + " (FLAGS)");
 				List<MessageFlag> flags = new List<MessageFlag>();
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response, @"FLAGS \(([\w\s\\$-]*)\)");
@@ -1832,9 +1836,8 @@ namespace S22.Imap {
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "UID STORE " + uid +
 					@" FLAGS.SILENT (" + flagsString.Trim() + ")");
-				while (response.StartsWith("*")) {
+				while (response.StartsWith("*"))
 					response = GetResponse();
-				}
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
@@ -1875,9 +1878,8 @@ namespace S22.Imap {
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "UID STORE " + uid +
 					@" +FLAGS.SILENT (" + flagsString.Trim() + ")");
-				while (response.StartsWith("*")) {
+				while (response.StartsWith("*"))
 					response = GetResponse();
-				}
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
@@ -1918,9 +1920,8 @@ namespace S22.Imap {
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "UID STORE " + uid +
 					@" -FLAGS.SILENT (" + flagsString.Trim() + ")");
-				while (response.StartsWith("*")) {
+				while (response.StartsWith("*"))
 					response = GetResponse();
-				}
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
@@ -1950,8 +1951,7 @@ namespace S22.Imap {
 			if (idling)
 				return;
 			if (!Supports("IDLE"))
-				throw new InvalidOperationException("The server does not support the " +
-					"IMAP4 IDLE command");
+				throw new InvalidOperationException("The server does not support the IMAP4 IDLE command.");
 			lock (sequenceLock) {
 				// Make sure the default mailbox is selected.
 				SelectMailbox(null);
@@ -1963,7 +1963,7 @@ namespace S22.Imap {
 			}
 			// Setup and start the idle thread.
 			if (idleThread != null)
-				throw new ApplicationException("idleThread is not null");
+				throw new ApplicationException("idleThread is not null.");
 			idling = true;
 			idleThread = new Thread(IdleLoop);
 			idleThread.IsBackground = true;
@@ -2069,7 +2069,7 @@ namespace S22.Imap {
 			}
 			// Setup and start the idle thread.
 			if (idleThread != null)
-				throw new ApplicationException("idleThread is not null");
+				throw new ApplicationException("idleThread is not null.");
 			idleThread = new Thread(IdleLoop);
 			idleThread.IsBackground = true;
 			idleThread.Start();
@@ -2112,7 +2112,19 @@ namespace S22.Imap {
 						return;
 					// Otherwise we should let it bubble up.
 					// FIXME: Raise an error event?
-					throw;
+					// Shutdown idleThread.
+					// Stop Timer.
+					// Set idling to false.
+					idleThread = null;
+					idling = false;
+					noopTimer.Stop();
+					try {
+						IdleError.Raise(this, new IdleErrorEventArgs(e, this));
+					} catch {
+					}
+					Console.WriteLine("Shutting down IdleLoop");
+					return;
+
 				}
 			}
 		}
@@ -2198,8 +2210,7 @@ namespace S22.Imap {
 				string response = SendCommandGetResponse(tag + "GETQUOTAROOT " +
 					Util.UTF7Encode(mailbox).QuoteString());
 				while (response.StartsWith("*")) {
-					Match m = Regex.Match(response,
-						"\\* QUOTA \"(\\w*)\" \\((\\w+)\\s+(\\d+)\\s+(\\d+)\\)");
+					Match m = Regex.Match(response, "\\* QUOTA \"(\\w*)\" \\((\\w+)\\s+(\\d+)\\s+(\\d+)\\)");
 					if (m.Success) {
 						try {
 							MailboxQuota quota = new MailboxQuota(m.Groups[2].Value,

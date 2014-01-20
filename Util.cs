@@ -64,8 +64,7 @@ namespace S22.Imap {
 		/// <returns>true if the value parameter occurs within this string, or if value is the empty
 		/// string (""); otherwise, false.</returns>
 		/// <exception cref="ArgumentNullException">The value parameter is null.</exception>
-		internal static bool Contains(this string str, string value,
-			StringComparison comparer) {
+		internal static bool Contains(this string str, string value, StringComparison comparer) {
 			return str.IndexOf(value, comparer) >= 0;
 		}
 
@@ -136,8 +135,7 @@ namespace S22.Imap {
 		/// <param name="reader">Extension method for BinaryReader.</param>
 		/// <param name="bigEndian">Set to true to interpret the short value as big endian value.</param>
 		/// <returns>The 16-byte unsigned short value read from the underlying stream.</returns>
-		internal static ushort ReadUInt16(this BinaryReader reader,
-			bool bigEndian) {
+		internal static ushort ReadUInt16(this BinaryReader reader, bool bigEndian) {
 			if (!bigEndian)
 				return reader.ReadUInt16();
 			int ret = 0;
@@ -219,8 +217,7 @@ namespace S22.Imap {
 				case "B":
 					return encoding.GetString(Util.Base64Decode(text));
 				default:
-					throw new FormatException("Encoding not recognized " +
-						"in encoded word: " + word);
+					throw new FormatException("Encoding not recognized in encoded word: " + word);
 			}
 		}
 
@@ -335,7 +332,7 @@ namespace S22.Imap {
 		/// </summary>
 		/// <param name="s">The UTF-7 encoded string to decode.</param>
 		/// <returns>A UTF-16 encoded "standard" C# string</returns>
-		/// <exception cref="FormatException">Thrown if the input string is not a proper UTF-7 encoded
+		/// <exception cref="FormatException">The input string is not a properly UTF-7 encoded
 		/// string.</exception>
 		/// <remarks>IMAP uses a modified version of UTF-7 for encoding international mailbox names. For
 		/// details, refer to RFC 3501 section 5.1.3 (Mailbox International Naming Convention).</remarks>
@@ -361,7 +358,7 @@ namespace S22.Imap {
 						builder.Append(Encoding.BigEndianUnicode.GetString(buffer));
 					} catch (Exception e) {
 						throw new FormatException(
-							"The input string is not in the correct Format", e);
+							"The input string is not in the correct Format.", e);
 					}
 				} else {
 					if (c == '&' && reader.Peek() == '-')

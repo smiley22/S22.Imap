@@ -69,7 +69,8 @@
     <Compile Include="Bodystructure\ContentType.cs" />
     <Compile Include="Bodystructure\Reader.cs" />
     <Compile Include="FetchOptions.cs" />
-    <Compile Include="IdleEvents.cs" />
+    <Compile Include="IdleErrorEventArgs.cs" />
+    <Compile Include="IdleMessageEventArgs.cs" />
     <Compile Include="IImapClient.cs" />
     <Compile Include="ImapClient.cs" />
     <Compile Include="Exceptions.cs" />
@@ -125,9 +126,6 @@
   </Target>
   -->
   <Target Name="AfterBuild">
-    <MSBuild Condition=" '$(TargetFrameworkVersion)' == 'v4.0'"
-      Projects="$(MSBuildProjectFile)"
-      Properties="TargetFrameworkVersion=v3.5"
-      RunEachTargetSeparately="true"  />
+    <MSBuild Condition=" '$(TargetFrameworkVersion)' == 'v4.0'" Projects="$(MSBuildProjectFile)" Properties="TargetFrameworkVersion=v3.5" RunEachTargetSeparately="true" />
   </Target>
 </Project>

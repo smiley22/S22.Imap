@@ -5,8 +5,8 @@ using System.Net.Mail;
 
 namespace S22.Imap {
 	/// <summary>
-	/// Enables applications to communicate with a mail server using the
-	/// Internet Message Access Protocol (IMAP).
+	/// Enables applications to communicate with a mail server using the Internet Message Access
+	/// Protocol (IMAP).
 	/// </summary>
 	public interface IImapClient : IDisposable {
 		/// <summary>

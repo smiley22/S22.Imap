@@ -2134,21 +2134,25 @@ namespace S22.Imap {
 				Match m = Regex.Match(response, @"\*\s+(\d+)\s+(\w+)");
 				if (!m.Success)
 					continue;
-				uint numberOfMessages = Convert.ToUInt32(m.Groups[1].Value),
-					uid = GetHighestUID();
-				switch (m.Groups[2].Value.ToUpper()) {
-					case "EXISTS":
-						if (lastUid != uid) {
-							newMessageEvent.Raise(this,
-								new IdleMessageEventArgs(numberOfMessages, uid, this));
-						}
-						break;
-					case "EXPUNGE":
-						messageDeleteEvent.Raise(
-							this, new IdleMessageEventArgs(numberOfMessages, uid, this));
-						break;
+				try {
+					uint numberOfMessages = Convert.ToUInt32(m.Groups[1].Value),
+						uid = GetHighestUID();
+					switch (m.Groups[2].Value.ToUpper()) {
+						case "EXISTS":
+							if (lastUid != uid) {
+								newMessageEvent.Raise(this,
+									new IdleMessageEventArgs(numberOfMessages, uid, this));
+							}
+							break;
+						case "EXPUNGE":
+							messageDeleteEvent.Raise(
+								this, new IdleMessageEventArgs(numberOfMessages, uid, this));
+							break;
+					}
+					lastUid = uid;
+				} catch {
+					// Fall through.
 				}
-				lastUid = uid;
 			}
 		}
 
@@ -2251,6 +2255,7 @@ namespace S22.Imap {
 						idleDispatch.Abort();
 						idleDispatch = null;
 					}
+					noopTimer.Stop();
 					stream.Close();
 					stream = null;
 					if (client != null)

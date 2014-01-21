@@ -146,6 +146,7 @@ namespace S22.Imap {
 			try {
 				// .NET won't accept address-lists ending with a ';' character.
 				list = list.TrimEnd(';');
+			        list = list.TrimEnd(',');
 				// Check for minimal length requirement.
 				if (list.TrimStart('<').TrimEnd('>').Length < minValidLength)
 					return mails.ToArray();

@@ -1,0 +1,9 @@
+Date: Sun, 10 Nov 2002 23:54:21 +0800
+MIME-Version: 1.0
+Content-Type: text/plain;
+	name="=?koi8-r?B?1MXT1C50eHQ=?="
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="=?koi8-r?B?1MXT1C50eHQ=?="
+
+This is an attachment. See issue #28.

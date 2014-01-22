@@ -99,6 +99,9 @@
   <ItemGroup>
     <None Include="Resources\MailWithInvalidFromHeader.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MailWithEncodedAttachmentName.txt" />
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

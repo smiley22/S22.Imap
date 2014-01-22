@@ -151,6 +151,24 @@ namespace S22.Imap.Test.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Date: Sun, 10 Nov 2002 23:54:21 +0800
+        ///MIME-Version: 1.0
+        ///Content-Type: text/plain;
+        ///	name=&quot;=?koi8-r?B?1MXT1C50eHQ=?=&quot;
+        ///Content-Transfer-Encoding: 7bit
+        ///Content-Disposition: attachment;
+        ///	filename=&quot;=?koi8-r?B?1MXT1C50eHQ=?=&quot;
+        ///
+        ///This is an attachment. See issue #28.
+        ///.
+        /// </summary>
+        internal static string MailWithEncodedAttachmentName {
+            get {
+                return ResourceManager.GetString("MailWithEncodedAttachmentName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to X-UIDL-JANA-SERVER: 255392621.1369491686@Jana-Server
         ///From: &quot;Systemadministrator&quot;
         ///Sender: &quot;Systemadministrator&quot;

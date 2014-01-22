@@ -143,6 +143,18 @@ namespace S22.Imap.Test {
 		}
 
 		/// <summary>
+		/// Ensures encoded attachment names are properly decoded. See issue #28.
+		/// </summary>
+		[TestMethod]
+		[TestCategory("BuildMessageFromMIME822")]
+		public void MessageWithEncodedAttachmentName() {
+			MailMessage m = MessageBuilder.FromMIME822(
+				Properties.Resources.MailWithEncodedAttachmentName);
+			Assert.AreEqual<int>(1, m.Attachments.Count);
+			Assert.AreEqual<string>("тест.txt", m.Attachments[0].Name);
+		}
+
+		/// <summary>
 		/// Ensures address-lists with multiple addresses are properly parsed.
 		/// </summary>
 		[TestMethod]

@@ -93,6 +93,12 @@
       <Name>S22.Imap</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MailWithoutDisposition.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MailWithInvalidFromHeader.txt" />
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

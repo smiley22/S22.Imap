@@ -1,0 +1,28 @@
+Received: from xxx.xxxxx.com (xx.xxxx.com [123.45.67.89])
+	by xxxx.asxxx.se (Postfix) with ESMTP id E357F2CCC6A
+	for <faktxxx@xxxxxx.se>; Thu,  7 Feb 2013 17:12:05 +0100 (CET)
+MIME-Version: 1.0
+From: <invxxxxx@xxxxx.com>
+To: <faktxxx@xxxxxx.se>
+Date: Thu, 7 Feb 2013 17:12:02 +0100
+Subject: Fakt__xxxx___xxxx___07_02_2013
+Content-Type: multipart/mixed;
+	boundary="--boundary_0_6cb33448-390c-4f02-b75a-2738f1d6dd45"
+Message-ID: <44967f46-57cc-47c4-ab9f-1c450e1d87bb@XXXXI0123.xx.xxxx.com>
+
+----boundary_0_6cb33448-390c-4f02-b75a-2738f1d6dd45
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+
+U8OkbmRlciBow6RybWVkIMO2dmVyIGJpbGFnb3IgdXRza3Jpdm5hIHNlbmFzdGUgZmFrdHVyZXJp
+bmdzZGFnZW4uDQoNCk1lZCB24oCebmxpZyBo4oCebHNuaW5nDQo=
+----boundary_0_6cb33448-390c-4f02-b75a-2738f1d6dd45
+Content-Type: application/octet-stream; name="Fakt_fil_xxxx_20130207.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjMNCiX15Pb8DQoNCjcgMCBvYmogPDwgL1R5cGUgL1hPYmplY3QNCi9TdWJ0eXBl
+IC9JbWFnZQ0KL05hbWUgL0kxDQovV2lkdGggNDYxDQovSGVpZ2h0IDExMA0KL0JpdHNQZXJD
+b21wb25lbnQgOA0KL0NvbG9yU3BhY2UgL0RldmljZUdyYXkNCi9MZW5ndGggOTUyOCAvRmls
+dGVyIFsgL0FTQ0lJODVEZWNvZGUgL0ZsYXRlRGVjb2RlIF0gPj4NCnN0cmVhbQ0KR2IiLyxN
+NDU0MFtKcD8/V14uckZCMXQuLUBjRVxBclFMVkgzJW1iWWR0bEpcRkVdO21faT==
+----boundary_0_6cb33448-390c-4f02-b75a-2738f1d6dd45--

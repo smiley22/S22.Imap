@@ -158,6 +158,9 @@ X-MimeOLE: Produced By Microsoft MimeOLE V6.0.6002.18463</value>
   <data name="MailWithMultipleParts" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\MessageWithMultipleParts.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
+  <data name="MailWithoutDisposition" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\MailWithoutDisposition.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
   <data name="MailWithQuotedPrintables" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\MailWithQuotedPrintables.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
@@ -188,5 +191,8 @@ Martin.</value>
   </data>
   <data name="ZipAttachment" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\attr.zip;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="MailWithInvalidFromHeader" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\MailWithInvalidFromHeader.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
 </root>

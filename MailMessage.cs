@@ -165,8 +165,7 @@ namespace S22.Imap {
 		internal static string To822Address(this MailAddress address) {
 			if (!String.IsNullOrEmpty(address.DisplayName)) {
 				string name = address.DisplayName.IsASCII() ?
-					String.Format("\"{0}\"", address.DisplayName) :
-					Base64Encode(address.DisplayName);
+					String.Format("\"{0}\"", address.DisplayName) : Base64Encode(address.DisplayName);
 				return name + " <" + address.Address + ">";
 			}
 			return address.Address;

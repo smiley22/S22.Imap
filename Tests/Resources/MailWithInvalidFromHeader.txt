@@ -1,0 +1,16 @@
+X-UIDL-JANA-SERVER: 255392621.1369491686@Jana-Server
+From: "Systemadministrator"
+Sender: "Systemadministrator"
+To: broxi@lcoalmail.loc
+Subject: Unzustellbar: test
+Date: Sat, 25 May 2013 16:21:24 +0200
+Message-ID: 
+MIME-Version: 1.0
+Content-Type: application/ms-tnef; name="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="winmail.dat"
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQIWacilbO2h+QbxaliA6L/xOzdkTQ==
+
+Hello World. See issue #50.
+

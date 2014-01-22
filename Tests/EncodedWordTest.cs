@@ -54,6 +54,7 @@ namespace S22.Imap.Test {
 		/// Tests for decoding AddressLists "encoded-words" strings.
 		/// </summary>
 		[TestMethod]
+		[TestCategory("ParseAddressList")]
 		public void DecodeEncodedAddressLists() {
 			Dictionary<string, string> dict = new Dictionary<string, string>() {
 				{ "", "" },

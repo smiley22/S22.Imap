@@ -26,9 +26,8 @@ namespace S22.Imap {
 				try {
 					m.Headers.Add(key, value);
 				} catch {
-					// HeaderCollection throws an exception if adding an empty string as
-					// value, which can happen, if reading a mail message with an empty
-					// subject.
+					// HeaderCollection throws an exception if adding an empty string as value, which can
+					// happen, if reading a mail message with an empty subject.
 					// Also spammers often forge headers, so just fall through and ignore.
 				}
 			}
@@ -139,28 +138,50 @@ namespace S22.Imap {
 		/// <param name="list">The address-list field to parse</param>
 		/// <returns>An array of MailAddress objects representing the parsed mail addresses.</returns>
 		internal static MailAddress[] ParseAddressList(string list) {
-			const int minValidLength = 3;
 			List<MailAddress> mails = new List<MailAddress>();
 			if (String.IsNullOrEmpty(list))
 				return mails.ToArray();
-			try {
-				// .NET won't accept address-lists ending with a ';' character, see #68.
-				list = list.TrimEnd(';', ',');
-				// Check for minimal length requirement.
-				if (list.TrimStart('<').TrimEnd('>').Length < minValidLength)
-					return mails.ToArray();
+			foreach (string part in SplitAddressList(list)) {
 				MailAddressCollection mcol = new MailAddressCollection();
-				// Use .NET internal MailAddressParser.ParseMultipleAddresses to parse the address list.
-				mcol.Add(list);
-				foreach (MailAddress m in mcol) {
-					// We might still need to decode the display name if it is Q-encoded.
-					string displayName = Util.DecodeWords(m.DisplayName);
-					mails.Add(new MailAddress(m.Address, displayName));
+				try {
+					// .NET won't accept address-lists ending with a ';' or a ',' character, see #68.
+					mcol.Add(part.TrimEnd(';', ','));
+					foreach (MailAddress m in mcol) {
+						// We might still need to decode the display name if it is Q-encoded.
+						string displayName = Util.DecodeWords(m.DisplayName);
+						mails.Add(new MailAddress(m.Address, displayName));
+					}
+				} catch {
+					// We don't want this to throw any exceptions even if the entry is malformed.
 				}
-			} catch {
-				// We don't want this to throw any exceptions even if the address list is malformed.
 			}
 			return mails.ToArray();
+		}
+
+		/// <summary>
+		/// Splits the specified address-list into individual parts consisting of a mail address and
+		/// optionally a display-name.
+		/// </summary>
+		/// <param name="list">The address-list to split into parts.</param>
+		/// <returns>An enumerable collection of parts.</returns>
+		internal static IEnumerable<string> SplitAddressList(string list) {
+			IList<string> parts = new List<string>();
+			StringBuilder builder = new StringBuilder();
+			bool inQuotes = false;
+			char last = '.';
+			for (int i = 0; i < list.Length; i++) {
+				if (list[i] == '"' && last != '\\')
+					inQuotes = !inQuotes;
+				if (list[i] == ',' && !inQuotes) {
+					parts.Add(builder.ToString().Trim());
+					builder.Length = 0;
+				} else {
+					builder.Append(list[i]);
+				}
+				if (i == list.Length - 1)
+					parts.Add(builder.ToString().Trim());
+			}
+			return parts;
 		}
 
 		/// <summary>

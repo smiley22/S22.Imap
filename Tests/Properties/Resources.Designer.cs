@@ -258,6 +258,48 @@ namespace S22.Imap.Test.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Return-Path: &lt;foo@example.org&gt;
+        ///Delivered-To: bar@example.org
+        ///Received: (qmail 2543 invoked from network); 4 Sep 1999 09:27:32 -0000
+        ///Received: from deathstar.example.org (HELO deathstar.example.org) (192.168.2.2)
+        ///  by tie-fighter.example.org with SMTP; 4 Sep 1999 09:27:31 -0000
+        ///MIME-Version: 1.0
+        ///Subject: RFC 2231
+        ///From: foo &lt;foo@example.org&gt;
+        ///To: bar &lt;bar@example.org&gt;
+        ///X-Mailer: tie-bomber
+        ///Date: Sat, 04 Sep 1999 18:26:50 +0900
+        ///Message-ID: &lt;19990904092850.5963.foo@example.org&gt;
+        ///Content-Type: multipart/mixed; boun [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string MailWithRfc2231Headers {
+            get {
+                return ResourceManager.GetString("MailWithRfc2231Headers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Return-Path: &lt;foo@example.org&gt;
+        ///Delivered-To: bar@example.org
+        ///Received: (qmail 2543 invoked from network); 4 Sep 1999 09:27:32 -0000
+        ///Received: from deathstar.example.org (HELO deathstar.example.org) (192.168.2.2)
+        ///  by tie-fighter.example.org with SMTP; 4 Sep 1999 09:27:31 -0000
+        ///MIME-Version: 1.0
+        ///Subject: RFC 2231
+        ///From: foo &lt;foo@example.org&gt;
+        ///To: bar &lt;bar@example.org&gt;
+        ///X-Mailer: tie-bomber
+        ///Date: Sat, 04 Sep 1999 18:26:50 +0900
+        ///Message-ID: &lt;19990904092850.5963.foo@example.org&gt;
+        ///Content-Type: multipart/mixed; boun [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string MailWithRfc2231Headers2 {
+            get {
+                return ResourceManager.GetString("MailWithRfc2231Headers2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &gt;From msu.ru!pooh Wed Nov 29 16:17:10 2000 remote from botik
         ///Received: from thicket.nmd.msu.ru([193.232.112.60])
         ///	by pier.botik.ru (Smail-3.2.0.98/botik-0.15 1999-Sep-9 #28) with smtp

@@ -116,16 +116,28 @@ namespace S22.Imap {
 		/// be "text/html").</remarks>
 		static NameValueCollection ParseMIMEField(string field) {
 			NameValueCollection coll = new NameValueCollection();
+			var fixup = new HashSet<string>();
 			try {
+				// This accounts for MIME Parameter Value Extensions (RFC2231).
 				MatchCollection matches = Regex.Matches(field,
-					"([\\w\\-]+)\\s*=\\s*([^;]+)");
-				foreach (Match m in matches)
-					coll.Add(m.Groups[1].Value, m.Groups[2].Value.Trim('"'));
+					@"([\w\-]+)(?:\*\d{1,3})?(\*?)?\s*=\s*([^;]+)");
+				foreach (Match m in matches) {
+					string pname = m.Groups[1].Value.Trim(), pval = m.Groups[3].Value.Trim('"');
+					coll[pname] = coll[pname] + pval;
+					if (m.Groups[2].Value == "*")
+						fixup.Add(pname);
+				}
+				foreach (var pname in fixup) {
+					try {
+						coll[pname] = Util.Rfc2231Decode(coll[pname]);
+					} catch (FormatException) {
+						// If decoding fails, we should at least return the un-altered value.
+					}
+				}
 				Match mvalue = Regex.Match(field, @"^\s*([^;]+)");
 				coll.Add("value", mvalue.Success ? mvalue.Groups[1].Value.Trim() : "");
 			} catch {
-				// We don't want this to blow up on the user with weird mails so
-				// just return an empty collection.
+				// We don't want this to blow up on the user with weird mails.
 				coll.Add("value", String.Empty);
 			}
 			return coll;

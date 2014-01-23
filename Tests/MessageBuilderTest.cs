@@ -155,6 +155,25 @@ namespace S22.Imap.Test {
 		}
 
 		/// <summary>
+		/// Ensures RFC2231-encoded attachment names are properly decoded.
+		/// </summary>
+		[TestMethod]
+		[TestCategory("BuildMessageFromMIME822")]
+		public void MessageWithRfc2231Headers() {
+			MailMessage m = MessageBuilder.FromMIME822(Properties.Resources.MailWithRfc2231Headers);
+			Assert.AreEqual<int>(4, m.Attachments.Count);
+			Assert.AreEqual<string>(m.Attachments[0].Name, "hogohoge0.jpeg");
+			Assert.AreEqual<string>(m.Attachments[1].Name, "hogohoge1.jpeg");
+			Assert.AreEqual<string>(m.Attachments[2].Name, "ほごほげ2.jpeg");
+			Assert.AreEqual<string>(m.Attachments[3].Name, "ほごほげ3.jpeg");
+
+			m = MessageBuilder.FromMIME822(Properties.Resources.MailWithRfc2231Headers2);
+			Assert.AreEqual<int>(1, m.Attachments.Count);
+			Assert.AreEqual<string>(m.Attachments[0].Name,
+				"0305 - MULTILINGUES - Solicitação de orçamento (Alemão Português).doc");
+		}
+
+		/// <summary>
 		/// Ensures address-lists with multiple addresses are properly parsed.
 		/// </summary>
 		[TestMethod]

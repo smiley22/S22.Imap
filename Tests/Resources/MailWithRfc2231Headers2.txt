@@ -1,0 +1,43 @@
+Return-Path: <foo@example.org>
+Delivered-To: bar@example.org
+Received: (qmail 2543 invoked from network); 4 Sep 1999 09:27:32 -0000
+Received: from deathstar.example.org (HELO deathstar.example.org) (192.168.2.2)
+  by tie-fighter.example.org with SMTP; 4 Sep 1999 09:27:31 -0000
+MIME-Version: 1.0
+Subject: RFC 2231
+From: foo <foo@example.org>
+To: bar <bar@example.org>
+X-Mailer: tie-bomber
+Date: Sat, 04 Sep 1999 18:26:50 +0900
+Message-ID: <19990904092850.5963.foo@example.org>
+Content-Type: multipart/mixed; boundary="boundarystring"
+
+This is a multi-part message in MIME format.
+
+--boundarystring
+Content-Type: text/plain; charset=us-ascii
+
+RFC 2231
+
+--boundarystring
+Content-Type: application/msword;
+	name*0*=ISO-8859-1''0305%20-%20MULTILINGUES%20-%20Solicita%E7%E3o%20de%20;
+	name*1*=or%E7amento%20%28Alem%E3o%20Portugu%EAs%29.doc
+Content-Disposition: attachment;
+	filename*0*=ISO-8859-1''0305%20-%20MULTILINGUES%20-%20Solicita%E7%E3o%20d;
+	filename*1*=e%20or%E7amento%20%28Alem%E3o%20Portugu%EAs%29.doc
+Content-Transfer-Encoding: base64
+
+/9j/4AAQSkZJRgABAQEOxA7EAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8l
+JCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/wAALCAAgACABAREA/8QAGAAA
+AwEBAAAAAAAAAAAAAAAABQYHAAT/xAAnEAACAQMDBAIDAQEAAAAAAAABAgMEBREABiEHEiIx
+E0EkYYFRUv/aAAgBAQAAPwCza2hdHuawXCqSlor5bqqokz2RQ1cbu2Bk4AOTwCf5opramvWS
+trZ6KzbVouxGv1WImkc+ICsmFPBOCzqcjkdmOc64959I9uUOyayps9M8FdQQfP8APJUO3yqg
+y/cORkqCfEDyx6GdPOyb224tm2u6yM7SzQBZmdQpaRSUc4HABZSR+iOB60d1Murf4V82be6j
+woKC5fkTe+zLRsPEcnxjc8A+v2NNu/ayCh2FfJqmTsRqGWIHBPk6lFHH+swH90P6TwywdNLO
+k0TxsVlcK6kEq0rsp5+iCCD9gjThoRubbVv3ZZZLTcQ4idlcSR9vfGwOcqWBwcZGceiR96Q0
+6L1VTHT0d43rca62QY7aQIVC4Uqvb3OyrjP/AD6yOM6p8MMVNBHBBEkUUShEjRQqooGAAB6A
+H1r/2Q==
+
+--boundarystring--
+

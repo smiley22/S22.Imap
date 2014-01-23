@@ -1,0 +1,88 @@
+Return-Path: <foo@example.org>
+Delivered-To: bar@example.org
+Received: (qmail 2543 invoked from network); 4 Sep 1999 09:27:32 -0000
+Received: from deathstar.example.org (HELO deathstar.example.org) (192.168.2.2)
+  by tie-fighter.example.org with SMTP; 4 Sep 1999 09:27:31 -0000
+MIME-Version: 1.0
+Subject: RFC 2231
+From: foo <foo@example.org>
+To: bar <bar@example.org>
+X-Mailer: tie-bomber
+Date: Sat, 04 Sep 1999 18:26:50 +0900
+Message-ID: <19990904092850.5963.foo@example.org>
+Content-Type: multipart/mixed; boundary="boundarystring"
+
+This is a multi-part message in MIME format.
+
+--boundarystring
+Content-Type: text/plain; charset=us-ascii
+
+RFC 2231
+
+--boundarystring
+Content-Transfer-Encoding: Base64
+Content-Type: image/jpeg
+Content-Disposition: attachment;
+ filename=hogohoge0.jpeg
+
+/9j/4AAQSkZJRgABAQEOxA7EAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8l
+JCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/wAALCAAgACABAREA/8QAGAAA
+AwEBAAAAAAAAAAAAAAAABQYHAAT/xAAnEAACAQMDBAIDAQEAAAAAAAABAgMEBREABiEHEiIx
+E0EkYYFRUv/aAAgBAQAAPwCza2hdHuawXCqSlor5bqqokz2RQ1cbu2Bk4AOTwCf5opramvWS
+trZ6KzbVouxGv1WImkc+ICsmFPBOCzqcjkdmOc64959I9uUOyayps9M8FdQQfP8APJUO3yqg
+y/cORkqCfEDyx6GdPOyb224tm2u6yM7SzQBZmdQpaRSUc4HABZSR+iOB60d1Murf4V82be6j
+woKC5fkTe+zLRsPEcnxjc8A+v2NNu/ayCh2FfJqmTsRqGWIHBPk6lFHH+swH90P6TwywdNLO
+k0TxsVlcK6kEq0rsp5+iCCD9gjThoRubbVv3ZZZLTcQ4idlcSR9vfGwOcqWBwcZGceiR96Q0
+6L1VTHT0d43rca62QY7aQIVC4Uqvb3OyrjP/AD6yOM6p8MMVNBHBBEkUUShEjRQqooGAAB6A
+H1r/2Q==
+
+--boundarystring
+Content-Transfer-Encoding: Base64
+Content-Type: image/jpeg
+Content-Disposition: attachment;
+ filename*0=hogohoge1;
+ filename*1=.jpeg
+
+/9j/4AAQSkZJRgABAQEOxA7EAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8l
+JCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/wAALCAAgACABAREA/8QAGAAB
+AQEBAQAAAAAAAAAAAAAAAAcDBgX/xAAnEAABAwMEAQMFAAAAAAAAAAABAgMEABESBQYhMRQH
+EzM4YWJ1sv/aAAgBAQAAPwCzUrB2bFYlMRXpLLciTl7LS3AFu4i6sR2bDk26releXuOdqWna
+FJk6RA8+eMUR45NgpSlBIJ/EXyPI4B5HYlsSDrkP140Re4Z7MudKjOvERwoNMJwfSltF+cQE
+36HKje5uTZqUqZa59Qu3P1q/5kVTaUrmJ2zvN9Q9N3b5+Hgxix4vs3zuHBfPLj5OrHr7109f
+/9k=
+
+--boundarystring
+Content-Transfer-Encoding: Base64
+Content-Type: image/jpeg
+Content-Disposition: attachment;
+ filename*=iso-2022-jp'ja'%1B%24B%24%5B%244%24%5B%242%1B%28B2.jpeg
+
+/9j/4AAQSkZJRgABAQEOxA7EAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8l
+JCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/wAALCAAgACABAREA/8QAGQAA
+AgMBAAAAAAAAAAAAAAAAAAYDBQcE/8QAKhAAAQMDAwEHBQAAAAAAAAAAAQIEEQMFBgASIRUH
+EyIjQVKBMTJRYWL/2gAIAQEAAD8A2bVXfMks2NtQ5vFxotEK+wLMrXyAdqRKlRImAYnnUNhy
+/H8n3izXSi6XTndSgoqACJOxQCtviAmIkxOrrRpSeYC1uucryO81qNxbpbCg2YVmwKKP7JmF
+8lZhSeN/8jSlleOW219qGIjGmlFk+cOVVXdJrU7vyUbJOyQEpKE1RwBuhQ5Ota0aWMvy/oPc
+Wy2Nuo39/wCFkxT8+Yv2oEH1EweQApSTEMQ6D39zubnqN/f+J6+V8eWj2oED0EwOAAlKWfRp
+IybsqsuWXqpdrjcLoKq0pQKdOsjZTSBEJCkGBMmJ+pJ9dcds7FcbtV1aXGg+uiqrSuiuhK6t
+MpKkqChMUxxI/OtD1//Z
+
+--boundarystring
+Content-Transfer-Encoding: Base64
+Content-Type: image/jpeg
+Content-Disposition: attachment;
+ filename*0*=iso-2022-jp'ja'%1B%24B%24%5B%244%24%5B%242%1B%28B;
+ filename*1=3.jpeg
+
+/9j/4AAQSkZJRgABAQEOxA7EAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8l
+JCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/wAALCAAgACABAREA/8QAGgAA
+AgIDAAAAAAAAAAAAAAAAAAcFBgIDBP/EACUQAAEEAQQBBAMAAAAAAAAAAAECAwQRBQAGEiEH
+EzEyQRVhgf/aAAgBAQAAPwBza0TJsXHxVypslmLHbrm684EITZoWT0OyB/dYQMnj8qwp/HTo
+01pKuBcjupcSFUDVpJ7ojr966tGqZnPHLG6N1jK57JPTccy1wjYsJLaGiQASVpVZsgn2B+Iu
+k0afl8Li9n+TtssbNcWxJkv+hkYbD5eKWuSFErSSVAFClHvqkBQoi9OPRqCk53bmUy0zZ8iY
+hc1xhSH4igtBWhSASAqgCeKrpJurP0aXm/MTifGDeMz20x+PyJklpTBkLcRJZKSVhSFKJKQQ
+gdEVyH3xIcGjVS3fsFjc85jKxcpMxGXjNekzMjLPSbPRAIPspY6I+Rux1qJw3iZMbPR81uDc
+c7OyoakKjetaQgpJI5EqUSAoggAgWDd3WmHr/9k=
+
+--boundarystring--
+

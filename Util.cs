@@ -279,6 +279,39 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
+		/// Decodes the specified MIME parameter value.
+		/// </summary>
+		/// <param name="value">The MIME parameter value to decode.</param>
+		/// <returns>The decoded MIME parameter value.</returns>
+		/// <exception cref="FormatException">The specified value is not a valid Rfc2231-encoded
+		/// string.</exception>
+		/// <remarks>Refer to RFC2231 for the details of the encoding mechanism.</remarks>
+		internal static string Rfc2231Decode(string value) {
+			if (String.IsNullOrEmpty(value))
+				return String.Empty;
+			Match m = Regex.Match(value, @"^([\w\-]+)(?:\'[\w\-]*\')?(.*)");
+			if (!m.Success)
+				return value;
+			string charset = m.Groups[1].Value, text = m.Groups[2].Value;
+			try {
+				Encoding enc = Encoding.GetEncoding(charset);
+				using (MemoryStream ms = new MemoryStream()) {
+					for (int i = 0; i < text.Length; i++) {
+						if (text[i] == '%') {
+							string hex = text.Substring(i + 1, 2);
+							ms.WriteByte(Convert.ToByte(hex, 16));
+							i = i + 2;
+						} else
+							ms.WriteByte(Convert.ToByte(text[i]));
+					}
+					return enc.GetString(ms.ToArray());
+				}
+			} catch {
+				throw new FormatException("The value is not a valid RFC2231-encoded string.");
+			}
+		}
+
+		/// <summary>
 		/// Takes a Base64-encoded string and decodes it.
 		/// </summary>
 		/// <param name="value">The Base64-encoded string to decode.</param>

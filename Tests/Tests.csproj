@@ -102,6 +102,12 @@
   <ItemGroup>
     <None Include="Resources\MailWithEncodedAttachmentName.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MailWithRfc2231Headers.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MailWithRfc2231Headers2.txt" />
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

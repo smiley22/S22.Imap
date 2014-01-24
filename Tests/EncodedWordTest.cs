@@ -26,6 +26,7 @@ namespace S22.Imap.Test {
 					"Information för dig" },
 				{ "faktura =?ISO-8859-1?Q?F14072-=F6stersund=2Epdf?=",
 					"faktura F14072-östersund.pdf" },
+				{ "=?US-ASCII*EN?Q?Keith_Moore?=", "Keith Moore" }
 			};
 			foreach (KeyValuePair<string, string> pair in dict)
 				Assert.AreEqual<string>(pair.Value, Util.DecodeWords(pair.Key));

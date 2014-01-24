@@ -190,8 +190,13 @@ namespace S22.Imap {
 				decoded.Append(FillData);
 			}
 
+		/// <summary>
+		/// The regular expression for matching encoded-words. This also accounts for the extension for
+		/// including language information (as defined in RFC2231).
+		/// </summary>
 		static readonly Regex rxDecodeWord =
-			new Regex(@"=\?([A-Za-z0-9\-_]+)\?([BbQq])\?([^\?]+)\?=", RegexOptions.Compiled);
+			new Regex(@"=\?([A-Za-z0-9\-_]+)(?:\*[^\?]+)?\?([BbQq])\?([^\?]+)\?=", RegexOptions.Compiled);
+
 		/// <summary>
 		/// Decodes a MIME 'encoded-word' string.
 		/// </summary>

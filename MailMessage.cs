@@ -12,9 +12,30 @@ namespace S22.Imap {
 	/// Adds extension methods to the MailMessage class of the .NET Framework.
 	/// </summary>
 	/// <remarks>
-	/// These are only used internally and are not visible outside of the S22.Imap assembly.
+	/// Most of the methods are only used internally and are not visible outside of the
+	/// S22.Imap assembly.
 	/// </remarks>
-	internal static class MailMessageExtension {
+	public static class MailMessageExtension {
+		/// <summary>
+		/// Returns the date and time the mail message was composed.
+		/// </summary>
+		/// <param name="message">The MailMessage instance to return the date and time for.</param>
+		/// <returns>The date and time the mail message was composed, or null if the mail message
+		/// does not contain any date information.</returns>
+		public static DateTime? Date(this MailMessage message) {
+			string date = message.Headers["Date"];
+			if (String.IsNullOrEmpty(date))
+				return null;
+			// Dates are sometimes suffixed with comments indicating the timezone, for example:
+			// Tue, 29 Mar 2005 15:11:45 -0800 (PST).
+			date = Regex.Replace(date, @"\([^\)]+\)", String.Empty);
+			try {
+				return DateTime.Parse(date);
+			} catch (FormatException) {
+				return null;
+			}
+		}
+
 		/// <summary>
 		/// Constructs a textual representation of a mail message from the specified MailMessage
 		/// instance compliant with the RFC822 and MIME standards.

@@ -84,6 +84,8 @@ namespace S22.Imap {
 			StringReader reader = new StringReader(header);
 			NameValueCollection coll = new NameValueCollection();
 			string line, fieldname = null, fieldvalue = null;
+			var exclude = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase) {
+				"Subject", "Comments", "Content-disposition", "User-Agent" };
 			while ((line = reader.ReadLine()) != null) {
 				if (line == String.Empty)
 					continue;
@@ -99,9 +101,44 @@ namespace S22.Imap {
 					continue;
 				fieldname = line.Substring(0, delimiter).Trim();
 				fieldvalue = line.Substring(delimiter + 1).Trim();
+				// Strip comments from RFC822 and MIME fields unless they are unstructured fields.
+				if (!exclude.Contains(fieldname))
+					fieldvalue = StripComments(fieldvalue);
 				coll.Add(fieldname, fieldvalue);
 			}
 			return coll;
+		}
+
+		/// <summary>
+		/// Strips RFC822/MIME comments from the specified string.
+		/// </summary>
+		/// <param name="s">The string to strip comments from.</param>
+		/// <returns>A new string stripped of any comments.</returns>
+		internal static string StripComments(string s) {
+			if (String.IsNullOrEmpty(s))
+				return s;
+			bool inQuotes = false, escape = false;
+			char last = ' ';
+			int depth = 0;
+			StringBuilder builder = new StringBuilder();
+			for (int i = 0; i < s.Length; i++) {
+				char c = s[i];
+				if (c == '\\' && !escape) {
+					escape = true;
+					continue;
+				}
+				if (c == '"' && !escape)
+					inQuotes = !inQuotes;
+				last = c;
+				if (!inQuotes && !escape && c == '(')
+					depth++;
+				else if (!inQuotes && !escape && c == ')' && depth > 0)
+					depth--;
+				else if (depth <= 0)
+					builder.Append(c);
+				escape = false;
+			}
+			return builder.ToString().Trim();
 		}
 
 		/// <summary>

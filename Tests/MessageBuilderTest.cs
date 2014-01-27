@@ -174,6 +174,28 @@ namespace S22.Imap.Test {
 		}
 
 		/// <summary>
+		/// Ensures RFC822/MIME comments are processed properly.
+		/// </summary>
+		[TestMethod]
+		[TestCategory("BuildMessageFromMIME822")]
+		public void MessageWithMIMEComments() {
+			MailMessage m = MessageBuilder.FromMIME822(Properties.Resources.MailWithMIMEComments);
+
+			Assert.AreEqual<string>("1.0", m.Headers["Mime-version"]);
+			Assert.AreEqual<bool>(true, m.IsBodyHtml);
+			Assert.AreEqual<string>("utf-8", m.BodyEncoding.WebName);
+			Assert.AreEqual<string>("HUB02.mailcluster.uni-bonn.de",
+				m.Headers["X-MS-Exchange-Organization-AuthSource"]);
+			// Parentheses in the subject should be left alone.
+			Assert.AreEqual<string>("Business Development Meeting (Important)", m.Subject);
+			// Parentheses in double-quoted strings should also be left alone.
+			Assert.AreEqual<string>("Taylor (John) Evans", m.From.DisplayName);
+			Assert.AreEqual<string>("example_from@dc.edu", m.From.Address);
+			Assert.AreEqual<string>("Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.0.1) " +
+				"Gecko/20020823 Netscape/7.0", m.Headers["User-Agent"]);
+		}
+
+		/// <summary>
 		/// Ensures address-lists with multiple addresses are properly parsed.
 		/// </summary>
 		[TestMethod]

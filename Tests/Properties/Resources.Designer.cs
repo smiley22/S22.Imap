@@ -194,6 +194,25 @@ namespace S22.Imap.Test.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Return-Path: &lt;example_from@dc.edu&gt;
+        ///X-SpamCatcher-Score: 1 [X]
+        ///Received: from [136.167.40.119] (HELO dc.edu)
+        ///	by fe3.dc.edu (CommuniGate Pro SMTP 4.1.8)
+        ///	with ESMTP-TLS id 61258719 for example_to@mail.dc.edu; Mon, 23 Aug 2004 11:40:10 -0400
+        ///Message-ID: &lt;4129F3CA.2020509@dc.edu&gt;
+        ///Date: Mon, 23 Aug 2005 11:40:36 -0400
+        ///From: &quot;Taylor (John) Evans&quot; &lt;example_from@dc.edu&gt;
+        ///User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.0.1) Gecko/20020823 Netscape/7.0
+        ///X-Accept-Language: en-us, en
+        ///MIME-Vers [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string MailWithMIMEComments {
+            get {
+                return ResourceManager.GetString("MailWithMIMEComments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to From: &quot;xxxxxxx&quot; &lt;xxxxxxx@ms19.hinet.net&gt;
         ///To: &quot;=?big5?B?pUS3UqTAqMm69A==?=&quot; &lt;xxxxxxx@ms19.hinet.net&gt;
         ///Subject: =?big5?B?tbmvuKr4qrqkQKvKq0g=?=

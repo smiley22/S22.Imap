@@ -47,7 +47,8 @@ further details on using the classes and methods exposed by the S22.Imap namespa
 + Inherently thread-safe
 + Well documented with lots of example code
 + Robust MIME parser, tested with 100.000+ mails
-+ Supports various SASL authentication mechanisms (SCRAM-SHA-1, OAUTH2, NTLM among [others](https://github.com/smiley22/S22.Imap/blob/master/AuthMethod.cs))
++ Supports various authentication mechanisms (SCRAM-SHA-1, OAUTH2, NTLM among [others](https://github.com/smiley22/S22.Imap/blob/master/AuthMethod.cs))
++ Integrates well with existing System.Net.Mail infrastructure
 + Still supports .NET 3.5
 + Free to use in commercial and personal projects ([MIT license](https://github.com/smiley22/S22.Imap/blob/master/License.md))
 

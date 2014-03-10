@@ -516,7 +516,7 @@ namespace S22.Imap {
 						if (b == CarriageReturn)
 							continue;
 						if (b == Newline) {
-							string s = Encoding.ASCII.GetString(mem.ToArray());
+							string s = Encoding.UTF8.GetString(mem.ToArray());
 							if (resolveLiterals) {
 								s = Regex.Replace(s, @"{(\d+)}$", m => {
 									return "\"" + GetData(Convert.ToInt32(m.Groups[1].Value)) +
@@ -551,7 +551,7 @@ namespace S22.Imap {
 						byteCount = byteCount - read;
 					}
 				}
-				string s = Encoding.ASCII.GetString(mem.ToArray());
+				string s = Encoding.UTF8.GetString(mem.ToArray());
 				ts.TraceInformation("S -> " + s);
 				return s;
 			}

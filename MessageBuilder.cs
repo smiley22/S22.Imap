@@ -45,7 +45,7 @@ namespace S22.Imap {
 					m.Subject = header["Subject"];
 				}
 			} else {
-				m.SubjectEncoding = Encoding.ASCII;
+				m.SubjectEncoding = Encoding.UTF8;
 				m.Subject = header["Subject"];
 			}
 			m.Priority = ParsePriority(header["Priority"]);
@@ -328,7 +328,7 @@ namespace S22.Imap {
 		/// <param name="content">The content of the body part.</param>
 		internal static void AddBodypart(this MailMessage message, Bodypart part, string content) {
 			Encoding encoding = part.Parameters.ContainsKey("Charset") ?
-				Util.GetEncoding(part.Parameters["Charset"]) : Encoding.ASCII;
+				Util.GetEncoding(part.Parameters["Charset"]) : Encoding.UTF8;
 			// Decode the content if it is encoded.
 			byte[] bytes;
 			try {
@@ -340,12 +340,12 @@ namespace S22.Imap {
 						bytes = Util.Base64Decode(content);
 						break;
 					default:
-						bytes = Encoding.ASCII.GetBytes(content);
+						bytes = Encoding.UTF8.GetBytes(content);
 						break;
 				}
 			} catch {
 				// If it's not a valid Base64 or quoted-printable encoded string just leave the data as is.
-				bytes = Encoding.ASCII.GetBytes(content);
+				bytes = Encoding.UTF8.GetBytes(content);
 			}
 
 			// If the part has a name it most likely is an attachment and it should go into the

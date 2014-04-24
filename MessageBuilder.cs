@@ -370,8 +370,7 @@ namespace S22.Imap {
 			// Many attachments are missing the disposition-type. If it's not defined as alternative
 			// and it has a name attribute, assume it is Attachment rather than an AlternateView.
 			if (part.Disposition.Type == ContentDispositionType.Attachment ||
-				(part.Disposition.Type == ContentDispositionType.Unknown &&
-				preferAlternative == false && hasName))
+				(preferAlternative == false && hasName))
 				message.Attachments.Add(CreateAttachment(part, bytes));
 			else
 				message.AlternateViews.Add(CreateAlternateView(part, bytes));

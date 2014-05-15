@@ -360,7 +360,7 @@ namespace S22.Imap {
 				using (NegotiateStream ns = new NegotiateStream(fs, true)) {
 					try {
 						ns.AuthenticateAsClient(
-							new NetworkCredential(username, password),
+							useNtlm && username == String.Empty ? CredentialCache.DefaultNetworkCredentials : new NetworkCredential(username, password), 
 							null,
 							String.Empty,
 							useNtlm ? ProtectionLevel.None : ProtectionLevel.EncryptAndSign,

@@ -356,7 +356,7 @@ namespace S22.Imap {
 			// (i.e. spam) mails like to omit content-types so we don't check for that here and just
 			// assume it's text.
 			if (String.IsNullOrEmpty(message.Body) &&
-				part.Disposition.Type != ContentDispositionType.Attachment) {
+				part.Type == S22.Imap.ContentType.Text) {
 				message.Body = encoding.GetString(bytes);
 				message.BodyEncoding = encoding;
 				message.IsBodyHtml = part.Subtype.ToLower() == "html";

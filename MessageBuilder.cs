@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net.Mail;
+using System.Net.Mime;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -340,7 +341,7 @@ namespace S22.Imap {
 						bytes = Util.Base64Decode(content);
 						break;
 					default:
-						bytes = Encoding.ASCII.GetBytes(content);
+						bytes = encoding.GetBytes(content);
 						break;
 				}
 			} catch {
@@ -374,7 +375,7 @@ namespace S22.Imap {
 				preferAlternative == false && hasName))
 				message.Attachments.Add(CreateAttachment(part, bytes));
 			else
-				message.AlternateViews.Add(CreateAlternateView(part, bytes));
+				message.AlternateViews.Add(CreateAlternateView(part, bytes, encoding));
 		}
 
 		/// <summary>
@@ -416,7 +417,7 @@ namespace S22.Imap {
 		/// <param name="part">The MIME body part to create the alternate view from.</param>
 		/// <param name="bytes">An array of bytes composing the content of the alternate view.</param>
 		/// <returns>An initialized instance of the AlternateView class.</returns>
-		static AlternateView CreateAlternateView(Bodypart part, byte[] bytes) {
+		static AlternateView CreateAlternateView(Bodypart part, byte[] bytes, Encoding altViewContentEncoding) {
 			MemoryStream stream = new MemoryStream(bytes);
 			System.Net.Mime.ContentType contentType;
 			try {
@@ -425,6 +426,7 @@ namespace S22.Imap {
 			} catch {
 				contentType = new System.Net.Mime.ContentType();
 			}
+			contentType.CharSet = altViewContentEncoding.BodyName;
 			AlternateView view = new AlternateView(stream, contentType);
 			try {
 				view.ContentId = ParseMessageId(part.Id);

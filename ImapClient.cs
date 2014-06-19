@@ -540,7 +540,7 @@ namespace S22.Imap {
 		/// <returns>The read bytes as an ASCII-encoded string.</returns>
 		/// <exception cref="IOException">The underlying socket is closed or there was a failure
 		/// reading from the network.</exception>
-		string GetData(int byteCount) {
+		string GetData(int byteCount, Encoding encoder = null) {
 			byte[] buffer = new byte[4096];
 			using (var mem = new MemoryStream()) {
 				lock (readLock) {
@@ -551,7 +551,9 @@ namespace S22.Imap {
 						byteCount = byteCount - read;
 					}
 				}
-				string s = Encoding.ASCII.GetString(mem.ToArray());
+				if (encoder == null)
+					encoder = Encoding.ASCII;
+				string s = encoder.GetString(mem.ToArray());
 				ts.TraceInformation("S -> " + s);
 				return s;
 			}
@@ -1148,7 +1150,7 @@ namespace S22.Imap {
 					foreach (Bodypart part in parts) {
 						// Let the delegate decide whether the part should be fetched or not.
 						if (callback(part) == true) {
-							string content = GetBodypart(uid, part.PartNumber, seen, mailbox);
+							string content = GetBodypart(uid, part, seen, mailbox);
 							message.AddBodypart(part, content);
 						}
 					}
@@ -1458,7 +1460,7 @@ namespace S22.Imap {
 		/// network.</exception>
 		/// <exception cref="NotAuthenticatedException">The method was called in non-authenticated
 		/// state, i.e. before logging in.</exception>
-		string GetBodypart(uint uid, string partNumber, bool seen = true,
+		string GetBodypart(uint uid, Bodypart part, bool seen = true,
 			string mailbox = null) {
 			AssertValid();
 			lock (sequenceLock) {
@@ -1467,12 +1469,13 @@ namespace S22.Imap {
 				StringBuilder builder = new StringBuilder();
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "UID FETCH " + uid +
-					" (BODY" + (seen ? null : ".PEEK") + "[" + partNumber + "])", false);
+					" (BODY" + (seen ? null : ".PEEK") + "[" + part.PartNumber + "])", false);
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response, @"\* \d+ FETCH .* {(\d+)}");
 					if (m.Success) {
 						int size = Convert.ToInt32(m.Groups[1].Value);
-						builder.Append(GetData(size));
+						var bodyEncoder = part.Parameters.ContainsKey("Charset") ? Util.GetEncoding(part.Parameters["Charset"]) : Encoding.ASCII;
+						builder.Append(GetData(size, bodyEncoder));
 						response = GetResponse();
 						if (!Regex.IsMatch(response, @"\)\s*$"))
 							throw new BadServerResponseException(response);

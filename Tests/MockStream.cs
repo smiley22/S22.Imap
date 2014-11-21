@@ -12,7 +12,7 @@ namespace S22.Imap.Test {
 		/// </summary>
 		/// <param name="mockFile">A string to initialize the underlying
 		/// MemoryStream with.</param>
-		public MockStream(string mockText): base(Encoding.ASCII.GetBytes(mockText)) {
+		public MockStream(string mockText): base(ImapClient.StreamEncoding.GetBytes(mockText)) {
 		}
 
 		/// <summary>

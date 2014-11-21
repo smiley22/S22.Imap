@@ -340,12 +340,12 @@ namespace S22.Imap {
 						bytes = Util.Base64Decode(content);
 						break;
 					default:
-						bytes = Encoding.ASCII.GetBytes(content);
+						bytes = ImapClient.StreamEncoding.GetBytes(content);
 						break;
 				}
 			} catch {
 				// If it's not a valid Base64 or quoted-printable encoded string just leave the data as is.
-				bytes = Encoding.ASCII.GetBytes(content);
+				bytes = ImapClient.StreamEncoding.GetBytes(content);
 			}
 
 			// If the part has a name it most likely is an attachment and it should go into the

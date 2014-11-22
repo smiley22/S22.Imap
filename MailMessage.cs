@@ -42,10 +42,11 @@ namespace S22.Imap {
 		/// </summary>
 		/// <param name="message">The MailMessage instance to construct the textual representation
 		/// from.</param>
+        /// <param name="breakBody">Signal whether the message body should be broken into 76 char lines.</param>
 		/// <returns>An RFC822/MIME-compliant string representing the specified mail message.</returns>
 		/// <exception cref="InvalidOperationException">The From property is null or has not been
 		/// properly initialized.</exception>
-		internal static string ToMIME822(this MailMessage message) {
+		internal static string ToMIME822(this MailMessage message, bool breakBody = true) {
 			NameValueCollection header = BuildHeader(message);
 			StringBuilder builder = new StringBuilder();
 
@@ -63,7 +64,7 @@ namespace S22.Imap {
 			}
 			// The mail body is separated by an empty line from the header.
 			builder.AppendLine();
-			builder.Append(BuildBody(message, header));
+			builder.Append(BuildBody(message, header, breakBody));
 			builder.AppendLine();
 
 			return builder.ToString();
@@ -208,11 +209,13 @@ namespace S22.Imap {
 		/// <param name="m">The MailMessage instance to build the mail body from.</param>
 		/// <param name="header">The RFC822/MIME mail header to use for constructing the mail
 		/// body.</param>
+        /// <param name="breakBody">Toggles the breaking of the message body lines.</param>
 		/// <returns>An RFC822/MIME-compliant mail body as a string.</returns>
 		/// <remarks>According to RFC2822 each line of a mail message should at max be 78 characters in
 		/// length excluding carriage return and newline characters. This method accounts for that and
-		/// ensures line breaks are inserted to meet this requirement.</remarks>
-		static string BuildBody(MailMessage m, NameValueCollection header) {
+		/// ensures line breaks are inserted to meet this requirement. Use breakBody set to false to disable
+        /// line breaking in case original message formatting has to be preserved.</remarks>
+		static string BuildBody(MailMessage m, NameValueCollection header, bool breakBody = true) {
 			StringBuilder builder = new StringBuilder();
 			bool multipart = header["Content-Type"].Contains("boundary");
 			// Just a regular RFC822 mail w/o any MIME parts.
@@ -230,7 +233,7 @@ namespace S22.Imap {
 				builder.AppendLine("--" + boundary);
 				AddNestedMixed(builder, m);
 			} else {
-				AddBody(builder, m, header, true);
+				AddBody(builder, m, header, true, breakBody);
 				foreach (AlternateView v in m.AlternateViews) {
 					builder.AppendLine("--" + boundary);
 					AddAttachment(builder, v);
@@ -254,8 +257,10 @@ namespace S22.Imap {
 		/// <param name="header">The RFC822/MIME mail header to use for constructing the mail body.</param>
 		/// <param name="addHeaders">Set to true to append body headers before adding the actual body
 		/// part content.</param>
+        /// <param name="breakBody">Sets whether the message body should be broken up into 76 char lines.
+        /// Breaking up the text may badly mess up the original formating of the message body.</param>
 		static void AddBody(StringBuilder builder, MailMessage m,
-			NameValueCollection header, bool addHeaders = false) {
+			NameValueCollection header, bool addHeaders = false, bool breakBody = true) {
 			bool base64 = header["Content-Transfer-Encoding"] == "base64";
 			if (addHeaders) {
 				string contentType = m.IsBodyHtml ? "text/html" : "text/plain";
@@ -273,11 +278,19 @@ namespace S22.Imap {
 				byte[] bytes = m.BodyEncoding.GetBytes(m.Body);
 				body = Convert.ToBase64String(bytes);
 			}
-			StringReader reader = new StringReader(body);
-			char[] line = new char[76];
-			int read;
-			while ((read = reader.Read(line, 0, line.Length)) > 0)
-				builder.AppendLine(new string(line, 0, read));
+            if (breakBody)
+            {
+                StringReader reader = new StringReader(body);
+                char[] line = new char[76];
+                int read;
+                while ((read = reader.Read(line, 0, line.Length)) > 0)
+                    builder.AppendLine(new string(line, 0, read));
+            }
+            else
+            {
+                builder.Append(body);
+                builder.AppendLine();
+            }
 		}
 
 		/// <summary>

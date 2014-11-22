@@ -335,40 +335,85 @@
 			<example>
 				This example demonstrates how to store a mail message on an IMAP server.
 				<code>
-					ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
-					"My_Password", true, AuthMethod.Login);
-					
-					MailMessage message = CreateSimpleMailMessage();
-					uint uid = Client.StoreMessage(message);
-					
-					Console.WriteLine("The UID of the stored mail message is " + uid);
-					
-					Client.Dispose();
+          ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
+          "My_Password", AuthMethod.Login, true);
 
-					// ...........
+          MailMessage message = CreateSimpleMailMessage();
+          uint uid = Client.StoreMessage(message);
 
-					// This creates a simple mail message with a text/plain body and a PNG image
-					// as a file attachment.
-					// Consult the MSDN website for more details on the System.Net.Mail.Mailmessage class.
-					static MailMessage CreateSimpleMailMessage() {
-						MailMessage message = new MailMessage();
+          Console.WriteLine("The UID of the stored mail message is " + uid);
 
-						message.From = new MailAddress("someone@someplace.com");
-						message.To.Add("john.doe@someplace.com");
+          Client.Dispose();
 
-						message.Subject = "This is just a test!";
-						message.Body = "This is the text/plain body. An additional HTML body " +
-							"can optionally be attached as an alternate view";
+          // ...........
 
-						// Add the attachment.
-						Attachment attachment = new Attachment("some_image.png", "image/png");
-						attachment.Name = "my_attached_image.png";
-						message.Attachments.Add(attachment);
+          // This creates a simple mail message with a text/plain body and a PNG image
+          // as a file attachment.
+          // Consult the MSDN website for more details on the System.Net.Mail.Mailmessage class.
+          static MailMessage CreateSimpleMailMessage() {
+          MailMessage message = new MailMessage();
 
-						return message;
-					}
-				</code>
+          message.From = new MailAddress("someone@someplace.com");
+          message.To.Add("john.doe@someplace.com");
+
+          message.Subject = "This is just a test!";
+          message.Body = "This is the text/plain body. An additional HTML body " +
+          "can optionally be attached as an alternate view";
+
+          // Add the attachment.
+          Attachment attachment = new Attachment("some_image.png", "image/png");
+          attachment.Name = "my_attached_image.png";
+          message.Attachments.Add(attachment);
+
+          return message;
+          }
+        </code>
 			</example>
 		</ImapClient>
+    <ImapClient name="StoreMessage2">
+      <example>
+        This example demonstrates how to store a mail message on an IMAP server without forcing
+        the message body to be broken into 76 char lines as per RFC2822 in order to preserve message formatting.
+        <code>
+          ImapClient Client = new ImapClient("imap.gmail.com", 993, "My_UsernamMe",
+          "My_Password", AuthMethod.Login, true);
+
+          MailMessage message = CreateSimpleMailMessage();
+          uint uid = Client.StoreMessage(message, //message to store
+          false, //mark the message as unseen
+          null, //use default mailbox
+          false); //do not force breaking of the message body
+
+          Console.WriteLine("The UID of the stored mail message is " + uid);
+
+          Client.Dispose();
+
+          // ...........
+
+          // This creates a simple mail message with a text/plain body and a PNG image
+          // as a file attachment.
+          // Consult the MSDN website for more details on the System.Net.Mail.Mailmessage class.
+          static MailMessage CreateSimpleMailMessage() {
+          MailMessage message = new MailMessage();
+
+          message.From = new MailAddress("someone@someplace.com");
+          message.To.Add("john.doe@someplace.com");
+
+          message.Subject = "This is just a test!";
+          message.Body = "This is the text/plain body. An additional HTML body " +
+          "can optionally be attached as an alternate view. " +
+          "We also need to add a few more words to the message body in order to see " +
+          "whether they get broken by the StoreMessage procedure.";
+
+          // Add the attachment.
+          Attachment attachment = new Attachment("some_image.png", "image/png");
+          attachment.Name = "my_attached_image.png";
+          message.Attachments.Add(attachment);
+
+          return message;
+          }
+        </code>
+      </example>
+    </ImapClient>
 	</Imap>
 </S22>

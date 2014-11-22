@@ -1276,6 +1276,7 @@ namespace S22.Imap {
 		/// <param name="mailbox">The mailbox the message will be stored in. If this parameter is
 		/// omitted, the value of the DefaultMailbox property is used to determine the mailbox to store
 		/// the message in.</param>
+        /// <param name="breakBody">Signal whether the message body should be broken into 76 char lines.</param>
 		/// <returns>The unique identifier (UID) of the stored message.</returns>
 		/// <exception cref="ArgumentNullException">The message parameter is null.</exception>
 		/// <exception cref="BadServerResponseException">The mail message could not be stored. The
@@ -1291,10 +1292,10 @@ namespace S22.Imap {
 		/// the same UID.</remarks>
 		/// <seealso cref="StoreMessages"/>
 		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="StoreMessage"]/*'/>
-		public uint StoreMessage(MailMessage message, bool seen = false, string mailbox = null) {
+		public uint StoreMessage(MailMessage message, bool seen = false, string mailbox = null, bool breakBody = true) {
 			AssertValid();
 			message.ThrowIfNull("message");
-			string mime822 = message.ToMIME822();
+			string mime822 = message.ToMIME822(breakBody);
 			lock (sequenceLock) {
 				PauseIdling();
 				if (mailbox == null)
@@ -1327,6 +1328,7 @@ namespace S22.Imap {
 		/// <param name="mailbox">The mailbox the messages will be stored in. If this parameter is
 		/// omitted, the value of the DefaultMailbox property is used to determine the mailbox to store
 		/// the messages in.</param>
+        /// <param name="breakBody">Signal whether the message body should be broken into 76 char lines.</param>
 		/// <returns>An enumerable collection of unique identifiers (UID) representing the stored
 		/// messages on the server.</returns>
 		/// <exception cref="ArgumentNullException">The messages parameter is null.</exception>
@@ -1343,11 +1345,12 @@ namespace S22.Imap {
 		/// the same UID.</remarks>
 		/// <seealso cref="StoreMessage"/>
 		public IEnumerable<uint> StoreMessages(IEnumerable<MailMessage> messages, bool seen = false,
-			string mailbox = null) {
+            string mailbox = null, bool breakBody = true)
+        {
 			messages.ThrowIfNull("messages");
 			List<uint> list = new List<uint>();
 			foreach (MailMessage m in messages)
-				list.Add(StoreMessage(m, seen, mailbox));
+				list.Add(StoreMessage(m, seen, mailbox, breakBody));
 			return list;
 		}
 

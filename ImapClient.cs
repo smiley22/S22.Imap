@@ -1276,6 +1276,7 @@ namespace S22.Imap {
 		/// <param name="mailbox">The mailbox the message will be stored in. If this parameter is
 		/// omitted, the value of the DefaultMailbox property is used to determine the mailbox to store
 		/// the message in.</param>
+        /// <param name="breakBody">Signal whether the message body should be broken into 76 char lines.</param>
 		/// <returns>The unique identifier (UID) of the stored message.</returns>
 		/// <exception cref="ArgumentNullException">The message parameter is null.</exception>
 		/// <exception cref="BadServerResponseException">The mail message could not be stored. The
@@ -1291,10 +1292,10 @@ namespace S22.Imap {
 		/// the same UID.</remarks>
 		/// <seealso cref="StoreMessages"/>
 		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="StoreMessage"]/*'/>
-		public uint StoreMessage(MailMessage message, bool seen = false, string mailbox = null) {
+		public uint StoreMessage(MailMessage message, bool seen = false, string mailbox = null, bool breakBody = true) {
 			AssertValid();
 			message.ThrowIfNull("message");
-			string mime822 = message.ToMIME822();
+			string mime822 = message.ToMIME822(breakBody);
 			lock (sequenceLock) {
 				PauseIdling();
 				if (mailbox == null)

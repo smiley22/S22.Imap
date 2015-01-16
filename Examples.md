@@ -151,7 +151,7 @@
 					// If we're only interested in the subject line or envelope
 					// information, just downloading the mail headers is alot
 					// cheaper and alot faster.
-					IEnumerable<MailMessage> messages = Client.GetMessages(uids. FetchOptions.HeadersOnly);
+					IEnumerable<MailMessage> messages = Client.GetMessages(uids, FetchOptions.HeadersOnly);
 				}
 			}
 		}

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>S22.Imap.PullReq-96</id>
+    <version>3.6.0.50130</version>
+    <title>$title$</title>
+    <authors>smiley22, just_dmitry</authors>
+    <owners>smiley22</owners>
+    <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
+    <projectUrl>https://github.com/justdmitry/S22.Imap</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Clone of https://github.com/smiley22/S22.Imap with issue #47 fixed (pull request https://github.com/smiley22/S22.Imap/pull/96) </description>
+    <releaseNotes>Somewhere in startup put: ImapClient.StreamEncoding = Encoding.UTF8</releaseNotes>
+    <tags>Imap C# Library Component Mail Email fix</tags>
+  </metadata>
+</package>

@@ -352,20 +352,22 @@ namespace S22.Imap {
 			// Attachments collection.
 			bool hasName = part.Parameters.ContainsKey("name");
 
+			// Check for alternative view.
+			string ContentType = ParseMIMEField(message.Headers["Content-Type"])["value"];
+			bool preferAlternative = string.Compare(ContentType, "multipart/alternative", true) == 0;
+			
 			// If the MailMessage's Body fields haven't been initialized yet, put it there. Some weird
 			// (i.e. spam) mails like to omit content-types so we don't check for that here and just
 			// assume it's text.
 			if (String.IsNullOrEmpty(message.Body) &&
-				part.Disposition.Type != ContentDispositionType.Attachment) {
+				!(part.Disposition.Type == ContentDispositionType.Attachment ||
+				(part.Disposition.Type == ContentDispositionType.Unknown &&
+				preferAlternative == false && hasName))) {
 				message.Body = encoding.GetString(bytes);
 				message.BodyEncoding = encoding;
 				message.IsBodyHtml = part.Subtype.ToLower() == "html";
 				return;
 			}
-
-			// Check for alternative view.
-			string ContentType = ParseMIMEField(message.Headers["Content-Type"])["value"];
-			bool preferAlternative = string.Compare(ContentType, "multipart/alternative", true) == 0;
 
 			// Many attachments are missing the disposition-type. If it's not defined as alternative
 			// and it has a name attribute, assume it is Attachment rather than an AlternateView.

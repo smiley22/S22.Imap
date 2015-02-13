@@ -161,6 +161,9 @@ X-MimeOLE: Produced By Microsoft MimeOLE V6.0.6002.18463</value>
   <data name="MailWithoutDisposition" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\MailWithoutDisposition.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
+  <data name="MailWithoutDispositionEmptyBody" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\MailWithoutDispositionEmptyBody.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
   <data name="MailWithQuotedPrintables" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\MailWithQuotedPrintables.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>

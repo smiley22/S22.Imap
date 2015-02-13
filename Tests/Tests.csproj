@@ -85,6 +85,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +111,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\MailWithMIMEComments.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MailWithoutDispositionEmptyBody.txt" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 using System.Linq;
 using System.Net.Mail;
@@ -127,6 +128,40 @@ namespace S22.Imap.Test {
 			Assert.AreEqual("Fakt_fil_xxxx_20130207.pdf", m.Attachments[0].Name,
 				"Attachment name missmatch.");
 		}
+
+        /// <summary>
+        /// Creates a MailMessage instance from an RFC822/MIME string containing an attachment without
+        /// a disposition and an empty body.
+        /// </summary>
+        [TestMethod]
+        [TestCategory("BuildMessageFromMIME822")]
+        public void MessageWithMultipartMixedAttachmentAndEmptyBody()
+        {
+            // The multiparts is manipulated base64 data and not the real files.
+            MailMessage m = MessageBuilder.FromMIME822(Properties.Resources.MailWithoutDispositionEmptyBody);
+
+            // Check the From header.
+            Assert.AreEqual("", m.From.DisplayName, "Expected no From displayname.");
+            Assert.AreEqual("invxxxxx@xxxxx.com", m.From.Address, "Unexpected From address.");
+            // Check the To header.
+            Assert.AreEqual(1, m.To.Count, "Unexpected To address count.");
+            Assert.AreEqual("", m.To[0].DisplayName, "Expected no To displayname.");
+            Assert.AreEqual("faktxxx@xxxxxx.se", m.To[0].Address, "Unexpected To address.");
+            Assert.AreEqual("Fakt__xxxx___xxxx___07_02_2013", m.Subject, "Unexpected Subject.");
+            Assert.AreEqual(
+                            "multipart/mixed;\tboundary=\"--boundary_0_6cb33448-390c-4f02-b75a-2738f1d6dd45\"",
+                            m.Headers["Content-Type"], "Unexpected Content-Type");
+            Assert.IsFalse(m.IsBodyHtml, "Expected non HTML body");
+            // Ensure that the body encoding is null, since there is no body.
+            Assert.AreEqual(null, m.BodyEncoding, "Expected null Body Encoding.");
+            // Ensure that the body is empty.
+            Assert.AreEqual(String.Empty, m.Body);
+            Assert.AreEqual(0, m.AlternateViews.Count, "AlternateViews count missmatch.");
+            // Ensure that the attachment is treated correctly as an attachment.
+            Assert.AreEqual(1, m.Attachments.Count, "Attachment count missmatch.");
+            Assert.AreEqual("Fakt_fil_xxxx_20130207.pdf", m.Attachments[0].Name,
+                "Attachment name missmatch.");
+        }
 
 		/// <summary>
 		/// Ensures a malformed, invalid or missing From header is handled properly. See issue #50.

@@ -363,6 +363,8 @@ namespace S22.Imap {
 				!(part.Disposition.Type == ContentDispositionType.Attachment ||
 				(part.Disposition.Type == ContentDispositionType.Unknown &&
 				preferAlternative == false && hasName))) {
+            //if (String.IsNullOrEmpty(message.Body) &&
+			//	!(part.Disposition.Type == ContentDispositionType.Attachment)) {
 				message.Body = encoding.GetString(bytes);
 				message.BodyEncoding = encoding;
 				message.IsBodyHtml = part.Subtype.ToLower() == "html";

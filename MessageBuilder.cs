@@ -170,7 +170,12 @@ namespace S22.Imap {
 					} catch (FormatException) {
 						// If decoding fails, we should at least return the un-altered value.
 					}
-				}
+                    try {
+                        coll[pname] = Util.DecodeWord(coll[pname]);
+                    } catch (FormatException) {
+                        // If decoding fails, we should at least return the un-altered value.
+                    }
+                }
 				Match mvalue = Regex.Match(field, @"^\s*([^;]+)");
 				coll.Add("value", mvalue.Success ? mvalue.Groups[1].Value.Trim() : "");
 			} catch {

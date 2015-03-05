@@ -21,6 +21,7 @@ namespace S22.Imap {
 	/// </summary>
 	public class ImapClient : IImapClient
 	{
+		public static Encoding StreamEncoding = Encoding.ASCII;
 		Stream stream;
 		TcpClient client;
 		bool disposed;
@@ -516,7 +517,7 @@ namespace S22.Imap {
 						if (b == CarriageReturn)
 							continue;
 						if (b == Newline) {
-							string s = Encoding.ASCII.GetString(mem.ToArray());
+							string s = StreamEncoding.GetString(mem.ToArray());
 							if (resolveLiterals) {
 								s = Regex.Replace(s, @"{(\d+)}$", m => {
 									return "\"" + GetData(Convert.ToInt32(m.Groups[1].Value)) +
@@ -551,7 +552,7 @@ namespace S22.Imap {
 						byteCount = byteCount - read;
 					}
 				}
-				string s = Encoding.ASCII.GetString(mem.ToArray());
+				string s = StreamEncoding.GetString(mem.ToArray());
 				ts.TraceInformation("S -> " + s);
 				return s;
 			}

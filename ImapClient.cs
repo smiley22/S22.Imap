@@ -1628,7 +1628,7 @@ namespace S22.Imap {
 				SelectMailbox(mailbox);
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "UID COPY " + set + " " +
-					destination.QuoteString());
+					Util.UTF7Encode(destination).QuoteString());
 				while (response.StartsWith("*"))
 					response = GetResponse();
 				ResumeIdling();

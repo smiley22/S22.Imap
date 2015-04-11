@@ -46,6 +46,15 @@ namespace S22.Imap {
 			return new SearchCondition { Field = Fields.Before, Value = date };
 		}
 		/// <summary>
+		/// Finds messages whose internal date (disregarding time and timezone) is later than the
+		/// specified date.
+		/// </summary>
+		/// <param name="date">The date to compare the message's internal date with.</param>
+		/// <returns>A SearchCondition object representing the "Since" search criterion.</returns>
+		public static SearchCondition Since(DateTime date) {
+			return new SearchCondition { Field = Fields.Since, Value = date };
+		}
+		/// <summary>
 		/// Finds messages that contain the specified string in the body of the message.
 		/// </summary>
 		/// <param name="text">String to search the message body for.</param>

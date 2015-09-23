@@ -258,6 +258,7 @@
 						Console.WriteLine("Used storage: " + info.UsedStorage);
 						Console.WriteLine("Free storage: " + info.FreeStorage);
 						Console.WriteLine("Next UID: " + info.NextUID);
+						Console.WriteLine("UID Validity: " + info.UIDValidity);
 						Console.WriteLine("Messages: " + info.Messages);
 						Console.WriteLine("Unread: " + info.Unread);
 						Console.WriteLine("Set Flags: ");

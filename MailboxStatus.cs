@@ -14,10 +14,12 @@ namespace S22.Imap {
 		/// <param name="Messages">The total number of messages in the mailbox.</param>
 		/// <param name="Unread">The number of unread (unseen) messages in the mailbox.</param>
 		/// <param name="NextUID">The next unique identifier value of the mailbox</param>
-		internal MailboxStatus(int Messages, int Unread, uint NextUID) {
+        /// <param name="UIDValidity">The unique identifier validity value of the mailbox</param>
+		internal MailboxStatus(int Messages, int Unread, uint NextUID, uint UIDValidity) {
 			this.Messages = Messages;
 			this.Unread = Unread;
 			this.NextUID = NextUID;
+            this.UIDValidity = UIDValidity;
 		}
 
 		/// <summary>
@@ -43,5 +45,14 @@ namespace S22.Imap {
 			get;
 			private set;
 		}
+
+        /// <summary>
+        /// The unique identifier validity value
+        /// </summary>
+        internal uint UIDValidity
+        {
+            get;
+            private set;
+        }
 	}
 }

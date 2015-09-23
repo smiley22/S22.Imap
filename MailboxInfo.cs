@@ -21,15 +21,17 @@ namespace S22.Imap {
 		/// <param name="Messages">The number of messages in the mailbox.</param>
 		/// <param name="Unread">The number of unread messages in the mailbox.</param>
 		/// <param name="NextUID">The next unique identifier (UID) of the mailbox.</param>
+        /// <param name="UIDValidity">The unique identifier validity value of the mailbox.</param>
 		/// <param name="UsedStorage">The amount of used storage of the mailbox, in bytes.</param>
 		/// <param name="FreeStorage">The amount of free storage of the mailbox, in bytes.</param>
 		internal MailboxInfo(string Name, IEnumerable<MailboxFlag> Flags, int Messages, int Unread,
-			uint NextUID, UInt64 UsedStorage, UInt64 FreeStorage) {
+			uint NextUID, uint UIDValidity, UInt64 UsedStorage, UInt64 FreeStorage) {
 				this.Name = Name;
 				this.Flags = Flags;
 				this.Messages = Messages;
 				this.Unread = Unread;
 				this.NextUID = NextUID;
+                this.UIDValidity = UIDValidity;
 				this.UsedStorage = UsedStorage;
 				this.FreeStorage = FreeStorage;
 		}
@@ -81,6 +83,15 @@ namespace S22.Imap {
 			get;
 			private set;
 		}
+
+        /// <summary>
+        /// The unique identifier validity value of the mailbox.
+        /// </summary>
+        public uint UIDValidity
+        {
+            get;
+            private set;
+        }
 
 		/// <summary>
 		/// The amount of used storage in the mailbox, measured in bytes.

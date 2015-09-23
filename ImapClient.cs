@@ -859,7 +859,7 @@ namespace S22.Imap {
 				// Try to collect special-use flags.
 				IEnumerable<MailboxFlag> flags = GetMailboxFlags(mailbox);
 				ResumeIdling();
-				return new MailboxInfo(mailbox, flags, status.Messages, status.Unread, status.NextUID,
+				return new MailboxInfo(mailbox, flags, status.Messages, status.Unread, status.NextUID, status.UIDValidity,
 					used, free);
 			}
 		}
@@ -939,14 +939,14 @@ namespace S22.Imap {
 		MailboxStatus GetMailboxStatus(string mailbox = null) {
 			AssertValid();
 			int messages = 0, unread = 0;
-			uint uid = 0;
+			uint uid = 0, uidvalidity = 0;
 			lock (sequenceLock) {
 				PauseIdling();
 				if (mailbox == null)
 					mailbox = defaultMailbox;
 				string tag = GetTag();
 				string response = SendCommandGetResponse(tag + "STATUS " +
-					Util.UTF7Encode(mailbox).QuoteString() + " (MESSAGES UNSEEN UIDNEXT)");
+					Util.UTF7Encode(mailbox).QuoteString() + " (MESSAGES UNSEEN UIDNEXT UIDVALIDITY)");
 				while (response.StartsWith("*")) {
 					Match m = Regex.Match(response, @"\* STATUS.*MESSAGES (\d+)");
 					if (m.Success)
@@ -957,13 +957,16 @@ namespace S22.Imap {
 					m = Regex.Match(response, @"\* STATUS.*UIDNEXT (\d+)");
 					if (m.Success)
 						uid = Convert.ToUInt32(m.Groups[1].Value);
-					response = GetResponse();
+                    m = Regex.Match(response, @"\* STATUS.*UIDVALIDITY (\d+)");
+                    if (m.Success)
+                        uidvalidity = Convert.ToUInt32(m.Groups[1].Value);
+                    response = GetResponse();
 				}
 				ResumeIdling();
 				if (!IsResponseOK(response, tag))
 					throw new BadServerResponseException(response);
 			}
-			return new MailboxStatus(messages, unread, uid);
+			return new MailboxStatus(messages, unread, uid, uidvalidity);
 		}
 
 		/// <summary>

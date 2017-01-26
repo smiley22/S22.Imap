@@ -1510,7 +1510,7 @@ namespace S22.Imap {
 		/// network.</exception>
 		/// <exception cref="NotAuthenticatedException">The method was called in non-authenticated
 		/// state, i.e. before logging in.</exception>
-		string GetMessageData(uint uid, bool seen = true, string mailbox = null) {
+		public string GetMessageData(uint uid, bool seen = true, string mailbox = null) {
 			AssertValid();
 			lock (sequenceLock) {
 				PauseIdling();

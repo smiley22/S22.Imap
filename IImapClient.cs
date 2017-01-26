@@ -235,30 +235,51 @@ namespace S22.Imap {
 		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="Search"]/*'/>
 		IEnumerable<uint> Search(SearchCondition criteria, string mailbox = null);
 
-		/// <summary>
-		/// Retrieves the mail message with the specified unique identifier (UID).
-		/// </summary>
-		/// <param name="uid">The unique identifier of the mail message to retrieve.</param>
-		/// <param name="seen">Set this to true to set the \Seen flag for this message on the
-		/// server.</param>
-		/// <param name="mailbox">The mailbox the message will be retrieved from. If this parameter is
-		/// omitted, the value of the DefaultMailbox property is used to determine the mailbox to
-		/// operate on.</param>
-		/// <returns>An initialized instance of the MailMessage class representing the fetched mail
-		/// message.</returns>
-		/// <exception cref="BadServerResponseException">The mail message could not be fetched. The
-		/// message property of the exception contains the error message returned by the
-		/// server.</exception>
-		/// <exception cref="ObjectDisposedException">The ImapClient object has been disposed.</exception>
-		/// <exception cref="IOException">There was a failure writing to or reading from the
-		/// network.</exception>
-		/// <exception cref="NotAuthenticatedException">The method was called in non-authenticated
-		/// state, i.e. before logging in.</exception>
-		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each message which uniquely
-		/// identifies the message within the respective mailbox. No two messages in a mailbox share
-		/// the same UID.</remarks>
-		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMessage-1"]/*'/>
-		MailMessage GetMessage(uint uid, bool seen = true, string mailbox = null);
+        /// <summary>
+        /// Retrieves the raw MIME/RFC822 mail message data for the mail message with the specified UID.
+        /// </summary>
+        /// <param name="uid">The UID of the mail message to retrieve as a MIME/RFC822 string.</param>
+        /// <param name="seen">Set this to true to set the \Seen flag for the fetched message on the
+        /// server.</param>
+        /// <param name="mailbox">The mailbox the message will be retrieved from. If this parameter is
+        /// omitted, the value of the DefaultMailbox property is used to determine the mailbox to
+        /// operate on.</param>
+        /// <returns>A string containing the raw MIME/RFC822 data of the mail message with the
+        /// specified UID.</returns>
+        /// <exception cref="BadServerResponseException">The mail message data could not be fetched.
+        /// The message property of the exception contains the error message returned by the
+        /// server.</exception>
+        /// <exception cref="ObjectDisposedException">The ImapClient object has been disposed.</exception>
+        /// <exception cref="IOException">There was a failure writing to or reading from the
+        /// network.</exception>
+        /// <exception cref="NotAuthenticatedException">The method was called in non-authenticated
+        /// state, i.e. before logging in.</exception>
+        string GetMessageData(uint uid, bool seen = true, string mailbox = null);
+
+        /// <summary>
+        /// Retrieves the mail message with the specified unique identifier (UID).
+        /// </summary>
+        /// <param name="uid">The unique identifier of the mail message to retrieve.</param>
+        /// <param name="seen">Set this to true to set the \Seen flag for this message on the
+        /// server.</param>
+        /// <param name="mailbox">The mailbox the message will be retrieved from. If this parameter is
+        /// omitted, the value of the DefaultMailbox property is used to determine the mailbox to
+        /// operate on.</param>
+        /// <returns>An initialized instance of the MailMessage class representing the fetched mail
+        /// message.</returns>
+        /// <exception cref="BadServerResponseException">The mail message could not be fetched. The
+        /// message property of the exception contains the error message returned by the
+        /// server.</exception>
+        /// <exception cref="ObjectDisposedException">The ImapClient object has been disposed.</exception>
+        /// <exception cref="IOException">There was a failure writing to or reading from the
+        /// network.</exception>
+        /// <exception cref="NotAuthenticatedException">The method was called in non-authenticated
+        /// state, i.e. before logging in.</exception>
+        /// <remarks>A unique identifier (UID) is a 32-bit value assigned to each message which uniquely
+        /// identifies the message within the respective mailbox. No two messages in a mailbox share
+        /// the same UID.</remarks>
+        /// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="GetMessage-1"]/*'/>
+        MailMessage GetMessage(uint uid, bool seen = true, string mailbox = null);
 
 		/// <summary>
 		/// Retrieves the mail message with the specified unique identifier (UID) using the specified

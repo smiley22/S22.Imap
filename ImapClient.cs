@@ -1276,6 +1276,8 @@ namespace S22.Imap {
 		/// <param name="mailbox">The mailbox the message will be stored in. If this parameter is
 		/// omitted, the value of the DefaultMailbox property is used to determine the mailbox to store
 		/// the message in.</param>
+        /// <param name="receivedDate">A date and time which reflects when the message was received. 
+        /// If null it will be set by default to now by the provider. </param>
 		/// <returns>The unique identifier (UID) of the stored message.</returns>
 		/// <exception cref="ArgumentNullException">The message parameter is null.</exception>
 		/// <exception cref="BadServerResponseException">The mail message could not be stored. The
@@ -1291,7 +1293,10 @@ namespace S22.Imap {
 		/// the same UID.</remarks>
 		/// <seealso cref="StoreMessages"/>
 		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="StoreMessage"]/*'/>
-		public uint StoreMessage(MailMessage message, bool seen = false, string mailbox = null) {
+        /// <remarks> If the receivedDate is to be spececified the message must also include the 'Date' header
+        /// with the same date in the format 'ddd, d MMM yyyy HH:mm:ss +0000'.</remarks>
+        public uint StoreMessage(MailMessage message, bool seen = false, string mailbox = null, DateTime? receivedDate = null)
+        {
 			AssertValid();
 			message.ThrowIfNull("message");
 			string mime822 = message.ToMIME822();
@@ -1300,9 +1305,11 @@ namespace S22.Imap {
 				if (mailbox == null)
 					mailbox = defaultMailbox;
 				string tag = GetTag();
-				string response = SendCommandGetResponse(tag + "APPEND " +
-					Util.UTF7Encode(mailbox).QuoteString() + (seen ? @" (\Seen)" : "") +
-					" {" + mime822.Length + "}");
+				string response = SendCommandGetResponse(tag + "APPEND " 
+                    + Util.UTF7Encode(mailbox).QuoteString()
+                    + (seen ? @" (\Seen)" : "")
+                    + (receivedDate.HasValue ? " " + Util.UTF7Encode(ConvertDateTimeToRfc2060(receivedDate.Value)).QuoteString() : "")
+                    + " {" + mime822.Length + "}");
 				// The server must send a continuation response before we can go ahead with the actual
 				// message data.
 				if (!response.StartsWith("+"))
@@ -2279,6 +2286,16 @@ namespace S22.Imap {
 			if(requireAuth && !Authed)
 					throw new NotAuthenticatedException();
 		}
+
+        /// <summary>
+        /// Converts a DateTime to a Rfc2060 compliant UTC date format
+        /// </summary>
+        /// <param name="date">Date to be converted</param>
+        /// <returns>An string representing the date in a Rfc2060 format</returns>
+        string ConvertDateTimeToRfc2060(DateTime date)
+        {
+            return date.ToUniversalTime().ToString("dd-MMM-yyy HH:mm:ss +0000", System.Globalization.CultureInfo.InvariantCulture);
+        }
 	}
 
 	/// <summary>

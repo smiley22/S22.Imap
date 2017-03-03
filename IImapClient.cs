@@ -424,6 +424,8 @@ namespace S22.Imap {
 		/// <param name="mailbox">The mailbox the message will be stored in. If this parameter is
 		/// omitted, the value of the DefaultMailbox property is used to determine the mailbox to store
 		/// the message in.</param>
+        /// <param name="receivedDate">A date and time which reflects when the message was received. 
+        /// If null it will be set by default to now by the provider.</param>
 		/// <returns>The unique identifier (UID) of the stored message.</returns>
 		/// <exception cref="ArgumentNullException">The message parameter is null.</exception>
 		/// <exception cref="BadServerResponseException">The mail message could not be stored. The
@@ -436,10 +438,12 @@ namespace S22.Imap {
 		/// state, i.e. before logging in.</exception>
 		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each message which uniquely
 		/// identifies the message within the respective mailbox. No two messages in a mailbox share
-		/// the same UID.</remarks>
+		/// the same UID.
+        /// If the receivedDate is to be spececified the message must also include the 'Date' header
+        /// with the same date in the format 'ddd, d MMM yyyy HH:mm:ss +0000'.</remarks>
 		/// <seealso cref="StoreMessages"/>
 		/// <include file='Examples.xml' path='S22/Imap/ImapClient[@name="StoreMessage"]/*'/>
-		uint StoreMessage(MailMessage message, bool seen = false, string mailbox = null);
+        uint StoreMessage(MailMessage message, bool seen = false, string mailbox = null, DateTime? receivedDate = null);
 
 		/// <summary>
 		/// Stores the specified mail messages on the IMAP server.

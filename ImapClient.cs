@@ -1268,6 +1268,109 @@ namespace S22.Imap {
 		}
 
 		/// <summary>
+		/// Retrieves the set of mail messages with the specified unique identifiers (UIDs) using the
+		/// specified set of header names.
+		/// </summary>
+		/// <param name="mailIds">Unique identifiers of the all tha mail messages to
+		/// retrieve</param>
+		/// <param name="mailbox">The mailbox the messages will be retrieved from. If this parameter is
+		/// omitted, the value of the DefaultMailbox property is used to determine the mailbox to
+		/// operate on.</param>
+		/// <param name="headerNames">Names of headers in the mail messages to
+		/// retrieve</param>
+		/// <returns>An enumerable collection of initialized instances of the MailMessage class
+		/// representing the fetched mail messages.</returns>
+		/// <exception cref="BadServerResponseException">The mail messages could not be fetched. The
+		/// message property of the exception contains the error message returned by the
+		/// server.</exception>
+		/// <exception cref="ObjectDisposedException">The ImapClient object has been disposed.</exception>
+		/// <exception cref="IOException">There was a failure writing to or reading from the
+		/// network.</exception>
+		/// <exception cref="NotAuthenticatedException">The method was called in non-authenticated
+		/// state, i.e. before logging in.</exception>
+		/// <remarks>A unique identifier (UID) is a 32-bit value assigned to each message which uniquely
+		/// identifies the message within the respective mailbox. No two messages in a mailbox share
+		/// the same UID.</remarks>
+		public IEnumerable<MailMessage> GetMessages(IEnumerable<uint> mailIds, string mailbox = null, IEnumerable<string> headerNames = null)
+		{
+		    var mails = GetMailHeaders(mailIds, mailbox, headerNames);
+		    List<MailMessage> list = new List<MailMessage>();
+		    foreach (var msg in mails)
+			list.Add( MessageBuilder.FromHeader(msg));
+		    return list;
+		}
+		
+		/// <summary>
+		/// Retrieves the mail headers for the mail message with the specified unique identifiers (mailIds) in a single command.
+		/// instead of sending the same command multiple times.
+		/// </summary>
+		/// <param name="mailIds">The list of UIDs of the mail message to retrieve the mail header for.</param>
+		/// <param name="mailbox">The mailbox the messages will be retrieved from. If this parameter is
+		/// omitted, the value of the DefaultMailbox property is used to determine the mailbox to
+		/// operate on.</param>
+		/// <param name="headerNames">Names of headers in the mail messages to retrieve</param>
+		/// <returns>An enumerable collection containing the raw mail headers of the mail messages with the specified
+		/// mailIds.</returns>
+		/// <exception cref="BadServerResponseException">The mail header could not be fetched. The
+		/// message property of the exception contains the error message returned by the
+		/// server.</exception>
+		/// <exception cref="ObjectDisposedException">The ImapClient object has been disposed.</exception>
+		/// <exception cref="IOException">There was a failure writing to or reading from the
+		/// network.</exception>
+		/// <exception cref="NotAuthenticatedException">The method was called in non-authenticated
+		/// state, i.e. before logging in.</exception>
+		private IEnumerable<string> GetMailHeaders(IEnumerable<uint> mailIds, string mailbox = null, IEnumerable<string> headerNames = null)
+		{
+		    this.AssertValid(true);
+		    //Convert the collection of mailIds into a single string
+		    string uids = string.Join(",", mailIds.Select(i => i.ToString()).ToArray());
+		    Dictionary<string, string> source = new Dictionary<string, string>();
+		    if (!string.IsNullOrEmpty(uids))
+		    {
+			lock (this.sequenceLock)
+			{
+			    this.PauseIdling();
+			    this.SelectMailbox(mailbox);
+			    string tag = this.GetTag();
+			    //Convert the collection of headerNames into a single string
+			    string headerFields = (headerNames == null ? string.Empty : ".FIELDS (" + string.Join(" ", (string[])headerNames) + ")");
+			    string response1 = this.SendCommandGetResponse(tag + "UID FETCH " + uids + " (FLAGS BODY.PEEK[HEADER" + headerFields + "])", false);
+			    StringBuilder stringBuilder = new StringBuilder();
+			    for (; response1.StartsWith("*"); response1 = this.GetResponse(false))
+			    {
+				// UID for gmail is added first in the response otherwise it will be in the end of the response.
+				Match match1 = Regex.Match(response1, "\\* (\\d+) FETCH\\s+\\((?:\\s*UID\\s+(\\d+)\\s+)?FLAGS\\s+\\((.*)\\).*{(\\d+)}");
+				Convert.ToInt32(match1.Groups[1].Value);
+				string key = match1.Groups[2].Value;
+				string str = match1.Groups[3].Value;
+				if (match1.Success)
+				{
+				    int int32 = Convert.ToInt32(match1.Groups[4].Value);
+				    stringBuilder.Append(this.GetData(int32));
+				    string response2 = this.GetResponse(true);
+				    Match match2 = Regex.Match(response2, "(?:UID\\s+(\\d+)\\s*)?\\)\\s*$");
+				    if (!match2.Success)
+					throw new BadServerResponseException(response2);
+				    if (string.IsNullOrEmpty(key))
+					key = match2.Groups[1].Value;
+				    stringBuilder.AppendLine("X-UID: " + key);
+				    stringBuilder.AppendLine("X-FLAG: " + str);
+				    if (!source.ContainsKey(key))
+				    {
+					source[key] = stringBuilder.ToString();
+					stringBuilder = new StringBuilder();
+				    }
+				}
+			    }
+			    this.ResumeIdling();
+			    if (!this.IsResponseOK(response1, tag))
+				throw new BadServerResponseException(response1);
+			}
+		    }
+		    return source.Select<KeyValuePair<string, string>, string>((Func<KeyValuePair<string, string>, string>)(x => x.Value));
+		}
+
+		/// <summary>
 		/// Stores the specified mail message on the IMAP server.
 		/// </summary>
 		/// <param name="message">The mail message to store on the server.</param>

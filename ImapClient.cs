@@ -2091,7 +2091,7 @@ namespace S22.Imap {
 				try {
 					string response = GetResponse();
 					// A request was made to stop idling so quit the thread.
-					if (response.Contains("OK IDLE", StringComparison.InvariantCultureIgnoreCase))
+					if (response.Contains("OK", StringComparison.InvariantCultureIgnoreCase))
 						return;
 					// Let the dispatcher thread take care of the IDLE notification so we can go back to
 					// receiving responses.

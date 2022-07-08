@@ -7,11 +7,11 @@ receiving electronic mail from an Internet Message Access Protocol (IMAP) server
 
 You can always get the latest package on [Nuget](http://nuget.org/packages/S22.Imap/) (includes 
 .NET 4.0 and 3.5 binaries) or download the binaries (targeting .NET 4.0) as a .zip archive from 
-[here](http://smiley22.github.com/Downloads/S22.Imap.zip). The
-[documentation](http://smiley22.github.com/S22.Imap/Documentation/) is also available for offline
+[here](http://smiley22.github.io/Downloads/S22.Imap.zip). The
+[documentation](http://smiley22.github.io/S22.Imap/Documentation/) is also available for offline
 viewing as HTML or CHM and can be downloaded from 
-[here](http://smiley22.github.com/Downloads/S22.Imap.Html.Documentation.zip) and 
-[here](http://smiley22.github.com/Downloads/S22.Imap.Chm.Documentation.zip), respectively.
+[here](http://smiley22.github.io/Downloads/S22.Imap.Html.Documentation.zip) and 
+[here](http://smiley22.github.io/Downloads/S22.Imap.Chm.Documentation.zip), respectively.
 
 ### Usage & Examples
 
@@ -35,7 +35,7 @@ IMAP server:
 	}
 
 [Here](https://github.com/smiley22/S22.Imap/blob/master/Examples.md) are a couple of examples of how to use
-the library. Please also see the [documentation](http://smiley22.github.com/S22.Imap/Documentation/) for
+the library. Please also see the [documentation](http://smiley22.github.io/S22.Imap/Documentation/) for
 further details on using the classes and methods exposed by the S22.Imap namespace.
 
 ### Features
